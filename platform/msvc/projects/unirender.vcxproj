@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\unirender\AlphaTest.h" />
+    <ClInclude Include="..\..\..\include\unirender\AttachmentType.h" />
+    <ClInclude Include="..\..\..\include\unirender\Bitmap.h" />
+    <ClInclude Include="..\..\..\include\unirender\Blending.h" />
+    <ClInclude Include="..\..\..\include\unirender\BufferUsageHint.h" />
+    <ClInclude Include="..\..\..\include\unirender\BufferTarget.h" />
+    <ClInclude Include="..\..\..\include\unirender\ClearState.h" />
+    <ClInclude Include="..\..\..\include\unirender\Color.h" />
+    <ClInclude Include="..\..\..\include\unirender\ColorMask.h" />
+    <ClInclude Include="..\..\..\include\unirender\ComponentDataType.h" />
+    <ClInclude Include="..\..\..\include\unirender\ComputeBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\Context.h" />
+    <ClInclude Include="..\..\..\include\unirender\DepthRange.h" />
+    <ClInclude Include="..\..\..\include\unirender\DepthTest.h" />
+    <ClInclude Include="..\..\..\include\unirender\Device.h" />
+    <ClInclude Include="..\..\..\include\unirender\DrawState.h" />
+    <ClInclude Include="..\..\..\include\unirender\FacetCulling.h" />
+    <ClInclude Include="..\..\..\include\unirender\Factory.h" />
+    <ClInclude Include="..\..\..\include\unirender\Framebuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\InternalFormat.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureUnit.h" />
+    <ClInclude Include="..\..\..\include\unirender\typedef.h" />
+    <ClInclude Include="..\..\..\include\unirender\UniformUpdater.h" />
+    <ClInclude Include="..\..\..\include\unirender\UniformValue.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\Buffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\Context.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\Device.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\Framebuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\IndexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\opengl.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\ReadPixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\RenderBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\ShaderObject.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\ShaderProgram.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\Texture.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureFormat.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureSampler.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureUnit.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureUnits.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\TypeConverter.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\Uniform.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexBufferAttributes.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexArray.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\WritePixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\ReadPixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\PrimitiveRestart.h" />
+    <ClInclude Include="..\..\..\include\unirender\PrimitiveType.h" />
+    <ClInclude Include="..\..\..\include\unirender\Rectangle.h" />
+    <ClInclude Include="..\..\..\include\unirender\RenderBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\RenderState.h" />
+    <ClInclude Include="..\..\..\include\unirender\ScissorTest.h" />
+    <ClInclude Include="..\..\..\include\unirender\ShaderProgram.h" />
+    <ClInclude Include="..\..\..\include\unirender\ShaderType.h" />
+    <ClInclude Include="..\..\..\include\unirender\ShaderVertexAttribute.h" />
+    <ClInclude Include="..\..\..\include\unirender\StencilTest.h" />
+    <ClInclude Include="..\..\..\include\unirender\StencilTestFace.h" />
+    <ClInclude Include="..\..\..\include\unirender\Texture.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureDescription.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureFormat.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureMagnificationFilter.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureMinificationFilter.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureSampler.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureTarget.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureUtility.h" />
+    <ClInclude Include="..\..\..\include\unirender\TextureWrap.h" />
+    <ClInclude Include="..\..\..\include\unirender\Uniform.h" />
+    <ClInclude Include="..\..\..\include\unirender\UniformType.h" />
+    <ClInclude Include="..\..\..\include\unirender\VertexArraySizes.h" />
+    <ClInclude Include="..\..\..\include\unirender\VertexBufferAttribute.h" />
+    <ClInclude Include="..\..\..\include\unirender\VertexArray.h" />
+    <ClInclude Include="..\..\..\include\unirender\VertexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\VertexLayoutType.h" />
+    <ClInclude Include="..\..\..\include\unirender\WindingOrder.h" />
+    <ClInclude Include="..\..\..\include\unirender\WritePixelBuffer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\Bitmap.cpp" />
+    <ClCompile Include="..\..\..\source\Factory.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\Buffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\ComputeBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\Context.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Device.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\IndexBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\PixelBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\ReadPixelBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\RenderBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\ShaderObject.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\ShaderProgram.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Texture.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureFormat.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureSampler.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureUnit.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureUnits.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\VertexBufferAttributes.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexArray.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\WritePixelBuffer.cpp" />
+    <ClCompile Include="..\..\..\source\ShaderProgram.cpp" />
+    <ClCompile Include="..\..\..\source\TextureUtility.cpp" />
+    <ClCompile Include="..\..\..\source\VertexBufferAttribute.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\include\unirender\opengl\Uniform.inl" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>0.unirender</ProjectName>
+    <ProjectGuid>{637A0E9C-1867-459D-8611-65A064E3B2C2}</ProjectGuid>
+    <RootNamespace>unirender</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>15.0.26730.12</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\unirender\x86\Debug\</OutDir>
+    <IntDir>..\unirender\x86\Debug\obj\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\unirender\x86\Release\</OutDir>
+    <IntDir>..\unirender\x86\Release\obj\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\external;..\..\..\..\cu\src;..\..\..\..\sm\src\sm;..\..\..\..\guard\include;..\..\..\..\logger\src\logger;..\..\..\..\memmgr\include;..\..\..\..\cooking\include;..\..\..\..\ds\src\ds;..\..\..\..\external\c99;..\..\..\..\external\boost\include;..\..\..\..\external\gl\include%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;__STDC_LIMIT_MACROS;GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\..\external;..\..\..\..\cu\src;..\..\..\..\sm\src\sm;..\..\..\..\guard\include;..\..\..\..\logger\src\logger;..\..\..\..\memmgr\include;..\..\..\..\cooking\include;..\..\..\..\ds\src\ds;..\..\..\..\external\c99;..\..\..\..\external\boost\include;..\..\..\..\external\gl\include%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;__STDC_LIMIT_MACROS;GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

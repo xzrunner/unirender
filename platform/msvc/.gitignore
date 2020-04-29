@@ -1,0 +1,5 @@
+unirender/
+projects/*
+
+!projects/unirender.vcxproj
+!projects/unirender.vcxproj.filters

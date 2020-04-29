@@ -1,0 +1,354 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="api">
+      <UniqueIdentifier>{06255ea9-aead-4c92-ada9-7c8c793432fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl">
+      <UniqueIdentifier>{6bb9dce8-ee47-4d52-ade6-fc5298953bbf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="buffer">
+      <UniqueIdentifier>{79d07dec-4ce2-4815-b7e8-8ef9031d1a3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{aa5b6c03-e86d-45ae-b893-fd5f93073433}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="texture">
+      <UniqueIdentifier>{713dff55-268e-4a47-b47c-b49fe1470425}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{ac00938b-4d88-4d5c-acc0-c8e9d0abcd7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="render_state">
+      <UniqueIdentifier>{8cc7ccad-0c96-432e-8eb1-28c6418e9cbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vertex_array">
+      <UniqueIdentifier>{422184b5-0847-4ba0-8166-f4f600b52694}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\shader">
+      <UniqueIdentifier>{e615ff5b-0e92-43ad-91d0-1b4eb74ea237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\texture">
+      <UniqueIdentifier>{143e0faf-8ca1-4654-8e58-d95c238ce32e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="frame_buffer">
+      <UniqueIdentifier>{06ec70fc-66fa-44ac-99c4-7cd108deeac3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\buffer">
+      <UniqueIdentifier>{2b116303-85ef-4f69-a552-d6202efee637}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\frame_buffer">
+      <UniqueIdentifier>{25f24afe-8a15-4ba2-bf86-3398c4b2f953}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\utility">
+      <UniqueIdentifier>{17855e0d-9b42-4de3-b5b3-e8b78bc81f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\vertex_array">
+      <UniqueIdentifier>{7fdad68f-4d42-470e-94a9-c05b4dfb4cfc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Context.h" />
+    <ClInclude Include="..\..\..\include\unirender\Device.h" />
+    <ClInclude Include="..\..\..\include\unirender\ClearState.h" />
+    <ClInclude Include="..\..\..\include\unirender\DrawState.h" />
+    <ClInclude Include="..\..\..\include\unirender\Blending.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\PrimitiveType.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Color.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ColorMask.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DepthRange.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DepthTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\FacetCulling.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\WindingOrder.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\PrimitiveRestart.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ScissorTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\StencilTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\StencilTestFace.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\RenderState.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ShaderProgram.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexArray.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Uniform.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureFormat.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureMagnificationFilter.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureMinificationFilter.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureWrap.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureSampler.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureTarget.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Context.h">
+      <Filter>api\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Framebuffer.h">
+      <Filter>frame_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Framebuffer.h">
+      <Filter>api\opengl\frame_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\opengl.h">
+      <Filter>api\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Rectangle.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TypeConverter.h">
+      <Filter>api\opengl\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexArray.h">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexBufferAttribute.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ComponentDataType.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexBufferAttributes.h">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Buffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\BufferTarget.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\BufferUsageHint.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\IndexBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ShaderProgram.h">
+      <Filter>api\opengl\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ShaderObject.h">
+      <Filter>api\opengl\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ShaderType.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ShaderVertexAttribute.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureSampler.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureUnit.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Device.h">
+      <Filter>api\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureUnits.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\AlphaTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Texture.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Texture.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ReadPixelBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\WritePixelBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ReadPixelBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\WritePixelBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureFormat.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureUtility.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\AttachmentType.h">
+      <Filter>frame_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\RenderBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\InternalFormat.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\RenderBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexArraySizes.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Uniform.h">
+      <Filter>api\opengl\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformType.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformValue.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureUnit.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\typedef.h" />
+    <ClInclude Include="..\..\..\include\unirender\Bitmap.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureDescription.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformUpdater.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Factory.h" />
+    <ClInclude Include="..\..\..\include\unirender\ComputeBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexLayoutType.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\opengl\Context.cpp">
+      <Filter>api\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
+      <Filter>api\opengl\frame_buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexArray.cpp">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\VertexBufferAttribute.cpp">
+      <Filter>vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexBufferAttributes.cpp">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Buffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\IndexBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ShaderProgram.cpp">
+      <Filter>api\opengl\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ShaderObject.cpp">
+      <Filter>api\opengl\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureSampler.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureUnit.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Device.cpp">
+      <Filter>api\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureUnits.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Texture.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ReadPixelBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\WritePixelBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureFormat.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\TextureUtility.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\RenderBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Bitmap.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\PixelBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ShaderProgram.cpp">
+      <Filter>shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Factory.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\ComputeBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\include\unirender\opengl\Uniform.inl">
+      <Filter>api\opengl\shader</Filter>
+    </None>
+  </ItemGroup>
+</Project>

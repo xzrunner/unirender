@@ -138,7 +138,7 @@ Uniform<Float1>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Float1>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -165,7 +165,7 @@ Uniform<Float2>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Float2>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -192,7 +192,7 @@ Uniform<Float3>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Float3>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -219,7 +219,7 @@ Uniform<Float4>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Float4>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -246,7 +246,7 @@ Uniform<Int1>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Int1>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -273,7 +273,7 @@ Uniform<Int2>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Int2>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -300,7 +300,7 @@ Uniform<Int3>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Int3>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -327,7 +327,7 @@ Uniform<Int4>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Int4>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -354,7 +354,7 @@ Uniform<UInt1>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<UInt1>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -381,7 +381,7 @@ Uniform<UInt2>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<UInt2>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -408,7 +408,7 @@ Uniform<UInt3>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<UInt3>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -435,7 +435,7 @@ Uniform<UInt4>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<UInt4>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -462,7 +462,7 @@ Uniform<Matrix22>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix22>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -485,7 +485,7 @@ Uniform<Matrix33>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix33>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -508,7 +508,7 @@ Uniform<Matrix44>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix44>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -531,7 +531,7 @@ Uniform<Matrix23>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix23>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -554,7 +554,7 @@ Uniform<Matrix32>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix32>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -577,7 +577,7 @@ Uniform<Matrix24>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix24>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -600,7 +600,7 @@ Uniform<Matrix42>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix42>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -623,7 +623,7 @@ Uniform<Matrix34>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix34>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 
@@ -646,7 +646,7 @@ Uniform<Matrix43>::Uniform(const std::string& name, int num, int location)
 template <>
 void Uniform<Matrix43>::Clean()
 {
-    if (!m_dirty) {
+    if (!m_dirty || m_vals.empty()) {
         return;
     }
 

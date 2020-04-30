@@ -1,53 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="api">
-      <UniqueIdentifier>{06255ea9-aead-4c92-ada9-7c8c793432fc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl">
-      <UniqueIdentifier>{6bb9dce8-ee47-4d52-ade6-fc5298953bbf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="buffer">
-      <UniqueIdentifier>{79d07dec-4ce2-4815-b7e8-8ef9031d1a3e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shader">
-      <UniqueIdentifier>{aa5b6c03-e86d-45ae-b893-fd5f93073433}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="texture">
-      <UniqueIdentifier>{713dff55-268e-4a47-b47c-b49fe1470425}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="utility">
-      <UniqueIdentifier>{ac00938b-4d88-4d5c-acc0-c8e9d0abcd7a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="render_state">
-      <UniqueIdentifier>{8cc7ccad-0c96-432e-8eb1-28c6418e9cbd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vertex_array">
-      <UniqueIdentifier>{422184b5-0847-4ba0-8166-f4f600b52694}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl\shader">
-      <UniqueIdentifier>{e615ff5b-0e92-43ad-91d0-1b4eb74ea237}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl\texture">
-      <UniqueIdentifier>{143e0faf-8ca1-4654-8e58-d95c238ce32e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="frame_buffer">
-      <UniqueIdentifier>{06ec70fc-66fa-44ac-99c4-7cd108deeac3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl\buffer">
-      <UniqueIdentifier>{2b116303-85ef-4f69-a552-d6202efee637}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl\frame_buffer">
-      <UniqueIdentifier>{25f24afe-8a15-4ba2-bf86-3398c4b2f953}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl\utility">
-      <UniqueIdentifier>{17855e0d-9b42-4de3-b5b3-e8b78bc81f95}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\opengl\vertex_array">
-      <UniqueIdentifier>{7fdad68f-4d42-470e-94a9-c05b4dfb4cfc}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h">
       <Filter>buffer</Filter>
     </ClInclude>
@@ -272,9 +225,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\source\opengl\Context.cpp">
-      <Filter>api\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
       <Filter>api\opengl\frame_buffer</Filter>
     </ClCompile>
@@ -345,10 +295,58 @@
     <ClCompile Include="..\..\..\source\opengl\ComputeBuffer.cpp">
       <Filter>api\opengl\buffer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Context.cpp">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\include\unirender\opengl\Uniform.inl">
-      <Filter>api\opengl\shader</Filter>
-    </None>
+    <Filter Include="api">
+      <UniqueIdentifier>{79bd7e02-69e7-4c7b-aeb6-99cdd07c363c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl">
+      <UniqueIdentifier>{c1f5e5b0-066a-4614-aab2-212e4cc2a2f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="buffer">
+      <UniqueIdentifier>{34089f1d-61f9-42c1-b9f0-8d887185f009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{52f61eff-1d8c-4a00-b901-944ae06b2a1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="texture">
+      <UniqueIdentifier>{eddd6496-dd38-40a7-8435-089968172a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{6a6bbf7c-4c52-4fe4-9d22-a54043026d21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="render_state">
+      <UniqueIdentifier>{210c1170-fec1-462c-9a46-1f8bcfba9386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vertex_array">
+      <UniqueIdentifier>{9408de89-7420-4dcc-a754-795c964154d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\shader">
+      <UniqueIdentifier>{9b041cac-3fd5-4953-80fc-7f2b76f1f375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\texture">
+      <UniqueIdentifier>{fe1b889d-8213-4079-95ef-3ff93e4500d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="frame_buffer">
+      <UniqueIdentifier>{a3b08419-dc8f-4d66-9796-e5042c7f9f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\buffer">
+      <UniqueIdentifier>{97d8e9a8-3e43-4d96-a219-ed32fbdf6d74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\frame_buffer">
+      <UniqueIdentifier>{517d6010-52d8-4ed5-b65d-ff2133af5209}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\utility">
+      <UniqueIdentifier>{080f556a-9398-4d99-bfba-fd6afbca53b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\vertex_array">
+      <UniqueIdentifier>{4ee0991e-a202-4568-b909-e9a0e6d30d4c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\include\unirender\opengl\Uniform.inl" />
   </ItemGroup>
 </Project>

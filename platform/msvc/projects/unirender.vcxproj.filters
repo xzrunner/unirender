@@ -296,7 +296,7 @@
       <Filter>api\opengl\buffer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\Context.cpp">
-      <Filter>api\opengl\vertex_array</Filter>
+      <Filter>api\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -32,7 +32,22 @@ void Framebuffer::SetAttachment(AttachmentType type, TextureTarget target,
                                 const std::shared_ptr<ur::RenderBuffer>& rbo,
                                 int mipmap_level)
 {
-    auto idx = static_cast<size_t>(type);
+    size_t idx = 0;
+    switch (type)
+    {
+    case AttachmentType::Depth:
+        assert(m_attachments.size() >= 2);
+        idx = m_attachments.size() - 2;
+        break;
+    case AttachmentType::Stencil:
+        assert(m_attachments.size() >= 1);
+        idx = m_attachments.size() - 1;
+        break;
+    default:
+        assert(type >= AttachmentType::Color0
+            && type <= AttachmentType::Color15);
+        idx = static_cast<size_t>(type) - static_cast<size_t>(AttachmentType::Color0);
+    }
     assert(idx <= m_attachments.size());
     auto& atta = m_attachments[idx];
 

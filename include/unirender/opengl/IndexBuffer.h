@@ -25,6 +25,10 @@ public:
 
     virtual void Reset(int size_in_bytes) override;
 
+    virtual void SetDataType(IndexBufferDataType data_type) override {
+        m_data_type = data_type;
+    }
+
 private:
     Buffer m_buf;
 

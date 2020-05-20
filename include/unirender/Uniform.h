@@ -24,6 +24,7 @@ public:
     virtual void SetValue(const float* value, int n = 1) = 0;
 
     auto& GetName() const { return m_name; }
+    auto GetType() const { return m_type; }
 
 protected:
     std::string m_name;

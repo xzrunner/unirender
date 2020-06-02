@@ -11,7 +11,7 @@ class TextureSampler
 {
 public:
     TextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter,
-        TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy)
+        TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1)
         : m_min_filter(min_filter)
         , m_mag_filter(mag_filter)
         , m_wrap_s(wrap_s)

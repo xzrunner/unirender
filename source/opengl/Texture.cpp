@@ -57,6 +57,21 @@ void Texture::Upload(const void* pixels, int x, int y, int w, int h, int mipleve
         fmt.pixel_format, fmt.pixel_type, pixels);
 }
 
+void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
+{
+    auto target = TypeConverter::To(m_desc.target);
+
+    auto min_filter = TypeConverter::To(sampler->GetMinFilter());
+    auto mag_filter = TypeConverter::To(sampler->GetMagFilter());
+    auto wrap_s = TypeConverter::To(sampler->GetWrapS());
+    auto wrap_t = TypeConverter::To(sampler->GetWrapT());
+
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
+}
+
 bool Texture::ReadFromMemory(const ur::WritePixelBuffer& buf, int x, int y,
                              int w, int h, int row_alignment)
 {
@@ -156,21 +171,6 @@ void Texture::BindToLastTextureUnit()
 {
     glActiveTexture(m_last_tex_unit);
     Bind();
-}
-
-void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
-{
-    auto target = TypeConverter::To(m_desc.target);
-
-    auto min_filter = TypeConverter::To(sampler->GetMinFilter());
-    auto mag_filter = TypeConverter::To(sampler->GetMagFilter());
-    auto wrap_s = TypeConverter::To(sampler->GetWrapS());
-    auto wrap_t = TypeConverter::To(sampler->GetWrapT());
-
-    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
-    glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
-    glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
 }
 
 void Texture::VerifyRowAlignment(int row_alignment)

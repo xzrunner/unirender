@@ -147,6 +147,14 @@ void Context::SetTexture(size_t slot, const ur::TexturePtr& tex)
     }
 }
 
+void Context::SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler)
+{
+    auto unit = m_texture_units.GetUnit(slot);
+    if (unit) {
+        unit->SetSampler(sampler);
+    }
+}
+
 void Context::SetUnpackRowLength(int len)
 {
     if (len != m_unpack_row_length) {

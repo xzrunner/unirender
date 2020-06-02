@@ -38,6 +38,8 @@ public:
     virtual void Upload(const void* pixels, int x, int y, int w, int h,
         int miplevel = 0, int row_alignment = 4) override;
 
+    virtual void ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler) override;
+
     bool ReadFromMemory(const WritePixelBuffer& buf, int x, int y,
         int w, int h, int row_alignment);
     void ReadFromMemory(const void* pixels, ur::TextureFormat fmt,
@@ -46,8 +48,6 @@ public:
 
 private:
     void BindToLastTextureUnit();
-
-    void ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler);
 
     static void VerifyRowAlignment(int row_alignment);
 

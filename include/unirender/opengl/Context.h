@@ -34,7 +34,7 @@ public:
     virtual void GetViewport(int& x, int& y, int& w, int& h) const override;
 
     virtual void SetTexture(size_t slot, const ur::TexturePtr& tex) override;
-
+    virtual void SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler) override;
     virtual void SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb) override {
         m_set_framebuffer = fb;
     }

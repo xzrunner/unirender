@@ -17,6 +17,7 @@ struct Rectangle;
 class Framebuffer;
 class ShaderProgram;
 class TextureUnit;
+class TextureSampler;
 
 class Context
 {
@@ -31,6 +32,7 @@ public:
     virtual void GetViewport(int& x, int& y, int& w, int& h) const = 0;
 
     virtual void SetTexture(size_t slot, const ur::TexturePtr& tex) = 0;
+    virtual void SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler) = 0;
 
     virtual void SetFramebuffer(const std::shared_ptr<Framebuffer>& fbo) = 0;
     virtual std::shared_ptr<Framebuffer> GetFramebuffer() const = 0;

@@ -2,8 +2,12 @@
 
 #include "unirender/TextureFormat.h"
 
+#include <memory>
+
 namespace ur
 {
+
+class TextureSampler;
 
 class Texture
 {
@@ -22,6 +26,8 @@ public:
 
     virtual void Upload(const void* pixels, int x, int y, int w, int h,
         int miplevel = 0, int row_alignment = 4) = 0;
+
+    virtual void ApplySampler(const std::shared_ptr<TextureSampler>& sampler) = 0;
 
 }; // Texture
 

@@ -3,9 +3,10 @@
 namespace ur
 {
 
-VertexBufferAttribute::VertexBufferAttribute(ComponentDataType comp_data_type, int num_of_comps,
-                                             int offset_in_bytes, int stride_in_bytes)
-    : m_comp_data_type(comp_data_type)
+VertexBufferAttribute::VertexBufferAttribute(int loc, ComponentDataType comp_data_type,
+                                             int num_of_comps, int offset_in_bytes, int stride_in_bytes)
+    : m_loc(loc)
+    , m_comp_data_type(comp_data_type)
     , m_num_of_comps(num_of_comps)
     , m_offset_in_bytes(offset_in_bytes)
     , m_stride_in_bytes(stride_in_bytes)

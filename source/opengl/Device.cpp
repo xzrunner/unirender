@@ -351,43 +351,43 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
     {
     case VertexLayoutType::Pos:
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 0, 12
+            0, ur::ComponentDataType::Float, 3, 0, 12
         ));
         break;
     case VertexLayoutType::PosTex:
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 0, 20
+            0, ur::ComponentDataType::Float, 3, 0, 20
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 2, 12, 20
+            1, ur::ComponentDataType::Float, 2, 12, 20
         ));
         break;
     case VertexLayoutType::PosNormTex:
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 0, 32
+            0, ur::ComponentDataType::Float, 3, 0, 32
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 12, 32
+            1, ur::ComponentDataType::Float, 3, 12, 32
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 2, 24, 32
+            2, ur::ComponentDataType::Float, 2, 24, 32
         ));
         break;
     case VertexLayoutType::PosNormTexTB:
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 0, 56
+            0, ur::ComponentDataType::Float, 3, 0, 56
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 12, 56
+            1, ur::ComponentDataType::Float, 3, 12, 56
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 2, 24, 56
+            2, ur::ComponentDataType::Float, 2, 24, 56
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 32, 56
+            3, ur::ComponentDataType::Float, 3, 32, 56
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
-            ur::ComponentDataType::Float, 3, 44, 56
+            4, ur::ComponentDataType::Float, 3, 44, 56
         ));
         break;
     }

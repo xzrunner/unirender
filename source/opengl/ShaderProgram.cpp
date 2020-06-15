@@ -96,6 +96,16 @@ int ShaderProgram::QueryTexSlot(const std::string& name) const
     return -1;
 }
 
+int ShaderProgram::QueryAttrLoc(const std::string& name) const
+{
+    for (auto& va : m_vertex_attributes) {
+        if (va.name == name) {
+            return va.location;
+        }
+    }
+    return -1;
+}
+
 bool ShaderProgram::CheckStatus() const
 {
     glValidateProgram(m_id);

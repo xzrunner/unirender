@@ -68,9 +68,10 @@ void VertexBufferAttributes::Attach(int index)
     auto& attr = m_attrs[index].attr;
     m_vbuf->Bind();
 
-    glEnableVertexAttribArray(index);
+    GLuint loc = attr->GetLocation();
+    glEnableVertexAttribArray(loc);
     glVertexAttribPointer(
-        index,
+        loc,
         attr->GetNumOfComps(),
         TypeConverter::To(attr->GetCompDataType()),
         attr->GetNormalized(),

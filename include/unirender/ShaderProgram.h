@@ -22,6 +22,7 @@ public:
     virtual int GetComputeWorkGroupSize() const = 0;
 
     virtual int QueryTexSlot(const std::string& name) const = 0;
+    virtual int QueryAttrLoc(const std::string& name) const = 0;
 
     void AddUniform(const std::string& name,
         const std::shared_ptr<Uniform>& uniform);

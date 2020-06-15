@@ -31,6 +31,7 @@ public:
     virtual int GetComputeWorkGroupSize() const override;
 
     virtual int QueryTexSlot(const std::string& name) const override;
+    virtual int QueryAttrLoc(const std::string& name) const override;
 
 private:
     bool CheckStatus();

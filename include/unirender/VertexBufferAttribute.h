@@ -12,8 +12,10 @@ class VertexBuffer;
 class VertexBufferAttribute
 {
 public:
-    VertexBufferAttribute(ComponentDataType comp_data_type, int num_of_comps,
-        int offset_in_bytes, int stride_in_bytes);
+    VertexBufferAttribute(int loc, ComponentDataType comp_data_type, 
+        int num_of_comps, int offset_in_bytes, int stride_in_bytes);
+
+    auto GetLocation() const { return m_loc; }
 
     auto GetCompDataType() const { return m_comp_data_type; }
     auto GetNumOfComps() const { return m_num_of_comps; }
@@ -24,6 +26,8 @@ public:
     auto GetStrideInBytes() const { return m_stride_in_bytes; }
 
 private:
+    int m_loc = -1;
+
     ComponentDataType m_comp_data_type;
     int m_num_of_comps = 0;
 

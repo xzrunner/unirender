@@ -39,7 +39,7 @@ private:
     void InitVertexAttributes();
     void InitUniforms();
 
-    void BindTextures();
+    void BindTextures() const;
 
 private:
     GLuint m_id = 0;

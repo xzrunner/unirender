@@ -284,10 +284,12 @@ void ShaderProgram::InitUniforms()
         AddUniform(name, uniform);
     }
 
+    BindTextures();
+
     delete[] name;
 }
 
-void ShaderProgram::BindTextures()
+void ShaderProgram::BindTextures() const
 {
     for (int i = 0, n = m_tex_uniforms.size(); i < n; ++i) {
         m_tex_uniforms[i]->SetValue(&i, 1);

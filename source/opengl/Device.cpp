@@ -46,7 +46,13 @@ Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const
         break;
     case PrimitiveType::Cube:
     {
-
+        if (m_cube_va[layout_idx]) {
+            return m_cube_va[layout_idx];
+        } else{
+            auto va = CreateCubeVertexArray(layout);
+            m_cube_va[layout_idx] = va;
+            return va;
+        }
     }
         break;
     }
@@ -332,6 +338,213 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
             pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
         };
     }
+        break;
+    default:
+        assert(0);
+    }
+
+    auto va = CreateVertexArray();
+
+    auto usage = ur::BufferUsageHint::StaticDraw;
+
+    auto vbuf_sz = sizeof(float) * vertices.size();
+    auto vbuf = CreateVertexBuffer(ur::BufferUsageHint::StaticDraw, vbuf_sz);
+    vbuf->ReadFromMemory(vertices.data(), vbuf_sz, 0);
+    va->SetVertexBuffer(vbuf);
+
+    std::vector<std::shared_ptr<ur::VertexBufferAttribute>> vbuf_attrs;
+    switch (layout)
+    {
+    case VertexLayoutType::Pos:
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            0, ur::ComponentDataType::Float, 3, 0, 12
+        ));
+        break;
+    case VertexLayoutType::PosTex:
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            0, ur::ComponentDataType::Float, 3, 0, 20
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            1, ur::ComponentDataType::Float, 2, 12, 20
+        ));
+        break;
+    case VertexLayoutType::PosNormTex:
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            0, ur::ComponentDataType::Float, 3, 0, 32
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            1, ur::ComponentDataType::Float, 3, 12, 32
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            2, ur::ComponentDataType::Float, 2, 24, 32
+        ));
+        break;
+    case VertexLayoutType::PosNormTexTB:
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            0, ur::ComponentDataType::Float, 3, 0, 56
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            1, ur::ComponentDataType::Float, 3, 12, 56
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            2, ur::ComponentDataType::Float, 2, 24, 56
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            3, ur::ComponentDataType::Float, 3, 32, 56
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            4, ur::ComponentDataType::Float, 3, 44, 56
+        ));
+        break;
+    }
+    va->SetVertexBufferAttrs(vbuf_attrs);
+
+    return va;
+}
+
+std::shared_ptr<ur::VertexArray>
+Device::CreateCubeVertexArray(VertexLayoutType layout) const
+{
+    std::vector<float> vertices;
+    switch (layout)
+    {
+    case VertexLayoutType::Pos:
+        vertices = {
+            // back face
+            -1.0f, -1.0f, -1.0f, // bottom-left
+             1.0f,  1.0f, -1.0f, // top-right
+             1.0f, -1.0f, -1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, // top-right
+            -1.0f, -1.0f, -1.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f, // bottom-left
+             1.0f, -1.0f,  1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f, // top-right
+             1.0f,  1.0f,  1.0f, // top-right
+            -1.0f,  1.0f,  1.0f, // top-left
+            -1.0f, -1.0f,  1.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, // top-right
+            -1.0f,  1.0f, -1.0f, // top-left
+            -1.0f, -1.0f, -1.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f, // top-left
+             1.0f, -1.0f, -1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, // top-right
+             1.0f, -1.0f, -1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f, // top-left
+             1.0f, -1.0f,  1.0f, // bottom-left
+            // bottom face
+            -1.0f, -1.0f, -1.0f, // top-right
+             1.0f, -1.0f, -1.0f, // top-left
+             1.0f, -1.0f,  1.0f, // bottom-left
+             1.0f, -1.0f,  1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f, // top-left
+             1.0f,  1.0f , 1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, // top-right
+             1.0f,  1.0f,  1.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f, // top-left
+            -1.0f,  1.0f,  1.0f  // bottom-left
+        };
+        break;
+    case VertexLayoutType::PosTex:
+        vertices = {
+            // back face
+            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f,  1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f, 1.0f, 1.0f, // top-right
+            -1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // top-left
+            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-right
+            -1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-left
+            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            // bottom face
+            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f, 1.0f, 1.0f, // top-left
+             1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, // top-left
+             1.0f,  1.0f , 1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, // top-left
+            -1.0f,  1.0f,  1.0f, 0.0f, 0.0f  // bottom-left
+        };
+        break;
+    case VertexLayoutType::PosNormTex:
+        vertices = {
+            // back face
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
+            // bottom face
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+             1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
+        };
         break;
     default:
         assert(0);

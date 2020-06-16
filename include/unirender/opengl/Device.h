@@ -74,6 +74,8 @@ private:
 
     std::shared_ptr<VertexArray>
         CreateQuadVertexArray(VertexLayoutType type) const;
+    std::shared_ptr<VertexArray>
+        CreateCubeVertexArray(VertexLayoutType type) const;
 
 private:
     int m_max_num_vert_attrs        = 0;

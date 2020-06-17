@@ -1,6 +1,7 @@
 #include "unirender/Factory.h"
 #include "unirender/opengl/Device.h"
 #include "unirender/opengl/Context.h"
+#include "unirender/vulkan/Device.h"
 
 namespace ur
 {
@@ -8,6 +9,7 @@ namespace ur
 std::shared_ptr<Device> CreateDeviceGL()
 {
     return std::make_shared<opengl::Device>();
+    //return std::make_shared<vulkan::Device>();
 }
 
 std::shared_ptr<Context> CreateContextGL(const Device& device)

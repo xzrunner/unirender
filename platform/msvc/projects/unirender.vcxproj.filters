@@ -223,6 +223,12 @@
     <ClInclude Include="..\..\..\include\unirender\VertexLayoutType.h">
       <Filter>vertex_array</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Context.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -298,6 +304,12 @@
     <ClCompile Include="..\..\..\source\opengl\Context.cpp">
       <Filter>api\opengl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Device.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Context.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="api">
@@ -344,6 +356,9 @@
     </Filter>
     <Filter Include="api\opengl\vertex_array">
       <UniqueIdentifier>{4ee0991e-a202-4568-b909-e9a0e6d30d4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan">
+      <UniqueIdentifier>{151f897a-1e40-451f-a519-042eebf6e722}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

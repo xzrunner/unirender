@@ -219,6 +219,9 @@ void ShaderProgram::InitUniforms()
         case GL_FLOAT_VEC4:
             uniform = std::make_shared<Uniform<Float4>>(name, uniform_size, location);
             break;
+        case GL_BOOL:
+            uniform = std::make_shared<Uniform<UInt1>>(name, uniform_size, location);
+            break;
         case GL_INT:
             uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
             break;

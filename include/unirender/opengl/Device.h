@@ -57,6 +57,8 @@ public:
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const override;
     virtual std::shared_ptr<ur::Texture>
         CreateTexture(const Bitmap& bmp, TextureFormat format) const override;
+    virtual std::shared_ptr<ur::Texture>
+        CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const override;
     virtual std::shared_ptr<TextureSampler>
         CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const override;
     virtual std::shared_ptr<TextureSampler>

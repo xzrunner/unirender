@@ -15,7 +15,29 @@
 
 #include <SM_Vector.h>
 
+#include <array>
+#include <vector>
+
 #include <assert.h>
+
+namespace
+{
+
+void revery_y(uint8_t* pixels, int width, int height, int channel)
+{
+    int line_sz = width * channel;
+    std::vector<uint8_t> buf(line_sz, 0);
+    int bpos = 0, epos = line_sz * (height - 1);
+    for (int i = 0, n = (int)(floorf(height / 2.0f)); i < n; ++i) {
+        memcpy(buf.data(), &pixels[bpos], line_sz);
+        memcpy(&pixels[bpos], &pixels[epos], line_sz);
+        memcpy(&pixels[epos], buf.data(), line_sz);
+        bpos += line_sz;
+        epos -= line_sz;
+    }
+}
+
+}
 
 namespace ur
 {
@@ -146,6 +168,47 @@ Device::CreateTexture(const Bitmap& bmp, ur::TextureFormat format) const
 
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
     tex->ReadFromMemory(*pbuf, 0, 0, bmp.GetWidth(), bmp.GetHeight(), 4);
+
+    return tex;
+}
+
+std::shared_ptr<ur::Texture>
+Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
+{
+    ur::TextureDescription desc;
+    desc.target = ur::TextureTarget::TextureCubeMap;
+    desc.format = ur::TextureFormat::RGB;
+
+    WritePixelBuffer::UnBind();
+
+    auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
+    for (int i = 0; i < 6; ++i)
+    {
+        auto& src = textures[i];
+
+        auto w = src->GetWidth();
+        auto h = src->GetHeight();
+
+        //glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+        //glCopyImageSubData(src->GetTexID(), GL_TEXTURE_2D, 0, 0, 0, 0, tex->GetTexID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0, src->GetWidth(), src->GetHeight(), 0);
+
+        auto fmt = src->GetFormat();
+        assert(fmt == ur::TextureFormat::RGB);
+
+        GLubyte* pixels = new GLubyte[h * h * 3];
+        glBindTexture(GL_TEXTURE_2D, src->GetTexID());
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        revery_y(pixels, w, h, 3);
+
+        glBindTexture(GL_TEXTURE_CUBE_MAP, tex->GetTexID());
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        delete[] pixels;
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return tex;
 }

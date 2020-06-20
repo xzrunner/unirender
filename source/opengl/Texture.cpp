@@ -24,9 +24,12 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
     WritePixelBuffer::UnBind();
     BindToLastTextureUnit();
 
-    TextureFormat fmt(desc.format);
-    glTexImage2D(TypeConverter::To(desc.target), 0, fmt.internal_format,
-        desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+    if (desc.width != 0 && desc.height != 0)
+    {
+        TextureFormat fmt(desc.format);
+        glTexImage2D(TypeConverter::To(desc.target), 0, fmt.internal_format,
+            desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+    }
 
     ApplySampler(device.GetTextureSampler(Device::TextureSamplerType::LinearClamp));
 }

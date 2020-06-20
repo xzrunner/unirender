@@ -8,6 +8,7 @@
 #include "unirender/InternalFormat.h"
 #include "unirender/AttachmentType.h"
 #include "unirender/VertexLayoutType.h"
+#include "unirender/typedef.h"
 
 #include <memory>
 #include <string>
@@ -73,6 +74,8 @@ public:
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const = 0;
     virtual std::shared_ptr<Texture>
         CreateTexture(const Bitmap& bmp, TextureFormat format) const = 0;
+	virtual std::shared_ptr<Texture>
+		CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const = 0;
     virtual std::shared_ptr<TextureSampler>
         CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const = 0;
 

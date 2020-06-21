@@ -7,6 +7,7 @@ enum class VertexLayoutType
 {
     Pos,
     PosTex,
+    PosNorm,
     PosNormTex,
     PosNormTexTB,
 

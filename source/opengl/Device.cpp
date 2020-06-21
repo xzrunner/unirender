@@ -325,6 +325,15 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
             1.0f,  p_min, 0.0f, 1.0f, 0.0f,
         };
         break;
+    case VertexLayoutType::PosNorm:
+        vertices = {
+            // positions        // normal         
+            p_min, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f, 
+            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f, 
+            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f, 
+        };
+        break;
     case VertexLayoutType::PosNormTex:
         vertices = {
             // positions        // normal         // texture Coords
@@ -429,6 +438,14 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
             1, ur::ComponentDataType::Float, 2, 12, 20
+        ));
+        break;
+    case VertexLayoutType::PosNorm:
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            0, ur::ComponentDataType::Float, 3, 0, 24
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            1, ur::ComponentDataType::Float, 3, 12, 24
         ));
         break;
     case VertexLayoutType::PosNormTex:
@@ -563,6 +580,52 @@ Device::CreateCubeVertexArray(VertexLayoutType layout) const
             -1.0f,  1.0f,  1.0f, 0.0f, 0.0f  // bottom-left
         };
         break;
+    case VertexLayoutType::PosNorm:
+        vertices = {
+            // back face
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // bottom-left
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // top-right
+            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // bottom-left
+            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // top-left
+            // front face
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-right
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-right
+            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
+            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-left
+            // left face
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // top-right
+            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, // top-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, // bottom-left
+            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // bottom-right
+            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // top-right
+            // right face
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, // top-left
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, // top-right
+             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, // bottom-right
+             1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, // top-left
+             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, // bottom-left
+            // bottom face
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, // top-right
+             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, // top-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-left
+             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-left
+            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-right
+            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, // top-right
+            // top face
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, // top-left
+             1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
+             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, // top-right
+             1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
+            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, // top-left
+            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f  // bottom-left
+        };
+        break;
     case VertexLayoutType::PosNormTex:
         vertices = {
             // back face
@@ -636,6 +699,14 @@ Device::CreateCubeVertexArray(VertexLayoutType layout) const
         ));
         vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
             1, ur::ComponentDataType::Float, 2, 12, 20
+        ));
+        break;
+    case VertexLayoutType::PosNorm:
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            0, ur::ComponentDataType::Float, 3, 0, 24
+        ));
+        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+            1, ur::ComponentDataType::Float, 3, 12, 24
         ));
         break;
     case VertexLayoutType::PosNormTex:

@@ -5,6 +5,20 @@
 
 #include <assert.h>
 
+namespace
+{
+
+bool str_has_ending(const std::string& str, const std::string& end) 
+{
+    if (str.length() >= end.length()) {
+        return (0 == str.compare (str.length() - end.length(), end.length(), end));
+    } else {
+        return false;
+    }
+}
+
+}
+
 namespace ur
 {
 namespace opengl
@@ -192,7 +206,7 @@ void ShaderProgram::InitUniforms()
     GLint uniform_name_max_length;
     glGetProgramiv(m_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_name_max_length);
 
-    GLchar* name = new char[uniform_name_max_length];
+    GLchar* name_buf = new char[uniform_name_max_length];
 
     for (int i = 0; i < number_of_uniforms; ++i)
     {
@@ -200,9 +214,16 @@ void ShaderProgram::InitUniforms()
         GLint uniform_size;
         GLenum uniform_type;
         glGetActiveUniform(m_id, i, uniform_name_max_length,
-            &uniform_name_length, &uniform_size, &uniform_type, name);
+            &uniform_name_length, &uniform_size, &uniform_type, name_buf);
 
-        auto location = glGetUniformLocation(m_id, name);
+		std::string name = name_buf;
+		if (uniform_size > 1)
+		{
+			assert(str_has_ending(name, "[0]"));
+			name = name.substr(0, name.size() - 3);
+		}
+
+        auto location = glGetUniformLocation(m_id, name.c_str());
 
         std::shared_ptr<ur::Uniform> uniform = nullptr;
         switch (uniform_type)
@@ -289,7 +310,7 @@ void ShaderProgram::InitUniforms()
 
     BindTextures();
 
-    delete[] name;
+    delete[] name_buf;
 }
 
 void ShaderProgram::BindTextures() const

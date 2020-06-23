@@ -9,8 +9,6 @@
 namespace ur
 {
 
-class Bitmap;
-
 namespace opengl
 {
 

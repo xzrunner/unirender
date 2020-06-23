@@ -11,7 +11,6 @@
 #include "unirender/opengl/RenderBuffer.h"
 #include "unirender/opengl/ComputeBuffer.h"
 #include "unirender/opengl/TextureFormat.h"
-#include "unirender/Bitmap.h"
 
 #include <SM_Vector.h>
 
@@ -154,20 +153,19 @@ Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 }
 
 std::shared_ptr<ur::Texture>
-Device::CreateTexture(const Bitmap& bmp, ur::TextureFormat format) const
+Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, const void* buf, size_t buf_sz) const
 {
-    const auto sz = bmp.CalcSizeInBytes();
-    auto pbuf = CreateWritePixelBuffer(ur::BufferUsageHint::StreamDraw, sz);
-    pbuf->ReadFromMemory(bmp.GetPixels(), sz, 0);
+    auto pbuf = CreateWritePixelBuffer(ur::BufferUsageHint::StreamDraw, buf_sz);
+    pbuf->ReadFromMemory(buf, buf_sz, 0);
 
     TextureDescription desc;
     desc.target = ur::TextureTarget::Texture2D;
-    desc.width  = bmp.GetWidth();
-    desc.height = bmp.GetHeight();
+    desc.width  = width;
+    desc.height = height;
     desc.format = format;
 
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
-    tex->ReadFromMemory(*pbuf, 0, 0, bmp.GetWidth(), bmp.GetHeight(), 4);
+    tex->ReadFromMemory(*pbuf, 0, 0, width, height, 4);
 
     return tex;
 }

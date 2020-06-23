@@ -1,6 +1,5 @@
 #include "unirender/opengl/PixelBuffer.h"
 #include "unirender/opengl/TypeConverter.h"
-#include "unirender/Bitmap.h"
 
 #include <assert.h>
 
@@ -9,8 +8,7 @@ namespace ur
 namespace opengl
 {
 
-PixelBuffer::PixelBuffer(BufferTarget type, BufferUsageHint hint,
-               int size_in_bytes)
+PixelBuffer::PixelBuffer(BufferTarget type, BufferUsageHint hint, int size_in_bytes)
     : m_size_in_bytes(size_in_bytes)
     , m_type(type)
     , m_usage_hint(hint)

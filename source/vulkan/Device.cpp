@@ -1,7 +1,4 @@
-
 #include "unirender/vulkan/Device.h"
-
-#include "unirender/Bitmap.h"
 
 #include <SM_Vector.h>
 
@@ -93,7 +90,7 @@ Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 }
 
 std::shared_ptr<ur::Texture>
-Device::CreateTexture(const Bitmap& bmp, ur::TextureFormat format) const
+Device::CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz) const
 {
     return nullptr;
 }

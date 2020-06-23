@@ -288,9 +288,6 @@
     <ClCompile Include="..\..\..\source\opengl\RenderBuffer.cpp">
       <Filter>api\opengl\buffer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\Bitmap.cpp">
-      <Filter>utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\PixelBuffer.cpp">
       <Filter>api\opengl\buffer</Filter>
     </ClCompile>
@@ -364,6 +361,9 @@
   <ItemGroup>
     <None Include="..\..\..\include\unirender\opengl\Uniform.inl">
       <Filter>shader</Filter>
+    </None>
+    <None Include="..\..\..\include\unirender\Bitmap.inl">
+      <Filter>utility</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -93,7 +93,6 @@
     <ClInclude Include="..\..\..\include\unirender\WritePixelBuffer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\source\Bitmap.cpp" />
     <ClCompile Include="..\..\..\source\Factory.cpp" />
     <ClCompile Include="..\..\..\source\opengl\Buffer.cpp" />
     <ClCompile Include="..\..\..\source\opengl\ComputeBuffer.cpp" />
@@ -155,6 +154,7 @@
     <ClCompile Include="..\..\..\source\vulkan\Device.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\include\unirender\Bitmap.inl" />
     <None Include="..\..\..\include\unirender\opengl\Uniform.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

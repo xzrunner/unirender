@@ -183,6 +183,9 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
     for (int i = 0; i < 6; ++i)
     {
         auto& src = textures[i];
+        if (!src) {
+            continue;
+        }
 
         auto w = src->GetWidth();
         auto h = src->GetHeight();

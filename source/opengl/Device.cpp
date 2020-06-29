@@ -22,9 +22,9 @@
 namespace
 {
 
-void revery_y(uint8_t* pixels, int width, int height, int channel)
+void revert_y(uint8_t* pixels, int width, int height, int channel, int pixel_size)
 {
-    int line_sz = width * channel;
+    int line_sz = width * channel * pixel_size;
     std::vector<uint8_t> buf(line_sz, 0);
     int bpos = 0, epos = line_sz * (height - 1);
     for (int i = 0, n = (int)(floorf(height / 2.0f)); i < n; ++i) {
@@ -194,16 +194,35 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
         //glCopyImageSubData(src->GetTexID(), GL_TEXTURE_2D, 0, 0, 0, 0, tex->GetTexID(), GL_TEXTURE_CUBE_MAP, 0, 0, 0, 0, src->GetWidth(), src->GetHeight(), 0);
 
         auto fmt = src->GetFormat();
-        assert(fmt == ur::TextureFormat::RGB);
+		switch (fmt)
+		{
+		case ur::TextureFormat::RGB:
+		{
+			GLubyte* pixels = new GLubyte[w * h * 3];
+			glBindTexture(GL_TEXTURE_2D, src->GetTexID());
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+			revert_y(pixels, w, h, 3, 1);
 
-        GLubyte* pixels = new GLubyte[h * h * 3];
-        glBindTexture(GL_TEXTURE_2D, src->GetTexID());
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-        revery_y(pixels, w, h, 3);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, tex->GetTexID());
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+			delete[] pixels;
+		}
+			break;
+		case ur::TextureFormat::RGB16F:
+		{
+			GLfloat* pixels = new GLfloat[w * h * 3];
+			glBindTexture(GL_TEXTURE_2D, src->GetTexID());
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, pixels);
+			revert_y((GLubyte*)(pixels), w, h, 3, 4);
 
-        glBindTexture(GL_TEXTURE_CUBE_MAP, tex->GetTexID());
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-        delete[] pixels;
+			glBindTexture(GL_TEXTURE_CUBE_MAP, tex->GetTexID());
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB32F, w, h, 0, GL_RGB, GL_FLOAT, pixels);
+			delete[] pixels;
+		}
+			break;
+		default:
+			assert(0);
+		}
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -328,11 +347,11 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
         break;
     case VertexLayoutType::PosNorm:
         vertices = {
-            // positions        // normal         
+            // positions        // normal
             p_min, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
-            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f, 
-            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f, 
-            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f, 
+            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f,
         };
         break;
     case VertexLayoutType::PosNormTex:

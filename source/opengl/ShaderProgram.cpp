@@ -8,7 +8,7 @@
 namespace
 {
 
-bool str_has_ending(const std::string& str, const std::string& end) 
+bool str_has_ending(const std::string& str, const std::string& end)
 {
     if (str.length() >= end.length()) {
         return (0 == str.compare (str.length() - end.length(), end.length(), end));
@@ -122,24 +122,26 @@ int ShaderProgram::QueryAttrLoc(const std::string& name) const
 
 bool ShaderProgram::CheckStatus() const
 {
-    glValidateProgram(m_id);
+    //glValidateProgram(m_id);
 
-    GLint status;
-    glGetProgramiv(m_id, GL_VALIDATE_STATUS, &status);
-    if (status == 0) 
-    {
-        char buf[1024];
-        GLint len;
-        glGetProgramInfoLog(m_id, 1024, &len, buf);
+    //GLint status;
+    //glGetProgramiv(m_id, GL_VALIDATE_STATUS, &status);
+    //if (status == 0)
+    //{
+    //    char buf[1024];
+    //    GLint len;
+    //    glGetProgramInfoLog(m_id, 1024, &len, buf);
 
-        printf("shader error:%s\n", buf);
+    //    printf("shader error:%s\n", buf);
 
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    //    return false;
+    //}
+    //else
+    //{
+    //    return true;
+    //}
+
+	return true;
 }
 
 void ShaderProgram::InitVertexAttributes()

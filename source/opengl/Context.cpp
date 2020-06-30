@@ -308,7 +308,7 @@ void Context::ApplyFramebuffer()
     if (m_set_framebuffer)
     {
         std::static_pointer_cast<opengl::Framebuffer>(m_set_framebuffer)->Clean();
-        assert(CheckRenderTargetStatus());
+        /*assert*/(CheckRenderTargetStatus());
     }
 }
 

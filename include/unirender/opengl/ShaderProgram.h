@@ -34,7 +34,7 @@ public:
     virtual int QueryAttrLoc(const std::string& name) const override;
 
 private:
-    bool CheckStatus();
+    bool CheckLinkStatus();
 
     void InitVertexAttributes();
     void InitUniforms();

@@ -15,7 +15,7 @@ ShaderObject::ShaderObject(ShaderType type, const std::string& source)
 
     glCompileShader(m_id);
 
-    CheckStatus(source);
+    CheckCompileStatus(source);
 }
 
 ShaderObject::~ShaderObject()
@@ -30,7 +30,7 @@ void ShaderObject::Attach(GLuint prograpm)
     }
 }
 
-bool ShaderObject::CheckStatus(const std::string& source)
+bool ShaderObject::CheckCompileStatus(const std::string& source)
 {
     GLint status;
     glGetShaderiv(m_id, GL_COMPILE_STATUS, &status);

@@ -46,7 +46,7 @@ ShaderProgram::ShaderProgram(const std::string& vs, const std::string& fs,
     }
 
     glLinkProgram(m_id);
-    CheckStatus();
+    CheckLinkStatus();
 
     InitVertexAttributes();
     InitUniforms();
@@ -60,7 +60,7 @@ ShaderProgram::ShaderProgram(const std::string& cs)
     m_cs->Attach(m_id);
 
     glLinkProgram(m_id);
-    CheckStatus();
+    CheckLinkStatus();
 }
 
 ShaderProgram::~ShaderProgram()
@@ -73,7 +73,7 @@ void ShaderProgram::Bind() const
     glUseProgram(m_id);
 }
 
-bool ShaderProgram::CheckStatus()
+bool ShaderProgram::CheckLinkStatus()
 {
     GLint status;
     glGetProgramiv(m_id, GL_LINK_STATUS, &status);
@@ -124,9 +124,22 @@ bool ShaderProgram::CheckStatus() const
 {
     glValidateProgram(m_id);
 
-    GLint validate_status;
-    glGetProgramiv(m_id, GL_VALIDATE_STATUS, &validate_status);
-    return validate_status != 0;
+    GLint status;
+    glGetProgramiv(m_id, GL_VALIDATE_STATUS, &status);
+    if (status == 0) 
+    {
+        char buf[1024];
+        GLint len;
+        glGetProgramInfoLog(m_id, 1024, &len, buf);
+
+        printf("shader error:%s\n", buf);
+
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 void ShaderProgram::InitVertexAttributes()

@@ -19,7 +19,7 @@ public:
     void Attach(GLuint prograpm);
 
 private:
-    bool CheckStatus(const std::string& source);
+    bool CheckCompileStatus(const std::string& source);
 
 private:
     GLuint m_id = 0;

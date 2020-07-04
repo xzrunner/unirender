@@ -93,8 +93,7 @@ void Framebuffer::Clean()
             atta.Attach();
         }
 
-        if (atta.tex &&
-            atta.type >= AttachmentType::Color0 &&
+        if (atta.type >= AttachmentType::Color0 &&
             atta.type <= AttachmentType::Color15) {
             col_bufs.push_back(TypeConverter::To(atta.type));
         }

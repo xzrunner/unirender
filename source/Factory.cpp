@@ -2,19 +2,39 @@
 #include "unirender/opengl/Device.h"
 #include "unirender/opengl/Context.h"
 #include "unirender/vulkan/Device.h"
+#include "unirender/vulkan/Context.h"
 
 namespace ur
 {
 
-std::shared_ptr<Device> CreateDeviceGL()
+std::shared_ptr<Device> CreateDevice(APIType type, void* hwnd)
 {
-    return std::make_shared<opengl::Device>();
-    //return std::make_shared<vulkan::Device>();
+    std::shared_ptr<Device> ret = nullptr;
+    switch (type)
+    {
+    case APIType::OpenGL:
+        ret = std::make_shared<opengl::Device>();
+        break;
+    case APIType::Vulkan:
+        ret = std::make_shared<vulkan::Device>(hwnd);
+        break;
+    }
+    return ret;
 }
 
-std::shared_ptr<Context> CreateContextGL(const Device& device)
+std::shared_ptr<Context> CreateContext(APIType type, const Device& device)
 {
-    return std::make_shared<opengl::Context>(device);
+    std::shared_ptr<Context> ret = nullptr;
+    switch (type)
+    {
+    case APIType::OpenGL:
+        ret = std::make_shared<opengl::Context>(device);
+        break;
+    case APIType::Vulkan:
+        ret = std::make_shared<vulkan::Context>(device);
+        break;
+    }
+    return ret;
 }
 
 RenderState DefaultRenderState2D()

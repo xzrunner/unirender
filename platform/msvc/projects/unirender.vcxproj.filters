@@ -229,6 +229,75 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\Context.h">
       <Filter>api\vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Swapchain.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\RenderPass.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorPool.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSet.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineLayout.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VertexArray.h">
+      <Filter>api\vulkan\vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h">
+      <Filter>api\vulkan\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VertexBuffer.h">
+      <Filter>api\vulkan\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderProgram.h">
+      <Filter>api\vulkan\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Texture.h">
+      <Filter>api\vulkan\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DeviceInfo.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ContextInfo.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineCache.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Pipeline.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Utility.h">
+      <Filter>api\vulkan\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderObject.h">
+      <Filter>api\vulkan\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\TypeConverter.h">
+      <Filter>api\vulkan\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\UniformBuffer.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -307,6 +376,72 @@
     <ClCompile Include="..\..\..\source\vulkan\Context.cpp">
       <Filter>api\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandPool.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Swapchain.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\RenderPass.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorPool.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorSet.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorSetLayout.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PipelineLayout.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VertexArray.cpp">
+      <Filter>api\vulkan\vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\IndexBuffer.cpp">
+      <Filter>api\vulkan\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VertexBuffer.cpp">
+      <Filter>api\vulkan\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ShaderProgram.cpp">
+      <Filter>api\vulkan\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Texture.cpp">
+      <Filter>api\vulkan\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\FrameBuffers.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DeviceInfo.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ContextInfo.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PipelineCache.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Pipeline.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Utility.cpp">
+      <Filter>api\vulkan\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ShaderObject.cpp">
+      <Filter>api\vulkan\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\UniformBuffer.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandBuffers.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="api">
@@ -356,6 +491,24 @@
     </Filter>
     <Filter Include="api\vulkan">
       <UniqueIdentifier>{151f897a-1e40-451f-a519-042eebf6e722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\vertex_array">
+      <UniqueIdentifier>{a53f959f-73c4-49f8-8039-1a4b7cf78115}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\buffer">
+      <UniqueIdentifier>{75682c33-c373-4a5b-95ff-07060b8c37cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\z_component">
+      <UniqueIdentifier>{e90db306-cead-452c-a91c-3c75625b0bf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\shader">
+      <UniqueIdentifier>{5b00a25d-761a-44ef-8a6c-cb49507ad422}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\texture">
+      <UniqueIdentifier>{5752e5f3-704b-442e-93e4-d00190e6855f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\utility">
+      <UniqueIdentifier>{6deb3e8b-5c15-4c78-9b31-f54414c3586e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

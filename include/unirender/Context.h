@@ -22,6 +22,8 @@ class TextureSampler;
 class Context
 {
 public:
+    virtual ~Context() {}
+
     virtual void Clear(const ClearState& clear_state) = 0;
     virtual void Draw(PrimitiveType prim_type, int offset, int count,
         const DrawState& draw, const void* scene) = 0;

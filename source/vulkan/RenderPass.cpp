@@ -32,7 +32,7 @@ void RenderPass::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info,
     VkResult res;
     /* Need attachments for render target and depth buffer */
     VkAttachmentDescription attachments[2];
-    attachments[0].format = dev_info.format;
+    attachments[0].format = ctx_info.format;
     attachments[0].samples = NUM_SAMPLES;
     attachments[0].loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
     attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;

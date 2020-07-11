@@ -16,9 +16,9 @@ namespace ur
 namespace vulkan
 {
 
-Device::Device(void* hwnd)
+Device::Device()
 {
-    m_info.Init(hwnd);
+    m_info.Init();
 }
 
 std::shared_ptr<ur::VertexArray>

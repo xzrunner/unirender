@@ -10,17 +10,24 @@ namespace ur
 namespace vulkan
 {
 
-void DeviceInfo::Init(void* hwnd)
+void DeviceInfo::Init()
 {
     InitGlobalLayerProperties();
     InitInstanceExtensionNames();
     InitDeviceExtensionNames();
     InitInstance("unirender-vulkan");
     InitEnumerateDevice();
-    InitWindowSize(20, 20);
-    InitSwapchainExtension(hwnd);
-    InitDevice();
-    InitDeviceQueue();
+}
+
+void DeviceInfo::InitDeviceAndQueue(uint32_t graphics_queue_family_index, 
+                                    uint32_t present_queue_family_index)
+{
+    if (device != VK_NULL_HANDLE) {
+        return;
+    }
+
+    InitDevice(graphics_queue_family_index);
+    InitDeviceQueue(graphics_queue_family_index, present_queue_family_index);
 }
 
 VkResult DeviceInfo::InitGlobalLayerProperties()
@@ -155,91 +162,7 @@ VkResult DeviceInfo::InitEnumerateDevice(uint32_t gpu_count)
     return res;
 }
 
-void DeviceInfo::InitWindowSize(int width, int height)
-{
-    this->width = width;
-    this->height = height;
-}
-
-void DeviceInfo::InitSwapchainExtension(void* hwnd)
-{
-    /* DEPENDS on init_connection() and init_window() */
-
-    VkResult res;
-
-// Construct the surface description:
-#ifdef _WIN32
-    VkWin32SurfaceCreateInfoKHR createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    createInfo.pNext = NULL;
-    createInfo.hinstance = GetModuleHandle(nullptr);
-    createInfo.hwnd = (HWND)hwnd;
-    res = vkCreateWin32SurfaceKHR(inst, &createInfo, NULL, &surface);
-#else
-    return;
-#endif  // _WIN32
-    assert(res == VK_SUCCESS);
-
-    // Iterate over each queue to learn whether it supports presenting:
-    VkBool32 *pSupportsPresent = (VkBool32 *)malloc(queue_family_count * sizeof(VkBool32));
-    for (uint32_t i = 0; i < queue_family_count; i++) {
-        vkGetPhysicalDeviceSurfaceSupportKHR(gpus[0], i, surface, &pSupportsPresent[i]);
-    }
-
-    // Search for a graphics and a present queue in the array of queue
-    // families, try to find one that supports both
-    graphics_queue_family_index = UINT32_MAX;
-    present_queue_family_index = UINT32_MAX;
-    for (uint32_t i = 0; i < queue_family_count; ++i) {
-        if ((queue_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
-            if (graphics_queue_family_index == UINT32_MAX) graphics_queue_family_index = i;
-
-            if (pSupportsPresent[i] == VK_TRUE) {
-                graphics_queue_family_index = i;
-                present_queue_family_index = i;
-                break;
-            }
-        }
-    }
-
-    if (present_queue_family_index == UINT32_MAX) {
-        // If didn't find a queue that supports both graphics and present, then
-        // find a separate present queue.
-        for (size_t i = 0; i < queue_family_count; ++i)
-            if (pSupportsPresent[i] == VK_TRUE) {
-                present_queue_family_index = i;
-                break;
-            }
-    }
-    free(pSupportsPresent);
-
-    // Generate error if could not find queues that support graphics
-    // and present
-    if (graphics_queue_family_index == UINT32_MAX || present_queue_family_index == UINT32_MAX) {
-        std::cout << "Could not find a queues for both graphics and present";
-        exit(-1);
-    }
-
-    // Get the list of VkFormats that are supported:
-    uint32_t formatCount;
-    res = vkGetPhysicalDeviceSurfaceFormatsKHR(gpus[0], surface, &formatCount, NULL);
-    assert(res == VK_SUCCESS);
-    VkSurfaceFormatKHR *surfFormats = (VkSurfaceFormatKHR *)malloc(formatCount * sizeof(VkSurfaceFormatKHR));
-    res = vkGetPhysicalDeviceSurfaceFormatsKHR(gpus[0], surface, &formatCount, surfFormats);
-    assert(res == VK_SUCCESS);
-    // If the format list includes just one entry of VK_FORMAT_UNDEFINED,
-    // the surface has no preferred format.  Otherwise, at least one
-    // supported format will be returned.
-    if (formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED) {
-        format = VK_FORMAT_B8G8R8A8_UNORM;
-    } else {
-        assert(formatCount >= 1);
-        format = surfFormats[0].format;
-    }
-    free(surfFormats);
-}
-
-VkResult DeviceInfo::InitDevice()
+VkResult DeviceInfo::InitDevice(uint32_t graphics_queue_family_index)
 {
     VkResult res;
     VkDeviceQueueCreateInfo queue_info = {};
@@ -266,7 +189,8 @@ VkResult DeviceInfo::InitDevice()
     return res;
 }
 
-void DeviceInfo::InitDeviceQueue()
+void DeviceInfo::InitDeviceQueue(uint32_t graphics_queue_family_index,
+                                 uint32_t present_queue_family_index)
 {
     vkGetDeviceQueue(device, graphics_queue_family_index, 0, &graphics_queue);
     if (graphics_queue_family_index == present_queue_family_index) {

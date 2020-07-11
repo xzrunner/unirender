@@ -24,6 +24,8 @@ class Context
 public:
     virtual ~Context() {}
 
+    virtual void Resize(uint32_t width, uint32_t height) = 0;
+
     virtual void Clear(const ClearState& clear_state) = 0;
     virtual void Draw(PrimitiveType prim_type, int offset, int count,
         const DrawState& draw, const void* scene) = 0;

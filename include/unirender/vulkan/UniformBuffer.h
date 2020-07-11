@@ -9,6 +9,7 @@ namespace vulkan
 {
 
 class DeviceInfo;
+class ContextInfo;
 
 class UniformBuffer
 {
@@ -16,7 +17,8 @@ public:
 	UniformBuffer(VkDevice device);
 	~UniformBuffer();
 
-	void Create(const DeviceInfo& dev_info);
+	void Create(const DeviceInfo& dev_info,
+		const ContextInfo& ctx_info);
 
 	auto GetBufferInfo() const { return m_buffer_info; }
 

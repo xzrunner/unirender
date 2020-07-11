@@ -40,8 +40,8 @@ void FrameBuffers::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_inf
     fb_info.renderPass = ctx_info.renderpass->GetHandler();
     fb_info.attachmentCount = include_depth ? 2 : 1;
     fb_info.pAttachments = attachments;
-    fb_info.width = dev_info.width;
-    fb_info.height = dev_info.height;
+    fb_info.width = ctx_info.width;
+    fb_info.height = ctx_info.height;
     fb_info.layers = 1;
 
     auto count = ctx_info.swapchain->GetImageCount();

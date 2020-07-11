@@ -1,15 +1,15 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
+
 #include <memory>
 
 namespace ur
 {
-
-class Device;
-
 namespace vulkan
 {
 
+class DeviceInfo;
 class CommandPool;
 class CommandBuffers;
 class Swapchain;
@@ -29,9 +29,29 @@ class VertexBuffer;
 class ContextInfo
 {
 public:
-    void Init(const ur::Device& device);
+    ContextInfo(const DeviceInfo& dev_info, bool include_depth);
+
+    void Init(int width, int height, void* hwnd);
+
+    void Resize(uint32_t width, uint32_t height);
+
+private:
+    void InitSwapchainExtension(void* hwnd);
 
 public:
+    int width = 0, height = 0;
+
+
+
+    VkSurfaceKHR surface;
+
+    uint32_t graphics_queue_family_index = UINT32_MAX;
+    uint32_t present_queue_family_index = UINT32_MAX;
+
+    uint32_t current_buffer = 0;
+
+    VkFormat format;
+
     std::shared_ptr<CommandPool>   cmd_pool  = nullptr;
     std::shared_ptr<CommandBuffers> cmd_bufs = nullptr;
 
@@ -54,6 +74,11 @@ public:
 
     std::shared_ptr<PipelineCache> pipeline_cache = nullptr;
     std::shared_ptr<Pipeline>      pipeline = nullptr;
+
+private:
+    const DeviceInfo& m_dev_info;
+
+    bool m_include_depth = false;
 
 }; // ContextInfo
 

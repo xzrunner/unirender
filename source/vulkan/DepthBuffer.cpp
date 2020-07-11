@@ -1,6 +1,7 @@
 #include "unirender/vulkan/DepthBuffer.h"
 #include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/Utility.h"
+#include "unirender/vulkan/ContextInfo.h"
 
 #include <iostream>
 
@@ -26,7 +27,8 @@ DepthBuffer::~DepthBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void DepthBuffer::Create(const DeviceInfo& dev_info)
+void DepthBuffer::Create(const DeviceInfo& dev_info,
+                         const ContextInfo& ctx_info)
 {
     VkResult res;
     bool pass;
@@ -52,8 +54,8 @@ void DepthBuffer::Create(const DeviceInfo& dev_info)
     image_info.pNext = NULL;
     image_info.imageType = VK_IMAGE_TYPE_2D;
     image_info.format = depth_format;
-    image_info.extent.width = dev_info.width;
-    image_info.extent.height = dev_info.height;
+    image_info.extent.width = ctx_info.width;
+    image_info.extent.height = ctx_info.height;
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;

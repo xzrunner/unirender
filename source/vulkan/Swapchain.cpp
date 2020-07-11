@@ -1,5 +1,6 @@
 #include "unirender/vulkan/Swapchain.h"
 #include "unirender/vulkan/DeviceInfo.h"
+#include "unirender/vulkan/ContextInfo.h"
 
 #include <assert.h>
 
@@ -21,22 +22,22 @@ Swapchain::~Swapchain()
 	vkDestroySwapchainKHR(m_device, m_handle, NULL);
 }
 
-void Swapchain::Create(const DeviceInfo& dev_info, VkImageUsageFlags usage_flags)
+void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, VkImageUsageFlags usage_flags)
 {
     /* DEPENDS on dev_info.cmd and dev_info.queue initialized */
 
     VkResult res;
     VkSurfaceCapabilitiesKHR surfCapabilities;
 
-    res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(dev_info.gpus[0], dev_info.surface, &surfCapabilities);
+    res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(dev_info.gpus[0], ctx_info.surface, &surfCapabilities);
     assert(res == VK_SUCCESS);
 
     uint32_t presentModeCount;
-    res = vkGetPhysicalDeviceSurfacePresentModesKHR(dev_info.gpus[0], dev_info.surface, &presentModeCount, NULL);
+    res = vkGetPhysicalDeviceSurfacePresentModesKHR(dev_info.gpus[0], ctx_info.surface, &presentModeCount, NULL);
     assert(res == VK_SUCCESS);
     VkPresentModeKHR *presentModes = (VkPresentModeKHR *)malloc(presentModeCount * sizeof(VkPresentModeKHR));
     assert(presentModes);
-    res = vkGetPhysicalDeviceSurfacePresentModesKHR(dev_info.gpus[0], dev_info.surface, &presentModeCount, presentModes);
+    res = vkGetPhysicalDeviceSurfacePresentModesKHR(dev_info.gpus[0], ctx_info.surface, &presentModeCount, presentModes);
     assert(res == VK_SUCCESS);
 
     VkExtent2D swapchainExtent;
@@ -44,8 +45,8 @@ void Swapchain::Create(const DeviceInfo& dev_info, VkImageUsageFlags usage_flags
     if (surfCapabilities.currentExtent.width == 0xFFFFFFFF) {
         // If the surface size is undefined, the size is set to
         // the size of the images requested.
-        swapchainExtent.width = dev_info.width;
-        swapchainExtent.height = dev_info.height;
+        swapchainExtent.width = ctx_info.width;
+        swapchainExtent.height = ctx_info.height;
         if (swapchainExtent.width < surfCapabilities.minImageExtent.width) {
             swapchainExtent.width = surfCapabilities.minImageExtent.width;
         } else if (swapchainExtent.width > surfCapabilities.maxImageExtent.width) {
@@ -98,9 +99,9 @@ void Swapchain::Create(const DeviceInfo& dev_info, VkImageUsageFlags usage_flags
     VkSwapchainCreateInfoKHR swapchain_ci = {};
     swapchain_ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapchain_ci.pNext = NULL;
-    swapchain_ci.surface = dev_info.surface;
+    swapchain_ci.surface = ctx_info.surface;
     swapchain_ci.minImageCount = desiredNumberOfSwapChainImages;
-    swapchain_ci.imageFormat = dev_info.format;
+    swapchain_ci.imageFormat = ctx_info.format;
     swapchain_ci.imageExtent.width = swapchainExtent.width;
     swapchain_ci.imageExtent.height = swapchainExtent.height;
     swapchain_ci.preTransform = preTransform;
@@ -118,8 +119,8 @@ void Swapchain::Create(const DeviceInfo& dev_info, VkImageUsageFlags usage_flags
     swapchain_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapchain_ci.queueFamilyIndexCount = 0;
     swapchain_ci.pQueueFamilyIndices = NULL;
-    uint32_t queueFamilyIndices[2] = {(uint32_t)dev_info.graphics_queue_family_index, (uint32_t)dev_info.present_queue_family_index};
-    if (dev_info.graphics_queue_family_index != dev_info.present_queue_family_index) {
+    uint32_t queueFamilyIndices[2] = {(uint32_t)ctx_info.graphics_queue_family_index, (uint32_t)ctx_info.present_queue_family_index};
+    if (ctx_info.graphics_queue_family_index != ctx_info.present_queue_family_index) {
         // If the graphics and present queues are from different queue families,
         // we either have to explicitly transfer ownership of images between the
         // queues, or we have to create the swapchain with imageSharingMode
@@ -147,7 +148,7 @@ void Swapchain::Create(const DeviceInfo& dev_info, VkImageUsageFlags usage_flags
         VkImageViewCreateInfo color_image_view = {};
         color_image_view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         color_image_view.pNext = NULL;
-        color_image_view.format = dev_info.format;
+        color_image_view.format = ctx_info.format;
         color_image_view.components.r = VK_COMPONENT_SWIZZLE_R;
         color_image_view.components.g = VK_COMPONENT_SWIZZLE_G;
         color_image_view.components.b = VK_COMPONENT_SWIZZLE_B;
@@ -169,7 +170,7 @@ void Swapchain::Create(const DeviceInfo& dev_info, VkImageUsageFlags usage_flags
         assert(res == VK_SUCCESS);
     }
     free(swapchainImages);
-    const_cast<DeviceInfo&>(dev_info).current_buffer = 0;
+    const_cast<ContextInfo&>(ctx_info).current_buffer = 0;
 
     if (NULL != presentModes) {
         free(presentModes);

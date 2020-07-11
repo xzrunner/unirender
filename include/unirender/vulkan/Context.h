@@ -18,8 +18,11 @@ class DeviceInfo;
 class Context : public ur::Context
 {
 public:
-    Context(const ur::Device& device);
+    Context(const ur::Device& device, void* hwnd, 
+        uint32_t width, uint32_t height);
     virtual ~Context();
+
+    virtual void Resize(uint32_t width, uint32_t height) override;
 
     virtual void Clear(const ClearState& clear_state) override;
     virtual void Draw(PrimitiveType prim_type, int offset, int count,

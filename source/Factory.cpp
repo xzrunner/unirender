@@ -7,7 +7,7 @@
 namespace ur
 {
 
-std::shared_ptr<Device> CreateDevice(APIType type, void* hwnd)
+std::shared_ptr<Device> CreateDevice(APIType type)
 {
     std::shared_ptr<Device> ret = nullptr;
     switch (type)
@@ -16,13 +16,14 @@ std::shared_ptr<Device> CreateDevice(APIType type, void* hwnd)
         ret = std::make_shared<opengl::Device>();
         break;
     case APIType::Vulkan:
-        ret = std::make_shared<vulkan::Device>(hwnd);
+        ret = std::make_shared<vulkan::Device>();
         break;
     }
     return ret;
 }
 
-std::shared_ptr<Context> CreateContext(APIType type, const Device& device)
+std::shared_ptr<Context> CreateContext(APIType type, const Device& device, void* hwnd, 
+                                       uint32_t width, uint32_t height)
 {
     std::shared_ptr<Context> ret = nullptr;
     switch (type)
@@ -31,7 +32,7 @@ std::shared_ptr<Context> CreateContext(APIType type, const Device& device)
         ret = std::make_shared<opengl::Context>(device);
         break;
     case APIType::Vulkan:
-        ret = std::make_shared<vulkan::Context>(device);
+        ret = std::make_shared<vulkan::Context>(device, hwnd, width, height);
         break;
     }
     return ret;

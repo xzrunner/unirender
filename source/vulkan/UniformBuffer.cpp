@@ -1,6 +1,7 @@
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/Utility.h"
+#include "unirender/vulkan/ContextInfo.h"
 
 #include <glm/vec3.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -22,15 +23,16 @@ UniformBuffer::~UniformBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void UniformBuffer::Create(const DeviceInfo& dev_info)
+void UniformBuffer::Create(const DeviceInfo& dev_info, 
+                           const ContextInfo& ctx_info)
 {
     VkResult res;
     bool pass;
     float fov = glm::radians(45.0f);
-    if (dev_info.width > dev_info.height) {
-        fov *= static_cast<float>(dev_info.height) / static_cast<float>(dev_info.width);
+    if (ctx_info.width > ctx_info.height) {
+        fov *= static_cast<float>(ctx_info.height) / static_cast<float>(ctx_info.width);
     }
-    Projection = glm::perspective(fov, static_cast<float>(dev_info.width) / static_cast<float>(dev_info.height), 0.1f, 100.0f);
+    Projection = glm::perspective(fov, static_cast<float>(ctx_info.width) / static_cast<float>(ctx_info.height), 0.1f, 100.0f);
     View = glm::lookAt(glm::vec3(-5, 3, -10),  // Camera is at (-5,3,-10), in World Space
                             glm::vec3(0, 0, 0),     // and looks at the origin
                             glm::vec3(0, -1, 0)     // Head is up (set to 0,-1,0 to look upside-down)

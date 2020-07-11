@@ -24,6 +24,8 @@ class Context : public ur::Context
 public:
     Context(const ur::Device& device);
 
+    virtual void Resize(uint32_t width, uint32_t height) override {}
+
     virtual void Clear(const ClearState& clear_state) override;
     virtual void Draw(PrimitiveType prim_type, int offset, int count,
         const DrawState& draw, const void* scene) override;

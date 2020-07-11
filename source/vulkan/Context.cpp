@@ -47,10 +47,12 @@ namespace ur
 namespace vulkan
 {
 
-Context::Context(const ur::Device& device)
+Context::Context(const ur::Device& device, void* hwnd,
+	             uint32_t width, uint32_t height)
     : m_dev_info(static_cast<const vulkan::Device&>(device).GetInfo())
+	, m_info(m_dev_info, false)
 {
-	m_info.Init(device);
+	m_info.Init(width, height, hwnd);
 
     //VkSemaphoreCreateInfo imageAcquiredSemaphoreCreateInfo;
     //imageAcquiredSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -94,6 +96,11 @@ Context::~Context()
 
 	vkDestroySemaphore(m_dev_info.device, presentCompleteSemaphore, nullptr);
 	vkDestroySemaphore(m_dev_info.device, renderCompleteSemaphore, nullptr);
+}
+
+void Context::Resize(uint32_t width, uint32_t height)
+{
+	m_info.Resize(width, height);
 }
 
 void Context::Clear(const ClearState& clear_state)
@@ -161,14 +168,14 @@ bool Context::CheckRenderTargetStatus()
 void Context::Draw()
 {
 	// Get next image in the swap chain (back/front buffer)
-	VkResult res = vkAcquireNextImageKHR(m_dev_info.device, m_info.swapchain->GetHandler(), UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE,
-                                         &const_cast<DeviceInfo&>(m_dev_info).current_buffer);
+	VkResult res = vkAcquireNextImageKHR(m_dev_info.device, m_info.swapchain->GetHandler(), 
+		UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &m_info.current_buffer);
     assert(res == VK_SUCCESS);
 
 	// Use a fence to wait until the command buffer has finished execution before using it again
-	res = vkWaitForFences(m_dev_info.device, 1, &waitFences[m_dev_info.current_buffer], VK_TRUE, UINT64_MAX);
+	res = vkWaitForFences(m_dev_info.device, 1, &waitFences[m_info.current_buffer], VK_TRUE, UINT64_MAX);
 	assert(res == VK_SUCCESS);
-	res = vkResetFences(m_dev_info.device, 1, &waitFences[m_dev_info.current_buffer]);
+	res = vkResetFences(m_dev_info.device, 1, &waitFences[m_info.current_buffer]);
 	assert(res == VK_SUCCESS);
 
 	// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
@@ -181,17 +188,17 @@ void Context::Draw()
 	submitInfo.waitSemaphoreCount = 1;                           // One wait semaphore
 	submitInfo.pSignalSemaphores = &renderCompleteSemaphore;     // Semaphore(s) to be signaled when command buffers have completed
 	submitInfo.signalSemaphoreCount = 1;                         // One signal semaphore
-	submitInfo.pCommandBuffers = &m_info.cmd_bufs->GetHandler()[m_dev_info.current_buffer];                // Command buffers(s) to execute in this batch (submission)
+	submitInfo.pCommandBuffers = &m_info.cmd_bufs->GetHandler()[m_info.current_buffer];                // Command buffers(s) to execute in this batch (submission)
 	submitInfo.commandBufferCount = 1;                           // One command buffer
 
 	// Submit to the graphics queue passing a wait fence
-	res = vkQueueSubmit(m_dev_info.graphics_queue, 1, &submitInfo, waitFences[m_dev_info.current_buffer]);
+	res = vkQueueSubmit(m_dev_info.graphics_queue, 1, &submitInfo, waitFences[m_info.current_buffer]);
 	assert(res == VK_SUCCESS);
 
 	// Present the current buffer to the swap chain
 	// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 	// This ensures that the image is not presented to the windowing system until all commands have been submitted
-	VkResult present = m_info.swapchain->QueuePresent(m_dev_info.graphics_queue, m_dev_info.current_buffer, renderCompleteSemaphore);
+	VkResult present = m_info.swapchain->QueuePresent(m_dev_info.graphics_queue, m_info.current_buffer, renderCompleteSemaphore);
 	if (!((present == VK_SUCCESS) || (present == VK_SUBOPTIMAL_KHR))) {
 		assert(present == VK_SUCCESS);
 	}
@@ -215,8 +222,8 @@ void Context::BuildCommandBuffers()
 	renderPassBeginInfo.renderPass = m_info.renderpass->GetHandler();
 	renderPassBeginInfo.renderArea.offset.x = 0;
 	renderPassBeginInfo.renderArea.offset.y = 0;
-	renderPassBeginInfo.renderArea.extent.width = m_dev_info.width;
-	renderPassBeginInfo.renderArea.extent.height = m_dev_info.height;
+	renderPassBeginInfo.renderArea.extent.width = m_info.width;
+	renderPassBeginInfo.renderArea.extent.height = m_info.height;
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clearValues;
 
@@ -235,16 +242,16 @@ void Context::BuildCommandBuffers()
 
 		// Update dynamic viewport state
 		VkViewport viewport = {};
-		viewport.height = (float)m_dev_info.height;
-		viewport.width = (float)m_dev_info.width;
+		viewport.height = (float)m_info.height;
+		viewport.width = (float)m_info.width;
 		viewport.minDepth = (float) 0.0f;
 		viewport.maxDepth = (float) 1.0f;
 		vkCmdSetViewport(cmd_bufs[i], 0, 1, &viewport);
 
 		// Update dynamic scissor state
 		VkRect2D scissor = {};
-		scissor.extent.width = m_dev_info.width;
-		scissor.extent.height = m_dev_info.height;
+		scissor.extent.width = m_info.width;
+		scissor.extent.height = m_info.height;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
 		vkCmdSetScissor(cmd_bufs[i], 0, 1, &scissor);

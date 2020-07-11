@@ -12,7 +12,9 @@ namespace vulkan
 class DeviceInfo
 {
 public:
-    void Init(void* hwnd);
+    void Init();
+    void InitDeviceAndQueue(uint32_t graphics_queue_family_index, 
+        uint32_t present_queue_family_index);
 
 public:
     /*
@@ -32,16 +34,14 @@ public:
     VkResult InitInstance(const char* title);
     VkResult InitEnumerateDevice(uint32_t gpu_count = 1);
     void InitWindowSize(int width, int height);
-    void InitSwapchainExtension(void* hwnd);
-    VkResult InitDevice();
-    void InitDeviceQueue();
+    VkResult InitDevice(uint32_t graphics_queue_family_index);
+    void InitDeviceQueue(uint32_t graphics_queue_family_index,
+        uint32_t present_queue_family_index);
 
     VkResult InitGlobalExtensionProperties(layer_properties& layer_props);
     VkResult InitDeviceExtensionProperties(layer_properties& layer_props);
 
 public:
-    VkSurfaceKHR surface;
-
     std::vector<const char*> instance_layer_names;
     std::vector<const char*> instance_extension_names;
     std::vector<layer_properties> instance_layer_properties;
@@ -51,25 +51,19 @@ public:
     std::vector<const char*> device_extension_names;
     std::vector<VkExtensionProperties> device_extension_properties;
     std::vector<VkPhysicalDevice> gpus;
-    VkDevice device;
-    uint32_t graphics_queue_family_index;
-    uint32_t present_queue_family_index;
+    VkDevice device = VK_NULL_HANDLE;
     VkPhysicalDeviceProperties gpu_props;
     std::vector<VkQueueFamilyProperties> queue_props;
     VkPhysicalDeviceMemoryProperties memory_properties;
 
-    int width, height;
-    VkFormat format;
-
-	uint32_t current_buffer     = 0;
     uint32_t queue_family_count = 0;
 
 	struct {
 		VkDescriptorImageInfo image_info;
 	} texture_data;
 
-    VkQueue graphics_queue;
-    VkQueue present_queue;
+    VkQueue graphics_queue = VK_NULL_HANDLE;
+    VkQueue present_queue = VK_NULL_HANDLE;
 
 }; // DeviceInfo
 

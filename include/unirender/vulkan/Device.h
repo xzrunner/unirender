@@ -11,7 +11,7 @@ namespace vulkan
 class Device : public ur::Device
 {
 public:
-    Device(void* hwnd);
+    Device();
 
     virtual int GetMaxNumVertAttrs() const override { return m_max_num_vert_attrs; }
     virtual int GetMaxNumTexUnits() const override { return m_max_num_tex_units; }

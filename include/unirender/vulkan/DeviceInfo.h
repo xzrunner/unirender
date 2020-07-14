@@ -12,7 +12,9 @@ namespace vulkan
 class DeviceInfo
 {
 public:
-    void Init();
+    ~DeviceInfo();
+
+    void Init(bool validation = false);
     void InitDeviceAndQueue(uint32_t graphics_queue_family_index, 
         uint32_t present_queue_family_index);
 
@@ -29,9 +31,9 @@ public:
 
 public:
     VkResult InitGlobalLayerProperties();
-    void InitInstanceExtensionNames();
+    void InitInstanceExtensionNames(bool validation = false);
     void InitDeviceExtensionNames();
-    VkResult InitInstance(const char* title);
+    VkResult InitInstance(const char* title, bool validation = false);
     VkResult InitEnumerateDevice(uint32_t gpu_count = 1);
     void InitWindowSize(int width, int height);
     VkResult InitDevice(uint32_t graphics_queue_family_index);
@@ -64,6 +66,9 @@ public:
 
     VkQueue graphics_queue = VK_NULL_HANDLE;
     VkQueue present_queue = VK_NULL_HANDLE;
+
+private:
+    bool m_validation = false;
 
 }; // DeviceInfo
 

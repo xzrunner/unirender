@@ -10,6 +10,7 @@
 #include "unirender/vulkan/PipelineLayout.h"
 #include "unirender/vulkan/DescriptorSet.h"
 #include "unirender/vulkan/VertexBuffer.h"
+#include "unirender/vulkan/IndexBuffer.h"
 
 #include <vulkan/vulkan.h>
 
@@ -86,10 +87,12 @@ Context::Context(const ur::Device& device, void* hwnd,
 		VkResult res = vkCreateFence(m_dev_info.device, &fenceCreateInfo, nullptr, &fence);
 		assert(res == VK_SUCCESS);
 	}
+
+	BuildCommandBuffers();
 }
 
 Context::~Context()
-{
+{ 
 	for (auto& fence : waitFences) {
 		vkDestroyFence(m_dev_info.device, fence, nullptr);
 	}
@@ -101,6 +104,8 @@ Context::~Context()
 void Context::Resize(uint32_t width, uint32_t height)
 {
 	m_info.Resize(width, height);
+
+	BuildCommandBuffers();
 }
 
 void Context::Clear(const ClearState& clear_state)
@@ -110,15 +115,11 @@ void Context::Clear(const ClearState& clear_state)
 
 void Context::Draw(PrimitiveType prim_type, int offset, int count, const DrawState& draw, const void* scene)
 {
-	BuildCommandBuffers();
-
 	Draw();
 }
 
 void Context::Draw(PrimitiveType prim_type, const DrawState& draw, const void* scene)
 {
-	BuildCommandBuffers();
-
 	Draw();
 }
 
@@ -165,8 +166,15 @@ bool Context::CheckRenderTargetStatus()
 	return true;
 }
 
+void Context::Flush()
+{
+	vkDeviceWaitIdle(m_dev_info.device);
+}
+
 void Context::Draw()
 {
+	printf("Context::Draw\n");
+
 	// Get next image in the swap chain (back/front buffer)
 	VkResult res = vkAcquireNextImageKHR(m_dev_info.device, m_info.swapchain->GetHandler(), 
 		UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &m_info.current_buffer);
@@ -182,6 +190,7 @@ void Context::Draw()
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	// The submit info structure specifices a command buffer queue submission batch
 	VkSubmitInfo submitInfo = {};
+	//submitInfo.pNext = NULL;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.pWaitDstStageMask = &waitStageMask;               // Pointer to the list of pipeline stages that the semaphore waits will occur at
 	submitInfo.pWaitSemaphores = &presentCompleteSemaphore;      // Semaphore(s) to wait upon before the submitted command buffer starts executing
@@ -213,7 +222,7 @@ void Context::BuildCommandBuffers()
 	// Set clear values for all framebuffer attachments with loadOp set to clear
 	// We use two attachments (color and depth) that are cleared at the start of the subpass and as such we need to set clear values for both
 	VkClearValue clearValues[2];
-	clearValues[0].color = { { 1.0f, 0.0f, 0.2f, 1.0f } };
+	clearValues[0].color = { { 0.0f, 0.0f, 0.2f, 1.0f } };
 	clearValues[1].depthStencil = { 1.0f, 0 };
 
 	VkRenderPassBeginInfo renderPassBeginInfo = {};
@@ -268,10 +277,10 @@ void Context::BuildCommandBuffers()
 		vkCmdBindVertexBuffers(cmd_bufs[i], 0, 1, &m_info.vert_buf->GetBuffer(), offsets);
 
 		//// Bind triangle index buffer
-		//vkCmdBindIndexBuffer(cmd_bufs[i], indices.buffer, 0, VK_INDEX_TYPE_UINT32);
+		//vkCmdBindIndexBuffer(cmd_bufs[i], m_info.idx_buf->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
 		//// Draw indexed triangle
-		//vkCmdDrawIndexed(cmd_bufs[i], indices.count, 1, 0, 0, 1);
+		//vkCmdDrawIndexed(cmd_bufs[i], m_info.idx_buf->GetCount(), 1, 0, 0, 1);
 
 		vkCmdDraw(cmd_bufs[i], 12 * 3, 1, 0, 0);
 

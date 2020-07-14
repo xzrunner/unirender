@@ -18,8 +18,7 @@ public:
     Swapchain(VkDevice device);
     ~Swapchain();
 
-    void Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info,
-		VkImageUsageFlags usage_flags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT/* | VK_IMAGE_USAGE_TRANSFER_SRC_BIT*/);
+    void Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info);
 
 	auto& GetHandler() const { return m_handle; }
 

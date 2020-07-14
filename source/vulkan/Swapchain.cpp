@@ -4,6 +4,27 @@
 
 #include <assert.h>
 
+// Macro to get a procedure address based on a vulkan instance
+#define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                        \
+{                                                                       \
+	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetInstanceProcAddr(inst, "vk"#entrypoint)); \
+	if (fp##entrypoint == NULL)                                         \
+	{																    \
+		exit(1);                                                        \
+	}                                                                   \
+}
+
+
+// Macro to get a procedure address based on a vulkan device
+#define GET_DEVICE_PROC_ADDR(dev, entrypoint)                           \
+{                                                                       \
+	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetDeviceProcAddr(dev, "vk"#entrypoint));   \
+	if (fp##entrypoint == NULL)                                         \
+	{																    \
+		exit(1);                                                        \
+	}                                                                   \
+}
+
 namespace ur
 {
 namespace vulkan
@@ -22,7 +43,7 @@ Swapchain::~Swapchain()
 	vkDestroySwapchainKHR(m_device, m_handle, NULL);
 }
 
-void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, VkImageUsageFlags usage_flags)
+void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info)
 {
     /* DEPENDS on dev_info.cmd and dev_info.queue initialized */
 
@@ -72,7 +93,10 @@ void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, 
     // Asking for minImageCount images ensures that we can acquire
     // 1 presentable image as long as we present it before attempting
     // to acquire another.
-    uint32_t desiredNumberOfSwapChainImages = surfCapabilities.minImageCount;
+    uint32_t desiredNumberOfSwapChainImages = surfCapabilities.minImageCount + 1;
+    if ((surfCapabilities.maxImageCount > 0) && (desiredNumberOfSwapChainImages > surfCapabilities.maxImageCount)) {
+        desiredNumberOfSwapChainImages = surfCapabilities.maxImageCount;
+    }
 
     VkSurfaceTransformFlagBitsKHR preTransform;
     if (surfCapabilities.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
@@ -115,7 +139,7 @@ void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, 
     swapchain_ci.clipped = false;
 #endif
     swapchain_ci.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-    swapchain_ci.imageUsage = usage_flags;
+    swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapchain_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapchain_ci.queueFamilyIndexCount = 0;
     swapchain_ci.pQueueFamilyIndices = NULL;
@@ -129,6 +153,16 @@ void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, 
         swapchain_ci.queueFamilyIndexCount = 2;
         swapchain_ci.pQueueFamilyIndices = queueFamilyIndices;
     }
+
+	// Enable transfer source on swap chain images if supported
+	if (surfCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+        swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	}
+
+	// Enable transfer destination on swap chain images if supported
+	if (surfCapabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
+        swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	}
 
     res = vkCreateSwapchainKHR(m_device, &swapchain_ci, NULL, &m_handle);
     assert(res == VK_SUCCESS);
@@ -166,6 +200,7 @@ void Swapchain::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, 
         color_image_view.image = sc_buffer.image;
 
         res = vkCreateImageView(m_device, &color_image_view, NULL, &sc_buffer.view);
+
         m_buffers.push_back(sc_buffer);
         assert(res == VK_SUCCESS);
     }

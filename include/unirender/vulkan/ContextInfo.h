@@ -25,6 +25,7 @@ class PipelineLayout;
 class Pipeline;
 class ShaderProgram;
 class VertexBuffer;
+class IndexBuffer;
 
 class ContextInfo
 {
@@ -43,7 +44,7 @@ public:
 
 
 
-    VkSurfaceKHR surface;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
 
     uint32_t graphics_queue_family_index = UINT32_MAX;
     uint32_t present_queue_family_index = UINT32_MAX;
@@ -66,8 +67,9 @@ public:
     std::shared_ptr<RenderPass>   renderpass = nullptr;
     std::shared_ptr<FrameBuffers> frame_buffers = nullptr;
 
-    std::shared_ptr<VertexBuffer> vert_buf = nullptr;
-    std::shared_ptr<ShaderProgram> program = nullptr;
+    std::shared_ptr<VertexBuffer>  vert_buf = nullptr;
+    std::shared_ptr<IndexBuffer>   idx_buf  = nullptr;
+    std::shared_ptr<ShaderProgram> program  = nullptr;
 
     std::shared_ptr<DescriptorPool> desc_pool = nullptr;
     std::shared_ptr<DescriptorSet>  desc_set  = nullptr;

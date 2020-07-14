@@ -14,7 +14,7 @@ namespace vulkan
 class ShaderObject
 {
 public:
-	ShaderObject(VkDevice dev, ShaderType type, const std::string& source);
+	ShaderObject(VkDevice dev, ShaderType type, const uint32_t* code, size_t code_sz);
 	~ShaderObject();
 
 	auto GetHandler() const { return m_stage; }

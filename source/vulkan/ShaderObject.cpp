@@ -8,13 +8,15 @@ namespace ur
 namespace vulkan
 {
 
-ShaderObject::ShaderObject(VkDevice dev, ShaderType type, const std::string& source)
+ShaderObject::ShaderObject(VkDevice dev, ShaderType type, const uint32_t* code, size_t code_sz)
     : m_dev(dev)
 {
     VkShaderModuleCreateInfo shader_ci{};
     shader_ci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    shader_ci.codeSize = source.size();
-    shader_ci.pCode = (uint32_t*)source.c_str();
+    shader_ci.pNext = nullptr;
+    shader_ci.flags = 0;
+    shader_ci.codeSize = code_sz * sizeof(uint32_t);
+    shader_ci.pCode = code;
 
     m_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     m_stage.pNext = NULL;

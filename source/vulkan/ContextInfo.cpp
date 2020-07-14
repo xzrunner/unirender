@@ -16,6 +16,7 @@
 #include "unirender/vulkan/ShaderProgram.h"
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/VertexBuffer.h"
+#include "unirender/vulkan/IndexBuffer.h"
 
 #include <iostream>
 
@@ -29,6 +30,21 @@ struct Vertex {
 
 #define XYZ1(_x_, _y_, _z_) (_x_), (_y_), (_z_), 1.f
 #define UV(_u_, _v_) (_u_), (_v_)
+
+//struct Vertex {
+//    float position[3];
+//    float color[3];
+//};
+
+//const std::vector<Vertex> vertexBuffer =
+//{
+//	{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+//	{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+//	{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+//};
+//
+//std::vector<uint32_t> indexBuffer = { 0, 1, 2 };
+
 
 static const Vertex g_vb_solid_face_colors_Data[] = {
     // red face
@@ -75,46 +91,152 @@ static const Vertex g_vb_solid_face_colors_Data[] = {
     {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
 };
 
-const char* vs = R"(
-#version 450
+//const char* vs = R"(
+//#version 450
+//
+//layout (location = 0) in vec3 inPos;
+//layout (location = 1) in vec3 inColor;
+//
+//layout (binding = 0) uniform UBO 
+//{
+//	mat4 projectionMatrix;
+//	mat4 modelMatrix;
+//	mat4 viewMatrix;
+//} ubo;
+//
+//layout (location = 0) out vec3 outColor;
+//
+//out gl_PerVertex 
+//{
+//    vec4 gl_Position;   
+//};
+//
+//
+//void main() 
+//{
+//	outColor = inColor;
+//	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(inPos.xyz, 1.0);
+//}
+//)";
+//
+//const char* fs = R"(
+//#version 450
+//
+//layout (location = 0) in vec3 inColor;
+//
+//layout (location = 0) out vec4 outFragColor;
+//
+//void main() 
+//{
+//  outFragColor = vec4(inColor, 1.0);
+//}
+//)";
 
-layout (location = 0) in vec3 inPos;
-layout (location = 1) in vec3 inColor;
-
-layout (binding = 0) uniform UBO 
-{
-	mat4 projectionMatrix;
-	mat4 modelMatrix;
-	mat4 viewMatrix;
-} ubo;
-
-layout (location = 0) out vec3 outColor;
-
-out gl_PerVertex 
-{
-    vec4 gl_Position;   
+static const uint32_t __draw_cube_vert[287] = {
+    0x07230203, 0x00010000, 0x00080008, 0x00000020,
+    0x00000000, 0x00020011, 0x00000001, 0x0006000b,
+    0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e,
+    0x00000000, 0x0003000e, 0x00000000, 0x00000001,
+    0x0009000f, 0x00000000, 0x00000004, 0x6e69616d,
+    0x00000000, 0x00000009, 0x0000000b, 0x00000012,
+    0x0000001c, 0x00030003, 0x00000002, 0x00000190,
+    0x00090004, 0x415f4c47, 0x735f4252, 0x72617065,
+    0x5f657461, 0x64616873, 0x6f5f7265, 0x63656a62,
+    0x00007374, 0x00090004, 0x415f4c47, 0x735f4252,
+    0x69646168, 0x6c5f676e, 0x75676e61, 0x5f656761,
+    0x70303234, 0x006b6361, 0x00040005, 0x00000004,
+    0x6e69616d, 0x00000000, 0x00050005, 0x00000009,
+    0x4374756f, 0x726f6c6f, 0x00000000, 0x00040005,
+    0x0000000b, 0x6f436e69, 0x00726f6c, 0x00060005,
+    0x00000010, 0x505f6c67, 0x65567265, 0x78657472,
+    0x00000000, 0x00060006, 0x00000010, 0x00000000,
+    0x505f6c67, 0x7469736f, 0x006e6f69, 0x00070006,
+    0x00000010, 0x00000001, 0x505f6c67, 0x746e696f,
+    0x657a6953, 0x00000000, 0x00070006, 0x00000010,
+    0x00000002, 0x435f6c67, 0x4470696c, 0x61747369,
+    0x0065636e, 0x00030005, 0x00000012, 0x00000000,
+    0x00050005, 0x00000016, 0x66667562, 0x61567265,
+    0x0000736c, 0x00040006, 0x00000016, 0x00000000,
+    0x0070766d, 0x00060005, 0x00000018, 0x7542796d,
+    0x72656666, 0x736c6156, 0x00000000, 0x00030005,
+    0x0000001c, 0x00736f70, 0x00040047, 0x00000009,
+    0x0000001e, 0x00000000, 0x00040047, 0x0000000b,
+    0x0000001e, 0x00000001, 0x00050048, 0x00000010,
+    0x00000000, 0x0000000b, 0x00000000, 0x00050048,
+    0x00000010, 0x00000001, 0x0000000b, 0x00000001,
+    0x00050048, 0x00000010, 0x00000002, 0x0000000b,
+    0x00000003, 0x00030047, 0x00000010, 0x00000002,
+    0x00040048, 0x00000016, 0x00000000, 0x00000005,
+    0x00050048, 0x00000016, 0x00000000, 0x00000023,
+    0x00000000, 0x00050048, 0x00000016, 0x00000000,
+    0x00000007, 0x00000010, 0x00030047, 0x00000016,
+    0x00000002, 0x00040047, 0x00000018, 0x00000022,
+    0x00000000, 0x00040047, 0x00000018, 0x00000021,
+    0x00000000, 0x00040047, 0x0000001c, 0x0000001e,
+    0x00000000, 0x00020013, 0x00000002, 0x00030021,
+    0x00000003, 0x00000002, 0x00030016, 0x00000006,
+    0x00000020, 0x00040017, 0x00000007, 0x00000006,
+    0x00000004, 0x00040020, 0x00000008, 0x00000003,
+    0x00000007, 0x0004003b, 0x00000008, 0x00000009,
+    0x00000003, 0x00040020, 0x0000000a, 0x00000001,
+    0x00000007, 0x0004003b, 0x0000000a, 0x0000000b,
+    0x00000001, 0x00040015, 0x0000000d, 0x00000020,
+    0x00000000, 0x0004002b, 0x0000000d, 0x0000000e,
+    0x00000001, 0x0004001c, 0x0000000f, 0x00000006,
+    0x0000000e, 0x0005001e, 0x00000010, 0x00000007,
+    0x00000006, 0x0000000f, 0x00040020, 0x00000011,
+    0x00000003, 0x00000010, 0x0004003b, 0x00000011,
+    0x00000012, 0x00000003, 0x00040015, 0x00000013,
+    0x00000020, 0x00000001, 0x0004002b, 0x00000013,
+    0x00000014, 0x00000000, 0x00040018, 0x00000015,
+    0x00000007, 0x00000004, 0x0003001e, 0x00000016,
+    0x00000015, 0x00040020, 0x00000017, 0x00000002,
+    0x00000016, 0x0004003b, 0x00000017, 0x00000018,
+    0x00000002, 0x00040020, 0x00000019, 0x00000002,
+    0x00000015, 0x0004003b, 0x0000000a, 0x0000001c,
+    0x00000001, 0x00050036, 0x00000002, 0x00000004,
+    0x00000000, 0x00000003, 0x000200f8, 0x00000005,
+    0x0004003d, 0x00000007, 0x0000000c, 0x0000000b,
+    0x0003003e, 0x00000009, 0x0000000c, 0x00050041,
+    0x00000019, 0x0000001a, 0x00000018, 0x00000014,
+    0x0004003d, 0x00000015, 0x0000001b, 0x0000001a,
+    0x0004003d, 0x00000007, 0x0000001d, 0x0000001c,
+    0x00050091, 0x00000007, 0x0000001e, 0x0000001b,
+    0x0000001d, 0x00050041, 0x00000008, 0x0000001f,
+    0x00000012, 0x00000014, 0x0003003e, 0x0000001f,
+    0x0000001e, 0x000100fd, 0x00010038,
 };
 
-
-void main() 
-{
-	outColor = inColor;
-	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(inPos.xyz, 1.0);
-}
-)";
-
-const char* fs = R"(
-#version 450
-
-layout (location = 0) in vec3 inColor;
-
-layout (location = 0) out vec4 outFragColor;
-
-void main() 
-{
-  outFragColor = vec4(inColor, 1.0);
-}
-)";
+static const uint32_t __draw_cube_frag[112] = {
+    0x07230203, 0x00010000, 0x00080008, 0x0000000d,
+    0x00000000, 0x00020011, 0x00000001, 0x0006000b,
+    0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e,
+    0x00000000, 0x0003000e, 0x00000000, 0x00000001,
+    0x0007000f, 0x00000004, 0x00000004, 0x6e69616d,
+    0x00000000, 0x00000009, 0x0000000b, 0x00030010,
+    0x00000004, 0x00000007, 0x00030003, 0x00000002,
+    0x00000190, 0x00090004, 0x415f4c47, 0x735f4252,
+    0x72617065, 0x5f657461, 0x64616873, 0x6f5f7265,
+    0x63656a62, 0x00007374, 0x00090004, 0x415f4c47,
+    0x735f4252, 0x69646168, 0x6c5f676e, 0x75676e61,
+    0x5f656761, 0x70303234, 0x006b6361, 0x00040005,
+    0x00000004, 0x6e69616d, 0x00000000, 0x00050005,
+    0x00000009, 0x4374756f, 0x726f6c6f, 0x00000000,
+    0x00040005, 0x0000000b, 0x6f6c6f63, 0x00000072,
+    0x00040047, 0x00000009, 0x0000001e, 0x00000000,
+    0x00040047, 0x0000000b, 0x0000001e, 0x00000000,
+    0x00020013, 0x00000002, 0x00030021, 0x00000003,
+    0x00000002, 0x00030016, 0x00000006, 0x00000020,
+    0x00040017, 0x00000007, 0x00000006, 0x00000004,
+    0x00040020, 0x00000008, 0x00000003, 0x00000007,
+    0x0004003b, 0x00000008, 0x00000009, 0x00000003,
+    0x00040020, 0x0000000a, 0x00000001, 0x00000007,
+    0x0004003b, 0x0000000a, 0x0000000b, 0x00000001,
+    0x00050036, 0x00000002, 0x00000004, 0x00000000,
+    0x00000003, 0x000200f8, 0x00000005, 0x0004003d,
+    0x00000007, 0x0000000c, 0x0000000b, 0x0003003e,
+    0x00000009, 0x0000000c, 0x000100fd, 0x00010038,
+};
 
 }
 
@@ -171,7 +293,17 @@ void ContextInfo::Init(int width, int height, void* hwnd)
 	vert_buf = std::make_shared<vulkan::VertexBuffer>();
     vert_buf->Create(m_dev_info, g_vb_solid_face_colors_Data, sizeof(g_vb_solid_face_colors_Data),
         sizeof(g_vb_solid_face_colors_Data[0]), false);
-	program = std::make_shared<vulkan::ShaderProgram>(dev, vs, fs);
+    //uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
+    //vert_buf->Create(m_dev_info, vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
+
+    //idx_buf = std::make_shared<vulkan::IndexBuffer>();
+    //uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
+    //idx_buf->Create(m_dev_info, vertexBuffer.data(), indexBufferSize);
+
+	program = std::make_shared<vulkan::ShaderProgram>(dev, 
+        __draw_cube_vert, sizeof(__draw_cube_vert) / sizeof(__draw_cube_vert[0]), 
+        __draw_cube_frag, sizeof(__draw_cube_frag) / sizeof(__draw_cube_frag[0])
+    );
 
 	desc_pool = std::make_shared<DescriptorPool>(dev);
 	desc_pool->Create(use_texture);
@@ -203,6 +335,9 @@ void ContextInfo::Resize(uint32_t width, uint32_t height)
 
     frame_buffers = std::make_shared<FrameBuffers>(dev);
     frame_buffers->Create(m_dev_info, *this, m_include_depth);
+
+    cmd_bufs = std::make_shared<CommandBuffers>(dev, cmd_pool);
+    cmd_bufs->Create(swapchain->GetImageCount());
 
     vkDeviceWaitIdle(m_dev_info.device);
 }

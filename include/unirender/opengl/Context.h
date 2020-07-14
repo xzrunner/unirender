@@ -49,6 +49,8 @@ public:
 
     virtual bool CheckRenderTargetStatus() override;
 
+    virtual void Flush() override;
+
 private:
     void Init();
 

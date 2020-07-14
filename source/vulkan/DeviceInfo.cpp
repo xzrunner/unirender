@@ -5,18 +5,117 @@
 
 #include <assert.h>
 
+namespace debug
+{
+PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
+PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT;
+VkDebugUtilsMessengerEXT debugUtilsMessenger;
+
+VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
+{
+	// Select prefix depending on flags passed to the callback
+	std::string prefix("");
+
+	if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
+		prefix = "VERBOSE: ";
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+		prefix = "INFO: ";
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+		prefix = "WARNING: ";
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+		prefix = "ERROR: ";
+	}
+
+
+	// Display message to default output (console/logcat)
+	std::stringstream debugMessage;
+	debugMessage << prefix << "[" << pCallbackData->messageIdNumber << "][" << pCallbackData->pMessageIdName << "] : " << pCallbackData->pMessage;
+
+#if defined(__ANDROID__)
+	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+		LOGE("%s", debugMessage.str().c_str());
+	} else {
+		LOGD("%s", debugMessage.str().c_str());
+	}
+#else
+	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+		std::cerr << debugMessage.str() << "\n";
+	} else {
+		std::cout << debugMessage.str() << "\n";
+	}
+	fflush(stdout);
+#endif
+
+
+	// The return value of this callback controls wether the Vulkan call that caused the validation message will be aborted or not
+	// We return VK_FALSE as we DON'T want Vulkan calls that cause a validation message to abort
+	// If you instead want to have calls abort, pass in VK_TRUE and the function will return VK_ERROR_VALIDATION_FAILED_EXT 
+	return VK_FALSE;
+}
+
+void setupDebugging(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportCallbackEXT callBack)
+{
+    vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+    vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+
+	VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCI{};
+	debugUtilsMessengerCI.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	debugUtilsMessengerCI.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	debugUtilsMessengerCI.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	debugUtilsMessengerCI.pfnUserCallback = debugUtilsMessengerCallback;
+	VkResult result = vkCreateDebugUtilsMessengerEXT(instance, &debugUtilsMessengerCI, nullptr, &debugUtilsMessenger);
+	assert(result == VK_SUCCESS);
+}
+
+void freeDebugCallback(VkInstance instance)
+{
+	if (debugUtilsMessenger != VK_NULL_HANDLE)
+	{
+		vkDestroyDebugUtilsMessengerEXT(instance, debugUtilsMessenger, nullptr);
+	}
+}
+}
+
 namespace ur
 {
 namespace vulkan
 {
 
-void DeviceInfo::Init()
+DeviceInfo::~DeviceInfo()
+{
+    vkDestroyInstance(inst, NULL);
+
+    if (m_validation)
+    {
+        debug::freeDebugCallback(inst);
+    }
+}
+
+void DeviceInfo::Init(bool validation)
 {
     InitGlobalLayerProperties();
-    InitInstanceExtensionNames();
+    InitInstanceExtensionNames(validation);
     InitDeviceExtensionNames();
-    InitInstance("unirender-vulkan");
+    InitInstance("unirender-vulkan", validation);
     InitEnumerateDevice();
+
+    // If requested, we enable the default validation layers for debugging
+    m_validation = validation;
+    if (validation)
+    {
+        // The report flags determine what type of messages for the layers will be displayed
+        // For validating (debugging) an appplication the error and warning bits should suffice
+        VkDebugReportFlagsEXT debugReportFlags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+        // Additional flags include performance info, loader and layer debug messages, etc.
+        debug::setupDebugging(inst, debugReportFlags, VK_NULL_HANDLE);
+    }
 }
 
 void DeviceInfo::InitDeviceAndQueue(uint32_t graphics_queue_family_index, 
@@ -86,7 +185,7 @@ VkResult DeviceInfo::InitGlobalLayerProperties()
     return res;
 }
 
-void DeviceInfo::InitInstanceExtensionNames()
+void DeviceInfo::InitInstanceExtensionNames(bool validation)
 {
     instance_extension_names.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 #ifdef __ANDROID__
@@ -100,6 +199,10 @@ void DeviceInfo::InitInstanceExtensionNames()
 #else
     instance_extension_names.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
 #endif
+
+	if (instance_extension_names.size() > 0 && validation) {
+        instance_extension_names.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	} 
 }
 
 void DeviceInfo::InitDeviceExtensionNames()
@@ -107,7 +210,7 @@ void DeviceInfo::InitDeviceExtensionNames()
     device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 }
 
-VkResult DeviceInfo::InitInstance(const char* title)
+VkResult DeviceInfo::InitInstance(const char* title, bool validation)
 {
     VkApplicationInfo app_info = {};
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -123,10 +226,36 @@ VkResult DeviceInfo::InitInstance(const char* title)
     instance_ci.pNext = NULL;
     instance_ci.flags = 0;
     instance_ci.pApplicationInfo = &app_info;
-    instance_ci.enabledLayerCount = instance_layer_names.size();
-    instance_ci.ppEnabledLayerNames = instance_layer_names.size() ? instance_layer_names.data() : NULL;
+    //instance_ci.enabledLayerCount = instance_layer_names.size();
+    //instance_ci.ppEnabledLayerNames = instance_layer_names.size() ? instance_layer_names.data() : NULL;
     instance_ci.enabledExtensionCount = instance_extension_names.size();
     instance_ci.ppEnabledExtensionNames = instance_extension_names.data();
+
+	if (validation)
+	{
+		// The VK_LAYER_KHRONOS_validation contains all current validation functionality.
+		// Note that on Android this layer requires at least NDK r20
+        const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
+		//const char* validationLayerName = "VK_LAYER_LUNARG_standard_validation";
+		// Check if this layer is available at instance level
+		uint32_t instanceLayerCount;
+		vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
+		std::vector<VkLayerProperties> instanceLayerProperties(instanceLayerCount);
+		vkEnumerateInstanceLayerProperties(&instanceLayerCount, instanceLayerProperties.data());
+		bool validationLayerPresent = false;
+		for (VkLayerProperties layer : instanceLayerProperties) {
+			if (strcmp(layer.layerName, validationLayerName) == 0) {
+				validationLayerPresent = true;
+				break;
+			}
+		}
+		if (validationLayerPresent) {
+            instance_ci.ppEnabledLayerNames = &validationLayerName;
+            instance_ci.enabledLayerCount = 1;
+		} else {
+			std::cerr << "Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled";
+		}
+	}
 
     VkResult res = vkCreateInstance(&instance_ci, NULL, &inst);
     assert(res == VK_SUCCESS);

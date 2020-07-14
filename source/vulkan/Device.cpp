@@ -18,7 +18,7 @@ namespace vulkan
 
 Device::Device()
 {
-    m_info.Init();
+    m_info.Init(true);
 }
 
 std::shared_ptr<ur::VertexArray>
@@ -67,7 +67,7 @@ Device::CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 std::shared_ptr<ur::IndexBuffer>
 Device::CreateIndexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {
-	return std::make_shared<ur::vulkan::IndexBuffer>(usage_hint, size_in_bytes);
+	return std::make_shared<ur::vulkan::IndexBuffer>();
 }
 
 std::shared_ptr<ur::WritePixelBuffer>

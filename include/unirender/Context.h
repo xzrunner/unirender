@@ -46,6 +46,8 @@ public:
 
     virtual bool CheckRenderTargetStatus() = 0;
 
+    virtual void Flush() = 0;
+
 }; // Context
 
 }

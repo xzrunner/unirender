@@ -9,11 +9,11 @@ namespace ur
 namespace vulkan
 {
 
-ShaderProgram::ShaderProgram(VkDevice dev, const std::string& vs, const std::string& fs,
-                             const std::string& gs, const std::vector<std::string>& attr_names)
+ShaderProgram::ShaderProgram(VkDevice dev, const uint32_t* vs, size_t vs_size,
+                             const uint32_t* fs, size_t fs_size)
 {
-    m_vs = std::make_shared<ShaderObject>(dev, ShaderType::VertexShader, vs);
-    m_fs = std::make_shared<ShaderObject>(dev, ShaderType::FragmentShader, fs);
+    m_vs = std::make_shared<ShaderObject>(dev, ShaderType::VertexShader, vs, vs_size);
+    m_fs = std::make_shared<ShaderObject>(dev, ShaderType::FragmentShader, fs, fs_size);
 
     m_shader_stages[0] = m_vs->GetHandler();
     m_shader_stages[1] = m_fs->GetHandler();

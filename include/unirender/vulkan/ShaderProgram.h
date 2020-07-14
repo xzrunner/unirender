@@ -17,7 +17,9 @@ class ShaderProgram : public ur::ShaderProgram
 {
 public:
     ShaderProgram(VkDevice dev, const std::string& vs, const std::string& fs,
-        const std::string& gs = "", const std::vector<std::string>& attr_names = std::vector<std::string>());
+        const std::string& gs = "", const std::vector<std::string>& attr_names = std::vector<std::string>()) {}
+    ShaderProgram(VkDevice dev, const uint32_t* vs, size_t vs_size,
+        const uint32_t* fs, size_t fs_size);
     ShaderProgram(const std::string& cs);
     virtual ~ShaderProgram();
 

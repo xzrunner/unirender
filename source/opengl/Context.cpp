@@ -198,6 +198,11 @@ bool Context::CheckRenderTargetStatus()
 	}
 }
 
+void Context::Flush()
+{
+    //glFlush();
+}
+
 void Context::Init()
 {
     GLfloat col[4];

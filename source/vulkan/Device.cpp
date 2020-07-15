@@ -7,6 +7,8 @@
 
 #include <SM_Vector.h>
 
+#include <glslang/public/ShaderLang.h>
+
 #include <iostream>
 
 #include <assert.h>
@@ -19,6 +21,12 @@ namespace vulkan
 Device::Device()
 {
     m_info.Init(true);
+
+    static bool glslang_inited = false;
+    if (!glslang_inited) {
+        glslang::InitializeProcess();
+        glslang_inited = true;
+    }
 }
 
 std::shared_ptr<ur::VertexArray>

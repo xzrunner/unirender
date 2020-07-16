@@ -173,8 +173,6 @@ void Context::Flush()
 
 void Context::Draw()
 {
-	printf("Context::Draw\n");
-
 	// Get next image in the swap chain (back/front buffer)
 	VkResult res = vkAcquireNextImageKHR(m_dev_info.device, m_info.swapchain->GetHandler(), 
 		UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &m_info.current_buffer);

@@ -202,7 +202,7 @@ void ShaderObject::SpirvFromGLSL(ShaderType type, const std::string& glsl,
     std::string preprocessed_glsl;
     if (!shader.preprocess(&resources, default_version, ENoProfile, false, false, messages, &preprocessed_glsl, includer)) 
     {
-        std::cout << "GLSL Preprocessing Failed for: " << glsl << std::endl;
+        std::cout << "GLSL Preprocessing Failed for: \n" << glsl << std::endl;
         std::cout << shader.getInfoLog() << std::endl;
         std::cout << shader.getInfoDebugLog() << std::endl;
         return;
@@ -213,7 +213,7 @@ void ShaderObject::SpirvFromGLSL(ShaderType type, const std::string& glsl,
 
     if (!shader.parse(&resources, 100, false, messages))
     {
-        std::cout << "GLSL Parsing Failed for: " << glsl << std::endl;
+        std::cout << "GLSL Parsing Failed for: \n" << glsl << std::endl;
         std::cout << shader.getInfoLog() << std::endl;
         std::cout << shader.getInfoDebugLog() << std::endl;
         return;
@@ -223,7 +223,7 @@ void ShaderObject::SpirvFromGLSL(ShaderType type, const std::string& glsl,
     program.addShader(&shader);
     if (!program.link(messages))
     {
-        std::cout << "GLSL Linking Failed for: " << glsl << std::endl;
+        std::cout << "GLSL Linking Failed for: \n" << glsl << std::endl;
         std::cout << shader.getInfoLog() << std::endl;
         std::cout << shader.getInfoDebugLog() << std::endl;
         return;

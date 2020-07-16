@@ -31,21 +31,6 @@ struct Vertex {
 #define XYZ1(_x_, _y_, _z_) (_x_), (_y_), (_z_), 1.f
 #define UV(_u_, _v_) (_u_), (_v_)
 
-//struct Vertex {
-//    float position[3];
-//    float color[3];
-//};
-
-//const std::vector<Vertex> vertexBuffer =
-//{
-//	{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-//	{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-//	{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-//};
-//
-//std::vector<uint32_t> indexBuffer = { 0, 1, 2 };
-
-
 static const Vertex g_vb_solid_face_colors_Data[] = {
     // red face
     {XYZ1(-1, -1, 1), XYZ1(1.f, 0.f, 0.f)},

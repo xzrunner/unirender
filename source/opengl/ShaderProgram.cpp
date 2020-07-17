@@ -24,8 +24,8 @@ namespace ur
 namespace opengl
 {
 
-ShaderProgram::ShaderProgram(const std::string& vs, const std::string& fs,
-                             const std::string& gs, const std::vector<std::string>& attr_names)
+ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs, 
+                                            const std::vector<unsigned int>& fs)
 {
     m_id = glCreateProgram();
 
@@ -35,16 +35,6 @@ ShaderProgram::ShaderProgram(const std::string& vs, const std::string& fs,
     m_fs = std::make_shared<ShaderObject>(ShaderType::FragmentShader, fs);
     m_fs->Attach(m_id);
 
-    if (!gs.empty())
-    {
-        m_gs = std::make_shared<ShaderObject>(ShaderType::GeometryShader, gs);
-        m_gs->Attach(m_id);
-    }
-
-    for (size_t i = 0, n = attr_names.size(); i < n; ++i) {
-        glBindAttribLocation(m_id, i, attr_names[i].c_str());
-    }
-
     glLinkProgram(m_id);
     CheckLinkStatus();
 
@@ -52,7 +42,7 @@ ShaderProgram::ShaderProgram(const std::string& vs, const std::string& fs,
     InitUniforms();
 }
 
-ShaderProgram::ShaderProgram(const std::string& cs)
+ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
 {
     m_id = glCreateProgram();
 

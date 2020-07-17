@@ -100,14 +100,13 @@ Device::CreateRenderBuffer(int width, int height, InternalFormat format, Attachm
 }
 
 std::shared_ptr<ur::ShaderProgram>
-Device::CreateShaderProgram(const std::string& vs, const std::string& fs, const std::string& gs,
-                            const std::vector<std::string>& attr_names) const
+Device::CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const
 {
-    return std::make_shared<ur::opengl::ShaderProgram>(vs, fs, gs, attr_names);
+    return std::make_shared<ur::opengl::ShaderProgram>(vs, fs);
 }
 
 std::shared_ptr<ur::ShaderProgram>
-Device::CreateShaderProgram(const std::string& cs) const
+Device::CreateShaderProgram(const std::vector<unsigned int>& cs) const
 {
     return std::make_shared<ur::opengl::ShaderProgram>(cs);
 }

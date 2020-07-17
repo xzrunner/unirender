@@ -4,6 +4,7 @@
 #include "unirender/opengl/opengl.h"
 
 #include <string>
+#include <vector>
 
 namespace ur
 {
@@ -13,7 +14,8 @@ namespace opengl
 class ShaderObject
 {
 public:
-    ShaderObject(ShaderType type, const std::string& source);
+    ShaderObject(ShaderType type, 
+        const std::vector<unsigned int>& spirv);
     ~ShaderObject();
 
     void Attach(GLuint prograpm);

@@ -17,6 +17,9 @@
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/IndexBuffer.h"
+#include "unirender/Adaptor.h"
+
+#include <shadertrans/ShaderTrans.h>
 
 #include <iostream>
 
@@ -165,7 +168,10 @@ void ContextInfo::Init(int width, int height, void* hwnd)
     //uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
     //idx_buf->Create(m_dev_info, vertexBuffer.data(), indexBufferSize);
 
-	program = std::make_shared<vulkan::ShaderProgram>(dev, vs, fs);
+    std::vector<unsigned int> _vs, _fs;
+    shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::VertexShader), vs, _vs);
+    shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::FragmentShader), fs, _fs);
+	program = std::make_shared<vulkan::ShaderProgram>(dev, _vs, _fs);
 
 	desc_pool = std::make_shared<DescriptorPool>(dev);
 	desc_pool->Create(use_texture);

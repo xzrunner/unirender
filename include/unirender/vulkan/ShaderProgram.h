@@ -16,9 +16,9 @@ class ShaderObject;
 class ShaderProgram : public ur::ShaderProgram
 {
 public:
-    ShaderProgram(VkDevice dev, const std::string& vs, const std::string& fs,
-        const std::string& gs = "", const std::vector<std::string>& attr_names = std::vector<std::string>());
-    ShaderProgram(const std::string& cs);
+    ShaderProgram(VkDevice dev, const std::vector<unsigned int>& vs,
+        const std::vector<unsigned int>& fs);
+    ShaderProgram(const std::vector<unsigned int>& cs);
     virtual ~ShaderProgram();
 
     virtual void Bind() const override;

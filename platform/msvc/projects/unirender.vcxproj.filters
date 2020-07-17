@@ -298,6 +298,9 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h">
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Adaptor.h">
+      <Filter>utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -441,6 +444,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\CommandBuffers.cpp">
       <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Adaptor.cpp">
+      <Filter>utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

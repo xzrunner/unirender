@@ -36,11 +36,10 @@ public:
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(
         int width, int height, InternalFormat format, AttachmentType attach) const override;
 
-    virtual std::shared_ptr<ShaderProgram> CreateShaderProgram(
-        const std::string& vs, const std::string& fs, const std::string& gs = "",
-        const std::vector<std::string>& attr_names = std::vector<std::string>()) const override;
-    virtual std::shared_ptr<ShaderProgram>
-        CreateShaderProgram(const std::string& cs) const override;
+    virtual std::shared_ptr<ur::ShaderProgram>
+        CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const override;
+    virtual std::shared_ptr<ur::ShaderProgram>
+        CreateShaderProgram(const std::vector<unsigned int>& cs) const override;
 
     virtual std::shared_ptr<VertexBuffer>
         CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const override;

@@ -7,8 +7,6 @@
 
 #include <SM_Vector.h>
 
-#include <glslang/public/ShaderLang.h>
-
 #include <iostream>
 
 #include <assert.h>
@@ -21,12 +19,6 @@ namespace vulkan
 Device::Device()
 {
     m_info.Init(true);
-
-    static bool glslang_inited = false;
-    if (!glslang_inited) {
-        glslang::InitializeProcess();
-        glslang_inited = true;
-    }
 }
 
 std::shared_ptr<ur::VertexArray>
@@ -54,14 +46,13 @@ Device::CreateRenderBuffer(int width, int height, InternalFormat format, Attachm
 }
 
 std::shared_ptr<ur::ShaderProgram>
-Device::CreateShaderProgram(const std::string& vs, const std::string& fs, const std::string& gs,
-                            const std::vector<std::string>& attr_names) const
+Device::CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const
 {
-	return std::make_shared<ur::vulkan::ShaderProgram>(m_info.device, vs, fs, gs, attr_names);
+	return std::make_shared<ur::vulkan::ShaderProgram>(m_info.device, vs, fs);
 }
 
 std::shared_ptr<ur::ShaderProgram>
-Device::CreateShaderProgram(const std::string& cs) const
+Device::CreateShaderProgram(const std::vector<unsigned int>& cs) const
 {
     return nullptr;
 }

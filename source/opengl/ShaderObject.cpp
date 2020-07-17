@@ -1,21 +1,28 @@
 #include "unirender/opengl/ShaderObject.h"
 #include "unirender/opengl/TypeConverter.h"
+#include "unirender/Adaptor.h"
+
+#include <shadertrans/ShaderTrans.h>
 
 namespace ur
 {
 namespace opengl
 {
 
-ShaderObject::ShaderObject(ShaderType type, const std::string& source)
+ShaderObject::ShaderObject(ShaderType type, const std::vector<unsigned int>& spirv)
 {
+    std::string glsl;
+    auto stage = Adaptor::ToShaderTransStage(type);
+    shadertrans::ShaderTrans::SpirV2GLSL(stage, spirv, glsl);
+
     m_id = glCreateShader(TypeConverter::To(type));
 
-    const char* c = source.c_str();
+    const char* c = glsl.c_str();
     glShaderSource(m_id, 1, &c, NULL);
 
     glCompileShader(m_id);
 
-    CheckCompileStatus(source);
+    CheckCompileStatus(glsl);
 }
 
 ShaderObject::~ShaderObject()

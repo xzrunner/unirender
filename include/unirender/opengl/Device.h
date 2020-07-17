@@ -41,15 +41,15 @@ public:
     virtual std::shared_ptr<ur::ShaderProgram>
         CreateShaderProgram(const std::vector<unsigned int>& cs) const override;
 
-    virtual std::shared_ptr<VertexBuffer>
+    virtual std::shared_ptr<ur::VertexBuffer>
         CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const override;
-    virtual std::shared_ptr<IndexBuffer>
+    virtual std::shared_ptr<ur::IndexBuffer>
         CreateIndexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const override;
-    virtual std::shared_ptr<WritePixelBuffer>
+    virtual std::shared_ptr<ur::WritePixelBuffer>
         CreateWritePixelBuffer(BufferUsageHint hint, int size_in_bytes) const override;
-    virtual std::shared_ptr<ComputeBuffer>
+    virtual std::shared_ptr<ur::ComputeBuffer>
         CreateComputeBuffer(const std::vector<int>& buf, size_t index) const override;
-    virtual std::shared_ptr<ComputeBuffer>
+    virtual std::shared_ptr<ur::ComputeBuffer>
         CreateComputeBuffer(const std::vector<float>& buf, size_t index) const override;
 
     virtual std::shared_ptr<ur::Texture>

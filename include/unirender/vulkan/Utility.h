@@ -18,21 +18,3 @@
 
 /* Amount of time, in nanoseconds, to wait for a command buffer to complete */
 #define FENCE_TIMEOUT 100000000
-
-namespace ur
-{
-namespace vulkan
-{
-
-class DeviceInfo;
-
-class Utility
-{
-public:
-	static bool MemoryTypeFromProperties(const DeviceInfo& dev_info, uint32_t typeBits,
-		VkFlags requirements_mask, uint32_t* typeIndex);
-
-}; // Utility
-
-}
-}

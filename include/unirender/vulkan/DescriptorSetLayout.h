@@ -15,14 +15,18 @@ public:
 	DescriptorSetLayout(VkDevice device);
 	~DescriptorSetLayout();
 
-	void Create(bool use_texture, VkDescriptorSetLayoutCreateFlags descSetLayoutCreateFlags = 0);
+	void Create();
 
-	auto& GetHandler() const { return m_handle; }
+	void AddBinding(VkDescriptorType desc_type, VkShaderStageFlags stage_flags);
+
+	auto GetHandler() const { return m_handle; }
 
 private:
-	VkDevice m_device;
+	VkDevice m_device = VK_NULL_HANDLE;
 
-	std::vector<VkDescriptorSetLayout> m_handle;
+	VkDescriptorSetLayout m_handle = VK_NULL_HANDLE;
+
+	std::vector<VkDescriptorSetLayoutBinding> m_bindings;
 
 }; // DescriptorSetLayout
 

@@ -9,7 +9,6 @@ namespace ur
 namespace vulkan
 {
 
-class DeviceInfo;
 class ContextInfo;
 
 class Swapchain
@@ -18,7 +17,7 @@ public:
     Swapchain(VkDevice device);
     ~Swapchain();
 
-    void Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info);
+    void Create(const ContextInfo& ctx_info);
 
 	auto& GetHandler() const { return m_handle; }
 
@@ -30,6 +29,21 @@ public:
 
 	VkResult QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore = VK_NULL_HANDLE);
 
+public:
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> present_modes;
+	};
+	
+	static SwapChainSupportDetails 
+		QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+	static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	static VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	static VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, int width, int height);
+
 private:
 	struct Buffer
 	{
@@ -38,7 +52,7 @@ private:
 	};
 
 private:
-    VkDevice m_device;
+    VkDevice m_device = VK_NULL_HANDLE;
 
     VkSwapchainKHR m_handle = VK_NULL_HANDLE;
 

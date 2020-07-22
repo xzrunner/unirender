@@ -18,7 +18,7 @@ public:
 	auto GetHandler() const { return m_handle; }
 
 private:
-	VkDevice m_device;
+	VkDevice m_device = VK_NULL_HANDLE;
 
 	VkDescriptorPool m_handle = VK_NULL_HANDLE;
 

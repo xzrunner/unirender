@@ -16,9 +16,9 @@ namespace ur
 namespace vulkan
 {
 
-Device::Device()
+Device::Device(bool enable_validation_layers)
+    : m_vk_dev(enable_validation_layers)
 {
-    m_info.Init(true);
 }
 
 std::shared_ptr<ur::VertexArray>
@@ -48,7 +48,7 @@ Device::CreateRenderBuffer(int width, int height, InternalFormat format, Attachm
 std::shared_ptr<ur::ShaderProgram>
 Device::CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const
 {
-	return std::make_shared<ur::vulkan::ShaderProgram>(m_info.device, vs, fs);
+	return std::make_shared<ur::vulkan::ShaderProgram>(m_vk_dev.m_vk_dev, vs, fs);
 }
 
 std::shared_ptr<ur::ShaderProgram>

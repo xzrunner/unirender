@@ -3,7 +3,6 @@
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/CommandBuffers.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/RenderPass.h"
 #include "unirender/vulkan/FrameBuffers.h"
 #include "unirender/vulkan/Pipeline.h"
@@ -50,8 +49,7 @@ namespace vulkan
 
 Context::Context(const ur::Device& device, void* hwnd,
 	             uint32_t width, uint32_t height)
-    : m_dev_info(static_cast<const vulkan::Device&>(device).GetInfo())
-	, m_info(m_dev_info, false)
+    : m_info(const_cast<VulkanDevice&>(static_cast<const vulkan::Device&>(device).GetVulkanDevice()), false)
 {
 	m_info.Init(width, height, hwnd);
 
@@ -60,7 +58,7 @@ Context::Context(const ur::Device& device, void* hwnd,
     //imageAcquiredSemaphoreCreateInfo.pNext = NULL;
     //imageAcquiredSemaphoreCreateInfo.flags = 0;
 
-    //VkResult res = vkCreateSemaphore(m_dev_info.device, &imageAcquiredSemaphoreCreateInfo, NULL, &imageAcquiredSemaphore);
+    //VkResult res = vkCreateSemaphore(vk_dev, &imageAcquiredSemaphoreCreateInfo, NULL, &imageAcquiredSemaphore);
     //assert(res == VK_SUCCESS);
 
 	// Semaphores (Used for correct command ordering)
@@ -68,12 +66,14 @@ Context::Context(const ur::Device& device, void* hwnd,
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphoreCreateInfo.pNext = nullptr;
 
+	auto vk_dev = m_info.m_vk_ctx.GetDevice();
+
 	// Semaphore used to ensures that image presentation is complete before starting to submit again
-	VkResult res = vkCreateSemaphore(m_dev_info.device, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+	VkResult res = vkCreateSemaphore(vk_dev, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
 	assert(res == VK_SUCCESS);
 
 	// Semaphore used to ensures that all commands submitted have been finished before submitting the image to the queue
-	res = vkCreateSemaphore(m_dev_info.device, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
+	res = vkCreateSemaphore(vk_dev, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
 	assert(res == VK_SUCCESS);
 
 	// Fences (Used to check draw command buffer completion)
@@ -84,7 +84,7 @@ Context::Context(const ur::Device& device, void* hwnd,
 	waitFences.resize(m_info.cmd_bufs->GetHandler().size());
 	for (auto& fence : waitFences)
 	{
-		VkResult res = vkCreateFence(m_dev_info.device, &fenceCreateInfo, nullptr, &fence);
+		VkResult res = vkCreateFence(vk_dev, &fenceCreateInfo, nullptr, &fence);
 		assert(res == VK_SUCCESS);
 	}
 
@@ -93,12 +93,14 @@ Context::Context(const ur::Device& device, void* hwnd,
 
 Context::~Context()
 { 
+	auto vk_dev = m_info.m_vk_ctx.GetDevice();
+
 	for (auto& fence : waitFences) {
-		vkDestroyFence(m_dev_info.device, fence, nullptr);
+		vkDestroyFence(vk_dev, fence, nullptr);
 	}
 
-	vkDestroySemaphore(m_dev_info.device, presentCompleteSemaphore, nullptr);
-	vkDestroySemaphore(m_dev_info.device, renderCompleteSemaphore, nullptr);
+	vkDestroySemaphore(vk_dev, presentCompleteSemaphore, nullptr);
+	vkDestroySemaphore(vk_dev, renderCompleteSemaphore, nullptr);
 }
 
 void Context::Resize(uint32_t width, uint32_t height)
@@ -168,20 +170,22 @@ bool Context::CheckRenderTargetStatus()
 
 void Context::Flush()
 {
-	vkDeviceWaitIdle(m_dev_info.device);
+	vkDeviceWaitIdle(m_info.m_vk_ctx.GetDevice());
 }
 
 void Context::Draw()
 {
+	auto vk_dev = m_info.m_vk_ctx.GetDevice();
+
 	// Get next image in the swap chain (back/front buffer)
-	VkResult res = vkAcquireNextImageKHR(m_dev_info.device, m_info.swapchain->GetHandler(), 
+	VkResult res = vkAcquireNextImageKHR(vk_dev, m_info.swapchain->GetHandler(), 
 		UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &m_info.current_buffer);
     assert(res == VK_SUCCESS);
 
 	// Use a fence to wait until the command buffer has finished execution before using it again
-	res = vkWaitForFences(m_dev_info.device, 1, &waitFences[m_info.current_buffer], VK_TRUE, UINT64_MAX);
+	res = vkWaitForFences(vk_dev, 1, &waitFences[m_info.current_buffer], VK_TRUE, UINT64_MAX);
 	assert(res == VK_SUCCESS);
-	res = vkResetFences(m_dev_info.device, 1, &waitFences[m_info.current_buffer]);
+	res = vkResetFences(vk_dev, 1, &waitFences[m_info.current_buffer]);
 	assert(res == VK_SUCCESS);
 
 	// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
@@ -198,14 +202,16 @@ void Context::Draw()
 	submitInfo.pCommandBuffers = &m_info.cmd_bufs->GetHandler()[m_info.current_buffer];                // Command buffers(s) to execute in this batch (submission)
 	submitInfo.commandBufferCount = 1;                           // One command buffer
 
+	auto graphics_queue = m_info.m_vk_ctx.GetGraphicsQueue();
+
 	// Submit to the graphics queue passing a wait fence
-	res = vkQueueSubmit(m_dev_info.graphics_queue, 1, &submitInfo, waitFences[m_info.current_buffer]);
+	res = vkQueueSubmit(graphics_queue, 1, &submitInfo, waitFences[m_info.current_buffer]);
 	assert(res == VK_SUCCESS);
 
 	// Present the current buffer to the swap chain
 	// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 	// This ensures that the image is not presented to the windowing system until all commands have been submitted
-	VkResult present = m_info.swapchain->QueuePresent(m_dev_info.graphics_queue, m_info.current_buffer, renderCompleteSemaphore);
+	VkResult present = m_info.swapchain->QueuePresent(graphics_queue, m_info.current_buffer, renderCompleteSemaphore);
 	if (!((present == VK_SUCCESS) || (present == VK_SUBOPTIMAL_KHR))) {
 		assert(present == VK_SUCCESS);
 	}
@@ -235,7 +241,7 @@ void Context::BuildCommandBuffers()
 	renderPassBeginInfo.pClearValues = clearValues;
 
 	auto& cmd_bufs = m_info.cmd_bufs->GetHandler();
-	for (int32_t i = 0; i < cmd_bufs.size(); ++i)
+	for (size_t i = 0; i < cmd_bufs.size(); ++i)
 	{
 		// Set target frame buffer
 		renderPassBeginInfo.framebuffer = m_info.frame_buffers->GetHandle()[i];
@@ -264,7 +270,9 @@ void Context::BuildCommandBuffers()
 		vkCmdSetScissor(cmd_bufs[i], 0, 1, &scissor);
 
 		// Bind descriptor sets describing shader binding points
-		vkCmdBindDescriptorSets(cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_info.pipeline_layout->GetHandler(), 0, 1, m_info.desc_set->GetHandler().data(), 0, nullptr);
+		std::vector<VkDescriptorSet> desc_sets;
+		desc_sets.push_back(m_info.desc_set->GetHandler());
+		vkCmdBindDescriptorSets(cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_info.pipeline_layout->GetHandler(), 0, desc_sets.size(), desc_sets.data(), 0, nullptr);
 
 		// Bind the rendering pipeline
 		// The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time

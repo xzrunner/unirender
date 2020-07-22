@@ -9,7 +9,7 @@ namespace ur
 namespace vulkan
 {
 
-class DeviceInfo;
+class VulkanContext;
 
 class VertexBuffer : public ur::VertexBuffer
 {
@@ -27,7 +27,7 @@ public:
 
     virtual void Reset(int size_in_bytes) override;
 
-    void Create(const DeviceInfo& dev_info, const void* data, size_t size, size_t stride, bool use_texture);
+    void Create(const VulkanContext& vk_ctx, const void* data, size_t size, size_t stride, bool use_texture);
 
     auto& GetBuffer() const { return m_vertex_buffer.buf; }
 

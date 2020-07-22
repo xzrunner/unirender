@@ -97,7 +97,6 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSet.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h" />
-    <ClInclude Include="..\..\..\include\unirender\vulkan\DeviceInfo.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Pipeline.h" />
@@ -113,6 +112,8 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\Utility.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\VertexArray.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\VertexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanContext.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanDevice.h" />
     <ClInclude Include="..\..\..\include\unirender\WindingOrder.h" />
     <ClInclude Include="..\..\..\include\unirender\WritePixelBuffer.h" />
   </ItemGroup>
@@ -238,10 +239,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\DeviceInfo.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\FrameBuffers.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
@@ -286,10 +283,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\Utility.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\VertexArray.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
@@ -298,6 +291,11 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VulkanContext.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VulkanDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\include\unirender\Bitmap.inl" />
@@ -354,6 +352,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -367,6 +366,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

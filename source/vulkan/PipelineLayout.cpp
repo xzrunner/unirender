@@ -18,18 +18,20 @@ PipelineLayout::~PipelineLayout()
 	vkDestroyPipelineLayout(m_device, m_handle, NULL);
 }
 
-void PipelineLayout::Create(const DescriptorSetLayout& desc_set_layout)
+void PipelineLayout::Create()
 {
-	auto& desc_set_layouts = desc_set_layout.GetHandler();
+	std::vector<VkDescriptorSetLayout> layouts(m_layouts.size());
+	for (size_t i = 0, n = m_layouts.size(); i < n; ++i) {
+		layouts[i] = m_layouts[i]->GetHandler();
+	}
 
-	/* Now use the descriptor layout to create a pipeline layout */
 	VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
 	pPipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pPipelineLayoutCreateInfo.pNext = NULL;
 	pPipelineLayoutCreateInfo.pushConstantRangeCount = 0;
 	pPipelineLayoutCreateInfo.pPushConstantRanges = NULL;
-	pPipelineLayoutCreateInfo.setLayoutCount = desc_set_layouts.size();
-	pPipelineLayoutCreateInfo.pSetLayouts = desc_set_layouts.data();
+	pPipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+	pPipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
 	VkResult res = vkCreatePipelineLayout(m_device, &pPipelineLayoutCreateInfo, NULL, &m_handle);
 	assert(res == VK_SUCCESS);

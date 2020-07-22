@@ -16,7 +16,14 @@ std::shared_ptr<Device> CreateDevice(APIType type)
         ret = std::make_shared<opengl::Device>();
         break;
     case APIType::Vulkan:
-        ret = std::make_shared<vulkan::Device>();
+    {
+#ifdef NDEBUG
+        const bool enable_validation_layers = false;
+#else
+        const bool enable_validation_layers = true;
+#endif
+        ret = std::make_shared<vulkan::Device>(enable_validation_layers);
+    }
         break;
     }
     return ret;

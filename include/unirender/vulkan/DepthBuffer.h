@@ -7,7 +7,6 @@ namespace ur
 namespace vulkan
 {
 
-class DeviceInfo;
 class ContextInfo;
 
 class DepthBuffer
@@ -16,14 +15,13 @@ public:
     DepthBuffer(VkDevice device);
     ~DepthBuffer();
 
-	void Create(const DeviceInfo& dev_info, 
-        const ContextInfo& ctx_info);
+	void Create(const ContextInfo& ctx_info);
 
     auto GetFormat() const { return m_format; }
     auto GetView() const { return m_view; }
 
 private:
-    VkDevice m_device;
+    VkDevice m_device = VK_NULL_HANDLE;
 
     VkFormat m_format;
 

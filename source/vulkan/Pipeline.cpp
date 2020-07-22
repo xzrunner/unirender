@@ -3,7 +3,6 @@
 #include "unirender/vulkan/ContextInfo.h"
 #include "unirender/vulkan/PipelineLayout.h"
 #include "unirender/vulkan/RenderPass.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/PipelineCache.h"
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/ShaderProgram.h"

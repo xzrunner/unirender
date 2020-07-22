@@ -5,7 +5,6 @@
 #include "unirender/vulkan/CommandBuffers.h"
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/RenderPass.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/FrameBuffers.h"
 #include "unirender/vulkan/DescriptorPool.h"
 #include "unirender/vulkan/DescriptorSet.h"
@@ -113,26 +112,29 @@ namespace ur
 namespace vulkan
 {
 
-ContextInfo::ContextInfo(const DeviceInfo& dev_info, bool include_depth)
-    : m_dev_info(dev_info)
+ContextInfo::ContextInfo(VulkanDevice& vk_dev, bool include_depth)
+    : m_vk_dev(vk_dev)
     , m_include_depth(include_depth)
+    , m_vk_ctx(vk_dev)
 {
 }
 
 void ContextInfo::Init(int width, int height, void* hwnd)
 {
+    m_vk_ctx.Init(width, height, hwnd);
+
+    m_vk_dev.m_vk_dev = m_vk_ctx.GetDevice();
+
     this->width = width;
     this->height = height;
 
 	const bool use_texture = false;
 	const bool include_vi = true;
 
-    InitSwapchainExtension(hwnd);
-
-    auto dev = m_dev_info.device;
+    auto dev = m_vk_ctx.GetDevice();
 
 	swapchain = std::make_shared<Swapchain>(dev);
-	swapchain->Create(m_dev_info, *this);
+	swapchain->Create(*this);
 
     cmd_pool = std::make_shared<CommandPool>(dev);
     cmd_pool->Create();
@@ -141,32 +143,43 @@ void ContextInfo::Init(int width, int height, void* hwnd)
     cmd_bufs->Create(swapchain->GetImageCount());
 
 	depth_buf = std::make_shared<DepthBuffer>(dev);
-	depth_buf->Create(m_dev_info, *this);
+	depth_buf->Create(*this);
 
 	uniform_buf = std::make_shared<UniformBuffer>(dev);
-	uniform_buf->Create(m_dev_info, *this);
+	uniform_buf->Create(*this);
 
-	desc_set_layout = std::make_shared<DescriptorSetLayout>(dev);
-	desc_set_layout->Create(use_texture);
+    auto single_ubo_binding_point = std::make_shared<DescriptorSetLayout>(dev);
+    desc_set_layouts["single_ubo"] = single_ubo_binding_point;
+    single_ubo_binding_point->AddBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+    single_ubo_binding_point->Create();
+
+    auto single_img_binding_point = std::make_shared<DescriptorSetLayout>(dev);
+    desc_set_layouts["single_img"] = single_ubo_binding_point;
+    single_img_binding_point->AddBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+    single_img_binding_point->Create();
 
 	pipeline_layout = std::make_shared<PipelineLayout>(dev);
-	pipeline_layout->Create(*desc_set_layout);
+    pipeline_layout->AddLayout(single_ubo_binding_point);
+    if (use_texture) {
+        pipeline_layout->AddLayout(single_img_binding_point);
+    }
+	pipeline_layout->Create();
 
 	renderpass = std::make_shared<RenderPass>(dev);
-	renderpass->Create(m_dev_info, *this, m_include_depth);
+	renderpass->Create(*this, m_include_depth);
 
 	frame_buffers = std::make_shared<FrameBuffers>(dev);
-	frame_buffers->Create(m_dev_info, *this, m_include_depth);
+	frame_buffers->Create(*this, m_include_depth);
 
 	vert_buf = std::make_shared<vulkan::VertexBuffer>();
-    vert_buf->Create(m_dev_info, g_vb_solid_face_colors_Data, sizeof(g_vb_solid_face_colors_Data),
+    vert_buf->Create(m_vk_ctx, g_vb_solid_face_colors_Data, sizeof(g_vb_solid_face_colors_Data),
         sizeof(g_vb_solid_face_colors_Data[0]), false);
     //uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
-    //vert_buf->Create(m_dev_info, vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
+    //vert_buf->Create(vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
 
     //idx_buf = std::make_shared<vulkan::IndexBuffer>();
     //uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
-    //idx_buf->Create(m_dev_info, vertexBuffer.data(), indexBufferSize);
+    //idx_buf->Create(vertexBuffer.data(), indexBufferSize);
 
     std::vector<unsigned int> _vs, _fs;
     shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::VertexShader), vs, _vs);
@@ -177,7 +190,13 @@ void ContextInfo::Init(int width, int height, void* hwnd)
 	desc_pool->Create(use_texture);
 
 	desc_set = std::make_shared<DescriptorSet>(dev);
-	desc_set->Create(m_dev_info, *this, use_texture);
+    desc_set->AddLayout(single_ubo_binding_point);
+    desc_set->AddDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &uniform_buf->GetBufferInfo());
+    if (use_texture) {
+        desc_set->AddLayout(single_img_binding_point);
+        desc_set->AddDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &texture_data.image_info);
+    }
+	desc_set->Create(*desc_pool);
 
 	pipeline_cache = std::make_shared<PipelineCache>(dev);
 	pipeline_cache->Create();
@@ -188,116 +207,28 @@ void ContextInfo::Init(int width, int height, void* hwnd)
 
 void ContextInfo::Resize(uint32_t width, uint32_t height)
 {
+    m_vk_ctx.Resize(width, height);
+
     this->width = width;
     this->height = height;
 
-    auto dev = m_dev_info.device;
+    auto dev = m_vk_ctx.GetDevice();
 
-    vkDeviceWaitIdle(m_dev_info.device);
+    vkDeviceWaitIdle(dev);
 
     swapchain = std::make_shared<Swapchain>(dev);
-    swapchain->Create(m_dev_info, *this);
+    swapchain->Create(*this);
 
     depth_buf = std::make_shared<DepthBuffer>(dev);
-    depth_buf->Create(m_dev_info, *this);
+    depth_buf->Create(*this);
 
     frame_buffers = std::make_shared<FrameBuffers>(dev);
-    frame_buffers->Create(m_dev_info, *this, m_include_depth);
+    frame_buffers->Create(*this, m_include_depth);
 
     cmd_bufs = std::make_shared<CommandBuffers>(dev, cmd_pool);
     cmd_bufs->Create(swapchain->GetImageCount());
 
-    vkDeviceWaitIdle(m_dev_info.device);
-}
-
-void ContextInfo::InitSwapchainExtension(void* hwnd)
-{
-    /* DEPENDS on init_connection() and init_window() */
-
-    VkResult res;
-
-// Construct the surface description:
-#ifdef _WIN32
-    VkWin32SurfaceCreateInfoKHR createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    createInfo.pNext = NULL;
-    createInfo.hinstance = GetModuleHandle(nullptr);
-    createInfo.hwnd = (HWND)hwnd;
-    res = vkCreateWin32SurfaceKHR(m_dev_info.inst, &createInfo, NULL, &surface);
-#else
-    return;
-#endif  // _WIN32
-    assert(res == VK_SUCCESS);
-
-    // Iterate over each queue to learn whether it supports presenting:
-    VkBool32 *pSupportsPresent = (VkBool32 *)malloc(m_dev_info.queue_family_count * sizeof(VkBool32));
-    for (uint32_t i = 0; i < m_dev_info.queue_family_count; i++) {
-        vkGetPhysicalDeviceSurfaceSupportKHR(m_dev_info.gpus[0], i, surface, &pSupportsPresent[i]);
-    }
-
-    // Search for a graphics and a present queue in the array of queue
-    // families, try to find one that supports both
-    int curr_graphics_queue_family_index = UINT32_MAX;
-    int curr_present_queue_family_index = UINT32_MAX;
-    for (uint32_t i = 0; i < m_dev_info.queue_family_count; ++i) {
-        if ((m_dev_info.queue_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
-            if (curr_graphics_queue_family_index == UINT32_MAX) curr_graphics_queue_family_index = i;
-
-            if (pSupportsPresent[i] == VK_TRUE) {
-                curr_graphics_queue_family_index = i;
-                curr_present_queue_family_index = i;
-                break;
-            }
-        }
-    }
-
-    if (curr_present_queue_family_index == UINT32_MAX) {
-        // If didn't find a queue that supports both graphics and present, then
-        // find a separate present queue.
-        for (size_t i = 0; i < m_dev_info.queue_family_count; ++i)
-            if (pSupportsPresent[i] == VK_TRUE) {
-                curr_present_queue_family_index = i;
-                break;
-            }
-    }
-    free(pSupportsPresent);
-
-    // Generate error if could not find queues that support graphics
-    // and present
-    if (curr_graphics_queue_family_index == UINT32_MAX || curr_present_queue_family_index == UINT32_MAX) {
-        std::cout << "Could not find a queues for both graphics and present";
-        exit(-1);
-    }
-
-    if (graphics_queue_family_index == UINT32_MAX) {
-        graphics_queue_family_index = curr_graphics_queue_family_index;
-    } else {
-        assert(graphics_queue_family_index == curr_graphics_queue_family_index);
-    }
-    if (present_queue_family_index == UINT32_MAX) {
-        present_queue_family_index = curr_present_queue_family_index;
-    } else {
-        assert(present_queue_family_index == curr_present_queue_family_index);
-    }
-    const_cast<DeviceInfo&>(m_dev_info).InitDeviceAndQueue(graphics_queue_family_index, present_queue_family_index);
-
-    // Get the list of VkFormats that are supported:
-    uint32_t formatCount;
-    res = vkGetPhysicalDeviceSurfaceFormatsKHR(m_dev_info.gpus[0], surface, &formatCount, NULL);
-    assert(res == VK_SUCCESS);
-    VkSurfaceFormatKHR *surfFormats = (VkSurfaceFormatKHR *)malloc(formatCount * sizeof(VkSurfaceFormatKHR));
-    res = vkGetPhysicalDeviceSurfaceFormatsKHR(m_dev_info.gpus[0], surface, &formatCount, surfFormats);
-    assert(res == VK_SUCCESS);
-    // If the format list includes just one entry of VK_FORMAT_UNDEFINED,
-    // the surface has no preferred format.  Otherwise, at least one
-    // supported format will be returned.
-    if (formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED) {
-        format = VK_FORMAT_B8G8R8A8_UNORM;
-    } else {
-        assert(formatCount >= 1);
-        format = surfFormats[0].format;
-    }
-    free(surfFormats);
+    vkDeviceWaitIdle(dev);
 }
 
 }

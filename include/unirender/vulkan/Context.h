@@ -13,8 +13,6 @@ class Device;
 namespace vulkan
 {
 
-class DeviceInfo;
-
 class Context : public ur::Context
 {
 public:
@@ -51,8 +49,6 @@ private:
     void BuildCommandBuffers();
 
 private:
-    const DeviceInfo& m_dev_info;
-
     ContextInfo m_info;
 
 }; // Context

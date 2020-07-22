@@ -271,9 +271,6 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h">
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\DeviceInfo.h">
-      <Filter>api\vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\ContextInfo.h">
       <Filter>api\vulkan</Filter>
     </ClInclude>
@@ -300,6 +297,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\Adaptor.h">
       <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanDevice.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanContext.h">
+      <Filter>api\vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -421,9 +424,6 @@
     <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
       <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\DeviceInfo.cpp">
-      <Filter>api\vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\ContextInfo.cpp">
       <Filter>api\vulkan</Filter>
     </ClCompile>
@@ -432,9 +432,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\Pipeline.cpp">
       <Filter>api\vulkan\z_component</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\Utility.cpp">
-      <Filter>api\vulkan\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\ShaderObject.cpp">
       <Filter>api\vulkan\shader</Filter>
@@ -447,6 +444,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\Adaptor.cpp">
       <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VulkanDevice.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VulkanContext.cpp">
+      <Filter>api\vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,4 @@
 #include "unirender/vulkan/UniformBuffer.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/ContextInfo.h"
 
@@ -23,11 +22,9 @@ UniformBuffer::~UniformBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void UniformBuffer::Create(const DeviceInfo& dev_info, 
-                           const ContextInfo& ctx_info)
+void UniformBuffer::Create(const ContextInfo& ctx_info)
 {
     VkResult res;
-    bool pass;
     float fov = glm::radians(45.0f);
     if (ctx_info.width > ctx_info.height) {
         fov *= static_cast<float>(ctx_info.height) / static_cast<float>(ctx_info.width);
@@ -43,6 +40,8 @@ void UniformBuffer::Create(const DeviceInfo& dev_info,
 
     MVP = Clip * Projection * View * Model;
 
+    auto device = ctx_info.m_vk_ctx.GetDevice();
+
     /* VULKAN_KEY_START */
     VkBufferCreateInfo buf_info = {};
     buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -53,11 +52,11 @@ void UniformBuffer::Create(const DeviceInfo& dev_info,
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     buf_info.flags = 0;
-    res = vkCreateBuffer(dev_info.device, &buf_info, NULL, &m_buf);
+    res = vkCreateBuffer(device, &buf_info, NULL, &m_buf);
     assert(res == VK_SUCCESS);
 
     VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(dev_info.device, m_buf, &mem_reqs);
+    vkGetBufferMemoryRequirements(device, m_buf, &mem_reqs);
 
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -65,23 +64,23 @@ void UniformBuffer::Create(const DeviceInfo& dev_info,
     alloc_info.memoryTypeIndex = 0;
 
     alloc_info.allocationSize = mem_reqs.size;
-    pass = Utility::MemoryTypeFromProperties(dev_info, mem_reqs.memoryTypeBits,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        &alloc_info.memoryTypeIndex);
-    assert(pass && "No mappable, coherent memory");
+    alloc_info.memoryTypeIndex = VulkanContext::FindMemoryType(
+        ctx_info.m_vk_ctx.GetPhysicalDevice(), mem_reqs.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
 
-    res = vkAllocateMemory(dev_info.device, &alloc_info, NULL, &(m_mem));
+    res = vkAllocateMemory(device, &alloc_info, NULL, &(m_mem));
     assert(res == VK_SUCCESS);
 
     uint8_t *pData;
-    res = vkMapMemory(dev_info.device, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
+    res = vkMapMemory(device, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
     memcpy(pData, &MVP, sizeof(MVP));
 
-    vkUnmapMemory(dev_info.device, m_mem);
+    vkUnmapMemory(device, m_mem);
 
-    res = vkBindBufferMemory(dev_info.device, m_buf, m_mem, 0);
+    res = vkBindBufferMemory(device, m_buf, m_mem, 0);
     assert(res == VK_SUCCESS);
 
     m_buffer_info.buffer = m_buf;

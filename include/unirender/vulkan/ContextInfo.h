@@ -1,15 +1,17 @@
 #pragma once
 
+#include "unirender/vulkan/VulkanContext.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
+#include <unordered_map>
 
 namespace ur
 {
 namespace vulkan
 {
 
-class DeviceInfo;
 class CommandPool;
 class CommandBuffers;
 class Swapchain;
@@ -30,28 +32,18 @@ class IndexBuffer;
 class ContextInfo
 {
 public:
-    ContextInfo(const DeviceInfo& dev_info, bool include_depth);
+    ContextInfo(VulkanDevice& vk_dev, bool include_depth);
 
     void Init(int width, int height, void* hwnd);
 
     void Resize(uint32_t width, uint32_t height);
 
-private:
-    void InitSwapchainExtension(void* hwnd);
-
 public:
+    VulkanContext m_vk_ctx;
+
     int width = 0, height = 0;
 
-
-
-    VkSurfaceKHR surface = VK_NULL_HANDLE;
-
-    uint32_t graphics_queue_family_index = UINT32_MAX;
-    uint32_t present_queue_family_index = UINT32_MAX;
-
     uint32_t current_buffer = 0;
-
-    VkFormat format;
 
     std::shared_ptr<CommandPool>   cmd_pool  = nullptr;
     std::shared_ptr<CommandBuffers> cmd_bufs = nullptr;
@@ -61,8 +53,8 @@ public:
 
     std::shared_ptr<UniformBuffer> uniform_buf = nullptr;
 
-    std::shared_ptr<DescriptorSetLayout> desc_set_layout = nullptr;
-    std::shared_ptr<PipelineLayout>      pipeline_layout = nullptr;
+    std::unordered_map<std::string, std::shared_ptr<DescriptorSetLayout>> desc_set_layouts;
+    std::shared_ptr<PipelineLayout> pipeline_layout = nullptr;
 
     std::shared_ptr<RenderPass>   renderpass = nullptr;
     std::shared_ptr<FrameBuffers> frame_buffers = nullptr;
@@ -78,9 +70,13 @@ public:
     std::shared_ptr<Pipeline>      pipeline = nullptr;
 
 private:
-    const DeviceInfo& m_dev_info;
+    VulkanDevice& m_vk_dev;
 
     bool m_include_depth = false;
+
+    struct {
+        VkDescriptorImageInfo image_info;
+    } texture_data;
 
 }; // ContextInfo
 

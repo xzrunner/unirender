@@ -1,6 +1,6 @@
 #include "unirender/vulkan/VertexBuffer.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/Utility.h"
+#include "unirender/vulkan/VulkanContext.h"
 
 #include <assert.h>
 
@@ -44,10 +44,11 @@ void VertexBuffer::Reset(int size_in_bytes)
 {
 }
 
-void VertexBuffer::Create(const DeviceInfo& dev_info, const void* data, size_t size, size_t stride, bool use_texture)
+void VertexBuffer::Create(const VulkanContext& vk_ctx, const void* data, size_t size, size_t stride, bool use_texture)
 {
     VkResult res;
-    bool pass;
+
+    auto device = vk_ctx.GetDevice();
 
     VkBufferCreateInfo buf_info = {};
     buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -58,11 +59,11 @@ void VertexBuffer::Create(const DeviceInfo& dev_info, const void* data, size_t s
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     buf_info.flags = 0;
-    res = vkCreateBuffer(dev_info.device, &buf_info, NULL, &m_vertex_buffer.buf);
+    res = vkCreateBuffer(device, &buf_info, NULL, &m_vertex_buffer.buf);
     assert(res == VK_SUCCESS);
 
     VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(dev_info.device, m_vertex_buffer.buf, &mem_reqs);
+    vkGetBufferMemoryRequirements(device, m_vertex_buffer.buf, &mem_reqs);
 
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -70,25 +71,25 @@ void VertexBuffer::Create(const DeviceInfo& dev_info, const void* data, size_t s
     alloc_info.memoryTypeIndex = 0;
 
     alloc_info.allocationSize = mem_reqs.size;
-    pass = Utility::MemoryTypeFromProperties(dev_info, mem_reqs.memoryTypeBits,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        &alloc_info.memoryTypeIndex);
-    assert(pass && "No mappable, coherent memory");
+    alloc_info.memoryTypeIndex = VulkanContext::FindMemoryType(
+        vk_ctx.GetPhysicalDevice(), mem_reqs.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
 
-    res = vkAllocateMemory(dev_info.device, &alloc_info, NULL, &(m_vertex_buffer.mem));
+    res = vkAllocateMemory(device, &alloc_info, NULL, &(m_vertex_buffer.mem));
     assert(res == VK_SUCCESS);
     m_vertex_buffer.buffer_info.range = mem_reqs.size;
     m_vertex_buffer.buffer_info.offset = 0;
 
     uint8_t *pData;
-    res = vkMapMemory(dev_info.device, m_vertex_buffer.mem, 0, mem_reqs.size, 0, (void **)&pData);
+    res = vkMapMemory(device, m_vertex_buffer.mem, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
     memcpy(pData, data, size);
 
-    vkUnmapMemory(dev_info.device, m_vertex_buffer.mem);
+    vkUnmapMemory(device, m_vertex_buffer.mem);
 
-    res = vkBindBufferMemory(dev_info.device, m_vertex_buffer.buf, m_vertex_buffer.mem, 0);
+    res = vkBindBufferMemory(device, m_vertex_buffer.buf, m_vertex_buffer.mem, 0);
     assert(res == VK_SUCCESS);
 
     m_vi_binding.binding = 0;

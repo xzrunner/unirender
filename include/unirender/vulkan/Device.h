@@ -1,7 +1,7 @@
 #pragma once
 
 #include "unirender/Device.h"
-#include "unirender/vulkan/DeviceInfo.h"
+#include "unirender/vulkan/VulkanDevice.h"
 
 namespace ur
 {
@@ -11,7 +11,7 @@ namespace vulkan
 class Device : public ur::Device
 {
 public:
-    Device();
+    Device(bool enable_validation_layers);
 
     virtual int GetMaxNumVertAttrs() const override { return m_max_num_vert_attrs; }
     virtual int GetMaxNumTexUnits() const override { return m_max_num_tex_units; }
@@ -59,14 +59,14 @@ public:
     virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const override;
 
-    auto& GetInfo() const { return m_info; }
+    auto& GetVulkanDevice() const { return m_vk_dev; }
 
 private:
     int m_max_num_vert_attrs = 0;
     int m_max_num_tex_units = 0;
     int m_max_num_color_attachments = 0;
 
-    DeviceInfo m_info;
+    VulkanDevice m_vk_dev;
 
 }; // Device
 }

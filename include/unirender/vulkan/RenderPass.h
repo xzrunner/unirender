@@ -7,7 +7,6 @@ namespace ur
 namespace vulkan
 {
 
-class DeviceInfo;
 class ContextInfo;
 
 class RenderPass
@@ -16,7 +15,7 @@ public:
     RenderPass(VkDevice device);
     ~RenderPass();
 
-    void Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info, 
+    void Create(const ContextInfo& ctx_info, 
         bool include_depth, bool clear = true, 
         VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 		VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED);
@@ -24,7 +23,7 @@ public:
     auto GetHandler() const { return m_handle; }
 
 private:
-    VkDevice m_device;
+    VkDevice m_device = VK_NULL_HANDLE;
 
 	VkRenderPass m_handle = VK_NULL_HANDLE;
 

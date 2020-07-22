@@ -1,6 +1,5 @@
 #include "unirender/vulkan/FrameBuffers.h"
 #include "unirender/vulkan/DepthBuffer.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/ContextInfo.h"
 #include "unirender/vulkan/RenderPass.h"
 #include "unirender/vulkan/Swapchain.h"
@@ -24,8 +23,7 @@ FrameBuffers::~FrameBuffers()
 	}
 }
 
-void FrameBuffers::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_info,
-                          bool include_depth)
+void FrameBuffers::Create(const ContextInfo& ctx_info, bool include_depth)
 {
     /* DEPENDS on init_depth_buffer(), init_renderpass() and
      * init_swapchain_extension() */
@@ -46,9 +44,9 @@ void FrameBuffers::Create(const DeviceInfo& dev_info, const ContextInfo& ctx_inf
 
     auto count = ctx_info.swapchain->GetImageCount();
     m_frame_buffers.resize(count);
-    for (int i = 0; i < count; ++i) {
+    for (size_t i = 0; i < count; ++i) {
         attachments[0] = ctx_info.swapchain->GetView(i);
-        res = vkCreateFramebuffer(dev_info.device, &fb_info, NULL, &m_frame_buffers[i]);
+        res = vkCreateFramebuffer(ctx_info.m_vk_ctx.GetDevice(), &fb_info, NULL, &m_frame_buffers[i]);
         assert(res == VK_SUCCESS);
     }
 }

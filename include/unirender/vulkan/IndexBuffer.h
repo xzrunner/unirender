@@ -9,7 +9,7 @@ namespace ur
 namespace vulkan
 {
 
-class DeviceInfo;
+class VulkanContext;
 
 class IndexBuffer : public ur::IndexBuffer
 {
@@ -30,7 +30,7 @@ public:
 
     virtual void SetDataType(IndexBufferDataType data_type) override {}
 
-    void Create(const DeviceInfo& dev_info, const void* data, size_t size);
+    void Create(const VulkanContext& vk_ctx, const void* data, size_t size);
 
     auto& GetBuffer() const { return m_buffer; }
     auto GetCount() const { return m_count; }

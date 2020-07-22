@@ -1,7 +1,7 @@
 #include "unirender/vulkan/DepthBuffer.h"
-#include "unirender/vulkan/DeviceInfo.h"
 #include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/ContextInfo.h"
+#include "unirender/vulkan/VulkanContext.h"
 
 #include <iostream>
 
@@ -27,8 +27,7 @@ DepthBuffer::~DepthBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void DepthBuffer::Create(const DeviceInfo& dev_info,
-                         const ContextInfo& ctx_info)
+void DepthBuffer::Create(const ContextInfo& ctx_info)
 {
     VkResult res;
     bool pass;
@@ -39,7 +38,8 @@ void DepthBuffer::Create(const DeviceInfo& dev_info,
     m_format = VK_FORMAT_D16_UNORM;
 
     const VkFormat depth_format = m_format;
-    vkGetPhysicalDeviceFormatProperties(dev_info.gpus[0], depth_format, &props);
+    auto phy_dev = ctx_info.m_vk_ctx.GetPhysicalDevice();
+    vkGetPhysicalDeviceFormatProperties(phy_dev, depth_format, &props);
     if (props.linearTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
         image_info.tiling = VK_IMAGE_TILING_LINEAR;
     } else if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
@@ -104,9 +104,9 @@ void DepthBuffer::Create(const DeviceInfo& dev_info,
     vkGetImageMemoryRequirements(m_device, m_image, &mem_reqs);
 
     mem_alloc.allocationSize = mem_reqs.size;
-    /* Use the memory properties to determine the type of memory required */
-    pass = Utility::MemoryTypeFromProperties(dev_info, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &mem_alloc.memoryTypeIndex);
-    assert(pass);
+    mem_alloc.memoryTypeIndex = VulkanContext::FindMemoryType(
+        phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    );
 
     /* Allocate memory */
     res = vkAllocateMemory(m_device, &mem_alloc, NULL, &m_mem);

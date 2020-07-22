@@ -20,7 +20,7 @@ public:
     auto GetHandle() const { return m_handle; }
 
 private:
-    VkDevice m_device;
+    VkDevice m_device = VK_NULL_HANDLE;
 
     VkCommandPool m_handle;
 

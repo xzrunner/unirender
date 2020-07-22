@@ -1,6 +1,8 @@
 #include "unirender/vulkan/IndexBuffer.h"
 #include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
 
@@ -57,7 +59,7 @@ void IndexBuffer::Create(const VulkanContext& vk_ctx, const void* data, size_t s
 	indexbufferInfo.size = size;
 	indexbufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-	auto device = vk_ctx.GetDevice();
+	auto device = vk_ctx.GetLogicalDevice()->GetHandler();
 
 	// Copy index data to a buffer visible to the host
 	auto res = vkCreateBuffer(device, &indexbufferInfo, nullptr, &m_buffer);
@@ -70,8 +72,8 @@ void IndexBuffer::Create(const VulkanContext& vk_ctx, const void* data, size_t s
 	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	alloc_info.allocationSize = mem_reqs.size;
 	alloc_info.memoryTypeIndex = 0;
-	alloc_info.memoryTypeIndex = VulkanContext::FindMemoryType(
-		vk_ctx.GetPhysicalDevice(), mem_reqs.memoryTypeBits,
+	alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
+		vk_ctx.GetPhysicalDevice()->GetHandler(), mem_reqs.memoryTypeBits,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	);
 

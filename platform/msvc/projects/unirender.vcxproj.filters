@@ -271,9 +271,6 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h">
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\ContextInfo.h">
-      <Filter>api\vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineCache.h">
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
@@ -303,6 +300,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanContext.h">
       <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Surface.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PhysicalDevice.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\LogicalDevice.h">
+      <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -424,9 +430,6 @@
     <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
       <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\ContextInfo.cpp">
-      <Filter>api\vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\PipelineCache.cpp">
       <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
@@ -450,6 +453,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\VulkanContext.cpp">
       <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Surface.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PhysicalDevice.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\LogicalDevice.cpp">
+      <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

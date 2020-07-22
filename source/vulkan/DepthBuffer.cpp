@@ -1,7 +1,7 @@
 #include "unirender/vulkan/DepthBuffer.h"
 #include "unirender/vulkan/Utility.h"
-#include "unirender/vulkan/ContextInfo.h"
 #include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/PhysicalDevice.h"
 
 #include <iostream>
 
@@ -27,10 +27,9 @@ DepthBuffer::~DepthBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void DepthBuffer::Create(const ContextInfo& ctx_info)
+void DepthBuffer::Create(const VulkanContext& vk_ctx)
 {
     VkResult res;
-    bool pass;
     VkImageCreateInfo image_info = {};
     VkFormatProperties props;
 
@@ -38,7 +37,7 @@ void DepthBuffer::Create(const ContextInfo& ctx_info)
     m_format = VK_FORMAT_D16_UNORM;
 
     const VkFormat depth_format = m_format;
-    auto phy_dev = ctx_info.m_vk_ctx.GetPhysicalDevice();
+    auto phy_dev = vk_ctx.GetPhysicalDevice()->GetHandler();
     vkGetPhysicalDeviceFormatProperties(phy_dev, depth_format, &props);
     if (props.linearTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
         image_info.tiling = VK_IMAGE_TILING_LINEAR;
@@ -54,8 +53,8 @@ void DepthBuffer::Create(const ContextInfo& ctx_info)
     image_info.pNext = NULL;
     image_info.imageType = VK_IMAGE_TYPE_2D;
     image_info.format = depth_format;
-    image_info.extent.width = ctx_info.width;
-    image_info.extent.height = ctx_info.height;
+    image_info.extent.width = vk_ctx.GetWidth();
+    image_info.extent.height = vk_ctx.GetHeight();
     image_info.extent.depth = 1;
     image_info.mipLevels = 1;
     image_info.arrayLayers = 1;
@@ -104,7 +103,7 @@ void DepthBuffer::Create(const ContextInfo& ctx_info)
     vkGetImageMemoryRequirements(m_device, m_image, &mem_reqs);
 
     mem_alloc.allocationSize = mem_reqs.size;
-    mem_alloc.memoryTypeIndex = VulkanContext::FindMemoryType(
+    mem_alloc.memoryTypeIndex = PhysicalDevice::FindMemoryType(
         phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 

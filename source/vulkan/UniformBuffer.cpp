@@ -1,6 +1,8 @@
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/Utility.h"
-#include "unirender/vulkan/ContextInfo.h"
+#include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <glm/vec3.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -22,14 +24,17 @@ UniformBuffer::~UniformBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void UniformBuffer::Create(const ContextInfo& ctx_info)
+void UniformBuffer::Create(const VulkanContext& vk_ctx)
 {
     VkResult res;
+
+    int width = vk_ctx.GetWidth();
+    int height = vk_ctx.GetHeight();
     float fov = glm::radians(45.0f);
-    if (ctx_info.width > ctx_info.height) {
-        fov *= static_cast<float>(ctx_info.height) / static_cast<float>(ctx_info.width);
+    if (width > height) {
+        fov *= static_cast<float>(height) / static_cast<float>(width);
     }
-    Projection = glm::perspective(fov, static_cast<float>(ctx_info.width) / static_cast<float>(ctx_info.height), 0.1f, 100.0f);
+    Projection = glm::perspective(fov, static_cast<float>(width) / static_cast<float>(height), 0.1f, 100.0f);
     View = glm::lookAt(glm::vec3(-5, 3, -10),  // Camera is at (-5,3,-10), in World Space
                             glm::vec3(0, 0, 0),     // and looks at the origin
                             glm::vec3(0, -1, 0)     // Head is up (set to 0,-1,0 to look upside-down)
@@ -40,7 +45,7 @@ void UniformBuffer::Create(const ContextInfo& ctx_info)
 
     MVP = Clip * Projection * View * Model;
 
-    auto device = ctx_info.m_vk_ctx.GetDevice();
+    auto device = vk_ctx.GetLogicalDevice()->GetHandler();
 
     /* VULKAN_KEY_START */
     VkBufferCreateInfo buf_info = {};
@@ -64,8 +69,8 @@ void UniformBuffer::Create(const ContextInfo& ctx_info)
     alloc_info.memoryTypeIndex = 0;
 
     alloc_info.allocationSize = mem_reqs.size;
-    alloc_info.memoryTypeIndex = VulkanContext::FindMemoryType(
-        ctx_info.m_vk_ctx.GetPhysicalDevice(), mem_reqs.memoryTypeBits,
+    alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
+        vk_ctx.GetPhysicalDevice()->GetHandler(), mem_reqs.memoryTypeBits,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 

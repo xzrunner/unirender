@@ -1,6 +1,8 @@
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
 
@@ -48,7 +50,7 @@ void VertexBuffer::Create(const VulkanContext& vk_ctx, const void* data, size_t 
 {
     VkResult res;
 
-    auto device = vk_ctx.GetDevice();
+    auto device = vk_ctx.GetLogicalDevice()->GetHandler();
 
     VkBufferCreateInfo buf_info = {};
     buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -71,8 +73,8 @@ void VertexBuffer::Create(const VulkanContext& vk_ctx, const void* data, size_t 
     alloc_info.memoryTypeIndex = 0;
 
     alloc_info.allocationSize = mem_reqs.size;
-    alloc_info.memoryTypeIndex = VulkanContext::FindMemoryType(
-        vk_ctx.GetPhysicalDevice(), mem_reqs.memoryTypeBits,
+    alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
+        vk_ctx.GetPhysicalDevice()->GetHandler(), mem_reqs.memoryTypeBits,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 

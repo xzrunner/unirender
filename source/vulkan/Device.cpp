@@ -48,7 +48,8 @@ Device::CreateRenderBuffer(int width, int height, InternalFormat format, Attachm
 std::shared_ptr<ur::ShaderProgram>
 Device::CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const
 {
-	return std::make_shared<ur::vulkan::ShaderProgram>(m_vk_dev.m_vk_dev, vs, fs);
+    assert(m_vk_dev.m_vk_dev);
+    return std::make_shared<ur::vulkan::ShaderProgram>(m_vk_dev.m_vk_dev, vs, fs);
 }
 
 std::shared_ptr<ur::ShaderProgram>

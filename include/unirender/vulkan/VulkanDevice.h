@@ -35,7 +35,7 @@ private:
 
 	// fixme
 public:
-	VkDevice m_vk_dev = VK_NULL_HANDLE;
+	mutable VkDevice m_vk_dev = VK_NULL_HANDLE;
 
 }; // VulkanDevice
 

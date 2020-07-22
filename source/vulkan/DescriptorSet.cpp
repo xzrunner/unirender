@@ -1,5 +1,4 @@
 #include "unirender/vulkan/DescriptorSet.h"
-#include "unirender/vulkan/ContextInfo.h"
 #include "unirender/vulkan/DescriptorPool.h"
 #include "unirender/vulkan/DescriptorSetLayout.h"
 #include "unirender/vulkan/UniformBuffer.h"

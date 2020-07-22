@@ -1,32 +1,13 @@
 #define NOMINMAX
 
 #include "unirender/vulkan/Swapchain.h"
-#include "unirender/vulkan/ContextInfo.h"
+#include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/Surface.h"
+#include "unirender/vulkan/PhysicalDevice.h"
 
 #include <algorithm>
 
 #include <assert.h>
-
-// Macro to get a procedure address based on a vulkan instance
-#define GET_INSTANCE_PROC_ADDR(inst, entrypoint)                        \
-{                                                                       \
-	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetInstanceProcAddr(inst, "vk"#entrypoint)); \
-	if (fp##entrypoint == NULL)                                         \
-	{																    \
-		exit(1);                                                        \
-	}                                                                   \
-}
-
-
-// Macro to get a procedure address based on a vulkan device
-#define GET_DEVICE_PROC_ADDR(dev, entrypoint)                           \
-{                                                                       \
-	fp##entrypoint = reinterpret_cast<PFN_vk##entrypoint>(vkGetDeviceProcAddr(dev, "vk"#entrypoint));   \
-	if (fp##entrypoint == NULL)                                         \
-	{																    \
-		exit(1);                                                        \
-	}                                                                   \
-}
 
 namespace ur
 {
@@ -46,14 +27,14 @@ Swapchain::~Swapchain()
 	vkDestroySwapchainKHR(m_device, m_handle, NULL);
 }
 
-void Swapchain::Create(const ContextInfo& ctx_info)
+void Swapchain::Create(const VulkanContext& vk_ctx)
 {
     VkResult res;
     VkSurfaceCapabilitiesKHR surfCapabilities;
 
-    auto surface = ctx_info.m_vk_ctx.GetSurface();
+    auto surface = vk_ctx.GetSurface()->GetHandler();
 
-    auto phy_dev = ctx_info.m_vk_ctx.GetPhysicalDevice();
+    auto phy_dev = vk_ctx.GetPhysicalDevice()->GetHandler();
 
     res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phy_dev, surface, &surfCapabilities);
     assert(res == VK_SUCCESS);
@@ -71,8 +52,8 @@ void Swapchain::Create(const ContextInfo& ctx_info)
     if (surfCapabilities.currentExtent.width == 0xFFFFFFFF) {
         // If the surface size is undefined, the size is set to
         // the size of the images requested.
-        swapchainExtent.width = ctx_info.width;
-        swapchainExtent.height = ctx_info.height;
+        swapchainExtent.width = vk_ctx.GetWidth();
+        swapchainExtent.height = vk_ctx.GetHeight();
         if (swapchainExtent.width < surfCapabilities.minImageExtent.width) {
             swapchainExtent.width = surfCapabilities.minImageExtent.width;
         } else if (swapchainExtent.width > surfCapabilities.maxImageExtent.width) {
@@ -147,13 +128,13 @@ void Swapchain::Create(const ContextInfo& ctx_info)
 #else
     swapchain_ci.clipped = false;
 #endif
-    swapchain_ci.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+    swapchain_ci.imageColorSpace = surfaceFormat.colorSpace;
     swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     swapchain_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapchain_ci.queueFamilyIndexCount = 0;
     swapchain_ci.pQueueFamilyIndices = NULL;
 
-    VulkanContext::QueueFamilyIndices indices = ctx_info.m_vk_ctx.FindQueueFamilies(phy_dev);
+    PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev, surface);
     uint32_t queueFamilyIndices[] = { indices.graphics_family.value(), indices.present_family.value() };
     if (indices.graphics_family != indices.present_family) {
         swapchain_ci.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -214,7 +195,7 @@ void Swapchain::Create(const ContextInfo& ctx_info)
         assert(res == VK_SUCCESS);
     }
     free(swapchainImages);
-    const_cast<ContextInfo&>(ctx_info).current_buffer = 0;
+    vk_ctx.SetCurrentBuffer(0);
 
     if (NULL != presentModes) {
         free(presentModes);
@@ -291,7 +272,7 @@ VkExtent2D Swapchain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilit
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     } else {
-        VkExtent2D actualExtent = { width, height };
+        VkExtent2D actualExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
         actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
         actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));

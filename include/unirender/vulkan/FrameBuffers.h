@@ -9,7 +9,7 @@ namespace ur
 namespace vulkan
 {
 
-class ContextInfo;
+class VulkanContext;
 
 class FrameBuffers
 {
@@ -17,9 +17,9 @@ public:
 	FrameBuffers(VkDevice device);
 	~FrameBuffers();
 
-	void Create(const ContextInfo& ctx_info, bool include_depth);
+	void Create(const VulkanContext& vk_ctx, bool include_depth);
 
-	auto& GetHandle() const { return m_frame_buffers; }
+	auto& GetHandler() const { return m_frame_buffers; }
 
 private:
 	VkDevice m_device = VK_NULL_HANDLE;

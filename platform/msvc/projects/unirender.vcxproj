@@ -91,7 +91,6 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Context.h" />
-    <ClInclude Include="..\..\..\include\unirender\vulkan\ContextInfo.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorPool.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSet.h" />
@@ -99,12 +98,15 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\LogicalDevice.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PhysicalDevice.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Pipeline.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineCache.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\RenderPass.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderObject.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderProgram.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Surface.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Swapchain.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Texture.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\TypeConverter.h" />
@@ -215,10 +217,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\ContextInfo.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
@@ -247,6 +245,14 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\LogicalDevice.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PhysicalDevice.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\Pipeline.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
@@ -268,6 +274,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\ShaderProgram.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Surface.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
@@ -295,7 +305,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\VulkanDevice.cpp" />
+    <ClCompile Include="..\..\..\source\vulkan\VulkanDevice.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\include\unirender\Bitmap.inl" />

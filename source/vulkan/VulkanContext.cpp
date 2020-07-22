@@ -1,15 +1,111 @@
 #include "unirender/vulkan/VulkanContext.h"
 #include "unirender/vulkan/VulkanDevice.h"
 #include "unirender/vulkan/Swapchain.h"
+#include "unirender/vulkan/DepthBuffer.h"
+#include "unirender/vulkan/CommandPool.h"
+#include "unirender/vulkan/CommandBuffers.h"
+#include "unirender/vulkan/Device.h"
+#include "unirender/vulkan/RenderPass.h"
+#include "unirender/vulkan/FrameBuffers.h"
+#include "unirender/vulkan/DescriptorPool.h"
+#include "unirender/vulkan/DescriptorSet.h"
+#include "unirender/vulkan/PipelineCache.h"
+#include "unirender/vulkan/DescriptorSetLayout.h"
+#include "unirender/vulkan/PipelineLayout.h"
+#include "unirender/vulkan/Pipeline.h"
+#include "unirender/vulkan/ShaderProgram.h"
+#include "unirender/vulkan/UniformBuffer.h"
+#include "unirender/vulkan/VertexBuffer.h"
+#include "unirender/vulkan/IndexBuffer.h"
+#include "unirender/vulkan/Surface.h"
+#include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/LogicalDevice.h"
+#include "unirender/Adaptor.h"
 
 #include <set>
 
 namespace
 {
 
-const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+struct Vertex {
+    float posX, posY, posZ, posW;  // Position data
+    float r, g, b, a;              // Color
 };
+
+#define XYZ1(_x_, _y_, _z_) (_x_), (_y_), (_z_), 1.f
+#define UV(_u_, _v_) (_u_), (_v_)
+
+static const Vertex g_vb_solid_face_colors_Data[] = {
+    // red face
+    {XYZ1(-1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
+    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
+    {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
+    {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
+    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
+    {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
+    // green face
+    {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
+    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
+    {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
+    {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
+    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
+    {XYZ1(1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
+    // blue face
+    {XYZ1(-1, 1, 1), XYZ1(0.f, 0.f, 1.f)},
+    {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
+    {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
+    {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
+    {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
+    {XYZ1(-1, -1, -1), XYZ1(0.f, 0.f, 1.f)},
+    // yellow face
+    {XYZ1(1, 1, 1), XYZ1(1.f, 1.f, 0.f)},
+    {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
+    {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
+    {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
+    {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
+    {XYZ1(1, -1, -1), XYZ1(1.f, 1.f, 0.f)},
+    // magenta face
+    {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
+    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
+    {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
+    {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
+    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
+    {XYZ1(-1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
+    // cyan face
+    {XYZ1(1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
+    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+    {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
+    {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
+    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+    {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
+};
+
+const char* vs = R"(
+#version 400
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+layout (std140, binding = 0) uniform bufferVals {
+    mat4 mvp;
+} myBufferVals;
+layout (location = 0) in vec4 pos;
+layout (location = 1) in vec4 inColor;
+layout (location = 0) out vec4 outColor;
+void main() {
+   outColor = inColor;
+   gl_Position = myBufferVals.mvp * pos;
+}
+)";
+
+const char* fs = R"(
+#version 400
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+layout (location = 0) in vec4 color;
+layout (location = 0) out vec4 outColor;
+void main() {
+    outColor = color;
+}
+)";
 
 }
 
@@ -18,254 +114,125 @@ namespace ur
 namespace vulkan
 {
 
-VulkanContext::VulkanContext(const VulkanDevice& vk)
-    : m_vk_ctx(vk)
+VulkanContext::VulkanContext(const VulkanDevice& vk_dev)
+    : m_vk_dev(vk_dev)
 {
-}
-
-VulkanContext::~VulkanContext()
-{
-    vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
-    vkDestroyDevice(m_device, nullptr);
-
-    vkDestroySurfaceKHR(m_vk_ctx.GetInstance(), m_surface, nullptr);
 }
 
 void VulkanContext::Init(uint32_t width, uint32_t height, void* hwnd)
 {
-    CreateSurface(hwnd);
-    PickPhysicalDevice();
-    CreateLogicalDevice();
-    //CreateSwapChain(width, height);
+    m_surface = std::make_shared<Surface>(m_vk_dev.GetInstance());
+    m_surface->Create(hwnd);
+
+    m_phy_dev = std::make_shared<PhysicalDevice>(m_vk_dev.GetInstance(), m_surface->GetHandler());
+    m_phy_dev->Create();
+
+    m_logic_dev = std::make_shared<LogicalDevice>();
+    m_logic_dev->Create(m_vk_dev, *m_surface, *m_phy_dev);
+
+    auto logic_dev = m_logic_dev->GetHandler();
+    m_vk_dev.m_vk_dev = logic_dev;
+
+    m_width = width;
+    m_height = height;
+
+	const bool use_texture = false;
+	const bool include_vi = true;
+
+    m_swapchain = std::make_shared<Swapchain>(logic_dev);
+    m_swapchain->Create(*this);
+
+    m_cmd_pool = std::make_shared<CommandPool>(logic_dev);
+    m_cmd_pool->Create();
+
+    m_cmd_bufs = std::make_shared<CommandBuffers>(logic_dev, m_cmd_pool);
+    m_cmd_bufs->Create(m_swapchain->GetImageCount());
+
+    m_depth_buf = std::make_shared<DepthBuffer>(logic_dev);
+    m_depth_buf->Create(*this);
+
+    m_uniform_buf = std::make_shared<UniformBuffer>(logic_dev);
+    m_uniform_buf->Create(*this);
+
+    auto single_ubo_binding_point = std::make_shared<DescriptorSetLayout>(logic_dev);
+    m_desc_set_layouts["single_ubo"] = single_ubo_binding_point;
+    single_ubo_binding_point->AddBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+    single_ubo_binding_point->Create();
+
+    auto single_img_binding_point = std::make_shared<DescriptorSetLayout>(logic_dev);
+    m_desc_set_layouts["single_img"] = single_ubo_binding_point;
+    single_img_binding_point->AddBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+    single_img_binding_point->Create();
+
+    m_pipeline_layout = std::make_shared<PipelineLayout>(logic_dev);
+    m_pipeline_layout->AddLayout(single_ubo_binding_point);
+    if (use_texture) {
+        m_pipeline_layout->AddLayout(single_img_binding_point);
+    }
+    m_pipeline_layout->Create();
+
+    m_renderpass = std::make_shared<RenderPass>(logic_dev);
+    m_renderpass->Create(*this, m_include_depth);
+
+    m_frame_buffers = std::make_shared<FrameBuffers>(logic_dev);
+    m_frame_buffers->Create(*this, m_include_depth);
+
+    m_vert_buf = std::make_shared<vulkan::VertexBuffer>();
+    m_vert_buf->Create(*this, g_vb_solid_face_colors_Data, sizeof(g_vb_solid_face_colors_Data),
+        sizeof(g_vb_solid_face_colors_Data[0]), false);
+    //uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
+    //vert_buf->Create(vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
+
+    //idx_buf = std::make_shared<vulkan::IndexBuffer>();
+    //uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
+    //idx_buf->Create(vertexBuffer.data(), indexBufferSize);
+
+    std::vector<unsigned int> _vs, _fs;
+    shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::VertexShader), vs, _vs);
+    shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::FragmentShader), fs, _fs);
+    m_program = std::make_shared<vulkan::ShaderProgram>(logic_dev, _vs, _fs);
+
+    m_desc_pool = std::make_shared<DescriptorPool>(logic_dev);
+    m_desc_pool->Create(use_texture);
+
+    m_desc_set = std::make_shared<DescriptorSet>(logic_dev);
+    m_desc_set->AddLayout(single_ubo_binding_point);
+    m_desc_set->AddDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_uniform_buf->GetBufferInfo());
+    if (use_texture) {
+        m_desc_set->AddLayout(single_img_binding_point);
+        m_desc_set->AddDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &m_texture_data.image_info);
+    }
+    m_desc_set->Create(*m_desc_pool);
+
+    m_pipeline_cache = std::make_shared<PipelineCache>(logic_dev);
+    m_pipeline_cache->Create();
+
+    m_pipeline = std::make_shared<Pipeline>(logic_dev);
+    m_pipeline->Create(*this, m_include_depth, include_vi);
 }
 
 void VulkanContext::Resize(uint32_t width, uint32_t height)
 {
-    //CreateSwapChain(width, height);
-}
+    m_width = width;
+    m_height = height;
 
-uint32_t VulkanContext::FindMemoryType(VkPhysicalDevice phy_dev, uint32_t type_filter, 
-                                       VkMemoryPropertyFlags properties)
-{
-    VkPhysicalDeviceMemoryProperties mem_props;
-    vkGetPhysicalDeviceMemoryProperties(phy_dev, &mem_props);
+    auto logic_dev = m_logic_dev->GetHandler();
 
-    for (uint32_t i = 0; i < mem_props.memoryTypeCount; i++) {
-        if ((type_filter & (1 << i)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties) {
-            return i;
-        }
-    }
+    vkDeviceWaitIdle(logic_dev);
 
-    throw std::runtime_error("failed to find suitable memory type!");
-}
+    m_swapchain = std::make_shared<Swapchain>(logic_dev);
+    m_swapchain->Create(*this);
 
-void VulkanContext::CreateSurface(void* hwnd) 
-{
-    VkWin32SurfaceCreateInfoKHR surface_ci = {};
-    surface_ci.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    surface_ci.pNext = NULL;
-    surface_ci.hinstance = GetModuleHandle(nullptr);
-    surface_ci.hwnd = (HWND)hwnd;
-    if (vkCreateWin32SurfaceKHR(m_vk_ctx.GetInstance(), &surface_ci, NULL, &m_surface) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create m_surface!");
-    }
-}
+    m_depth_buf = std::make_shared<DepthBuffer>(logic_dev);
+    m_depth_buf->Create(*this);
 
-void VulkanContext::PickPhysicalDevice() 
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(m_vk_ctx.GetInstance(), &deviceCount, nullptr);
+    m_frame_buffers = std::make_shared<FrameBuffers>(logic_dev);
+    m_frame_buffers->Create(*this, m_include_depth);
 
-    if (deviceCount == 0) {
-        throw std::runtime_error("failed to find GPUs with VulkanContext support!");
-    }
+    m_cmd_bufs = std::make_shared<CommandBuffers>(logic_dev, m_cmd_pool);
+    m_cmd_bufs->Create(m_swapchain->GetImageCount());
 
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(m_vk_ctx.GetInstance(), &deviceCount, devices.data());
-
-    for (const auto& device : devices) {
-        if (IsDeviceSuitable(device)) {
-            m_physical_device = device;
-            break;
-        }
-    }
-
-    if (m_physical_device == VK_NULL_HANDLE) {
-        throw std::runtime_error("failed to find a suitable GPU!");
-    }
-}
-
-void VulkanContext::CreateLogicalDevice() 
-{
-    QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
-
-    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-    std::set<uint32_t> unique_queue_families = {indices.graphics_family.value(), indices.present_family.value()};
-
-    float queuePriority = 1.0f;
-    for (uint32_t queueFamily : unique_queue_families) 
-    {
-        VkDeviceQueueCreateInfo queue_ci{};
-        queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queue_ci.queueFamilyIndex = queueFamily;
-        queue_ci.queueCount = 1;
-        queue_ci.pQueuePriorities = &queuePriority;
-        queue_create_infos.push_back(queue_ci);
-    }
-
-    VkPhysicalDeviceFeatures deviceFeatures{};
-
-    VkDeviceCreateInfo device_ci{};
-    device_ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-    device_ci.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
-    device_ci.pQueueCreateInfos = queue_create_infos.data();
-
-    device_ci.pEnabledFeatures = &deviceFeatures;
-
-    device_ci.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-    device_ci.ppEnabledExtensionNames = deviceExtensions.data();
-
-    if (m_vk_ctx.IsEnableValidationLayers()) 
-    {
-        auto& validation_layers = m_vk_ctx.GetValidationLayers();
-        device_ci.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
-        device_ci.ppEnabledLayerNames = validation_layers.data();
-    } 
-    else 
-    {
-        device_ci.enabledLayerCount = 0;
-    }
-
-    if (vkCreateDevice(m_physical_device, &device_ci, nullptr, &m_device) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create logical device!");
-    }
-
-    vkGetDeviceQueue(m_device, indices.graphics_family.value(), 0, &m_graphics_queue);
-    vkGetDeviceQueue(m_device, indices.present_family.value(), 0, &m_present_queue);
-}
-
-void VulkanContext::CreateSwapChain(uint32_t width, uint32_t height)
-{
-    Swapchain::SwapChainSupportDetails swapChainSupport 
-        = Swapchain::QuerySwapChainSupport(m_physical_device, m_surface);
-
-    VkSurfaceFormatKHR surfaceFormat = Swapchain::ChooseSwapSurfaceFormat(swapChainSupport.formats);
-    VkPresentModeKHR presentMode = Swapchain::ChooseSwapPresentMode(swapChainSupport.present_modes);
-    VkExtent2D extent = Swapchain::ChooseSwapExtent(swapChainSupport.capabilities, width, height);
-
-    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-    if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
-        imageCount = swapChainSupport.capabilities.maxImageCount;
-    }
-
-    VkSwapchainCreateInfoKHR createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = m_surface;
-
-    createInfo.minImageCount = imageCount;
-    createInfo.imageFormat = surfaceFormat.format;
-    createInfo.imageColorSpace = surfaceFormat.colorSpace;
-    createInfo.imageExtent = extent;
-    createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-    QueueFamilyIndices indices = FindQueueFamilies(m_physical_device);
-    uint32_t queueFamilyIndices[] = {indices.graphics_family.value(), indices.present_family.value()};
-
-    if (indices.graphics_family != indices.present_family) {
-        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
-    } else {
-        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    }
-
-    createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    createInfo.presentMode = presentMode;
-    createInfo.clipped = VK_TRUE;
-
-    createInfo.oldSwapchain = VK_NULL_HANDLE;
-
-    if (vkCreateSwapchainKHR(m_device, &createInfo, nullptr, &m_swapchain) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create swap chain!");
-    }
-
-    vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, nullptr);
-    m_swapchain_images.resize(imageCount);
-    vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, m_swapchain_images.data());
-
-    m_swapchain_image_format = surfaceFormat.format;
-    m_swapchain_extent = extent;
-}
-
-VulkanContext::QueueFamilyIndices 
-VulkanContext::FindQueueFamilies(VkPhysicalDevice device) const
-{
-    QueueFamilyIndices indices;
-
-    uint32_t queue_family_count = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-
-    int i = 0;
-    for (const auto& queue_family : queue_families) 
-    {
-        if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphics_family = i;
-        }
-
-        VkBool32 present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &present_support);
-
-        if (present_support) {
-            indices.present_family = i;
-        }
-
-        if (indices.IsComplete()) {
-            break;
-        }
-
-        i++;
-    }
-
-    return indices;
-}
-
-bool VulkanContext::IsDeviceSuitable(VkPhysicalDevice device) const
-{
-    QueueFamilyIndices indices = FindQueueFamilies(device);
-
-    bool extensionsSupported = CheckDeviceExtensionSupport(device);
-
-    bool swapChainAdequate = false;
-    if (extensionsSupported) {
-        Swapchain::SwapChainSupportDetails swapChainSupport 
-            = Swapchain::QuerySwapChainSupport(device, m_surface);
-        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.present_modes.empty();
-    }
-
-    return indices.IsComplete() && extensionsSupported && swapChainAdequate;
-}
-
-bool VulkanContext::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
-{
-    uint32_t extensionCount;
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-    for (const auto& extension : availableExtensions) {
-        requiredExtensions.erase(extension.extensionName);
-    }
-
-    return requiredExtensions.empty();
+    vkDeviceWaitIdle(logic_dev);
 }
 
 }

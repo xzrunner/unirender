@@ -1,0 +1,84 @@
+#include "unirender/vulkan/LogicalDevice.h"
+#include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/VulkanDevice.h"
+#include "unirender/vulkan/Surface.h"
+
+#include <vector>
+#include <set>
+
+namespace
+{
+
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
+}
+
+namespace ur
+{
+namespace vulkan
+{
+
+LogicalDevice::LogicalDevice()
+{
+}
+
+LogicalDevice::~LogicalDevice()
+{
+	vkDestroyDevice(m_handle, nullptr);
+}
+
+void LogicalDevice::Create(const VulkanDevice& vk_dev, const Surface& surface,
+                           const PhysicalDevice& phy_dev)
+{
+    PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev.GetHandler(), surface.GetHandler());
+
+    std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+    std::set<uint32_t> unique_queue_families = {indices.graphics_family.value(), indices.present_family.value()};
+
+    float queuePriority = 1.0f;
+    for (uint32_t queueFamily : unique_queue_families) 
+    {
+        VkDeviceQueueCreateInfo queue_ci{};
+        queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_ci.queueFamilyIndex = queueFamily;
+        queue_ci.queueCount = 1;
+        queue_ci.pQueuePriorities = &queuePriority;
+        queue_create_infos.push_back(queue_ci);
+    }
+
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    VkDeviceCreateInfo device_ci{};
+    device_ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+    device_ci.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
+    device_ci.pQueueCreateInfos = queue_create_infos.data();
+
+    device_ci.pEnabledFeatures = &deviceFeatures;
+
+    device_ci.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+    device_ci.ppEnabledExtensionNames = deviceExtensions.data();
+
+    if (vk_dev.IsEnableValidationLayers())
+    {
+        auto& validation_layers = vk_dev.GetValidationLayers();
+        device_ci.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
+        device_ci.ppEnabledLayerNames = validation_layers.data();
+    } 
+    else 
+    {
+        device_ci.enabledLayerCount = 0;
+    }
+
+    if (vkCreateDevice(phy_dev.GetHandler(), &device_ci, nullptr, &m_handle) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create logical device!");
+    }
+
+    vkGetDeviceQueue(m_handle, indices.graphics_family.value(), 0, &m_graphics_queue);
+    vkGetDeviceQueue(m_handle, indices.present_family.value(), 0, &m_present_queue);
+}
+
+}
+}

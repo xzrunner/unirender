@@ -1,7 +1,9 @@
 #include "unirender/vulkan/RenderPass.h"
-#include "unirender/vulkan/ContextInfo.h"
 #include "unirender/vulkan/DepthBuffer.h"
 #include "unirender/vulkan/Swapchain.h"
+#include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/Surface.h"
+#include "unirender/vulkan/PhysicalDevice.h"
 
 #include <assert.h>
 
@@ -22,7 +24,7 @@ RenderPass::~RenderPass()
 	vkDestroyRenderPass(m_device, m_handle, NULL);
 }
 
-void RenderPass::Create(const ContextInfo& ctx_info, bool include_depth, bool clear, 
+void RenderPass::Create(const VulkanContext& vk_ctx, bool include_depth, bool clear, 
                         VkImageLayout finalLayout, VkImageLayout initialLayout)
 {
     /* DEPENDS on init_swap_chain() and init_depth_buffer() */
@@ -30,7 +32,7 @@ void RenderPass::Create(const ContextInfo& ctx_info, bool include_depth, bool cl
 	assert(clear || (initialLayout != VK_IMAGE_LAYOUT_UNDEFINED));
 
     Swapchain::SwapChainSupportDetails swapChainSupport
-        = Swapchain::QuerySwapChainSupport(ctx_info.m_vk_ctx.GetPhysicalDevice(), ctx_info.m_vk_ctx.GetSurface());
+        = Swapchain::QuerySwapChainSupport(vk_ctx.GetPhysicalDevice()->GetHandler(), vk_ctx.GetSurface()->GetHandler());
     VkSurfaceFormatKHR surfaceFormat = Swapchain::ChooseSwapSurfaceFormat(swapChainSupport.formats);
 
     VkResult res;
@@ -47,7 +49,7 @@ void RenderPass::Create(const ContextInfo& ctx_info, bool include_depth, bool cl
     attachments[0].flags = 0;
 
     if (include_depth) {
-        attachments[1].format = ctx_info.depth_buf->GetFormat();
+        attachments[1].format = vk_ctx.GetDepthBuffer()->GetFormat();
         attachments[1].samples = NUM_SAMPLES;
         attachments[1].loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;

@@ -16,7 +16,7 @@ CommandBuffers::CommandBuffers(VkDevice device, const std::shared_ptr<CommandPoo
 
 CommandBuffers::~CommandBuffers()
 {
-    vkFreeCommandBuffers(m_device, m_pool->GetHandle(), static_cast<uint32_t>(m_handle.size()), m_handle.data());
+    vkFreeCommandBuffers(m_device, m_pool->GetHandler(), static_cast<uint32_t>(m_handle.size()), m_handle.data());
 }
 
 void CommandBuffers::Create(int count)
@@ -26,7 +26,7 @@ void CommandBuffers::Create(int count)
     VkCommandBufferAllocateInfo cmd = {};
     cmd.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cmd.pNext = NULL;
-    cmd.commandPool = m_pool->GetHandle();
+    cmd.commandPool = m_pool->GetHandler();
     cmd.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     cmd.commandBufferCount = count;
 

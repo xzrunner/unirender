@@ -3,7 +3,8 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
-#include <optional>
+#include <memory>
+#include <unordered_map>
 
 namespace ur
 {
@@ -12,68 +13,99 @@ namespace vulkan
 
 class VulkanDevice;
 
+class Surface;
+class PhysicalDevice;
+class LogicalDevice;
+class CommandPool;
+class CommandBuffers;
+class Swapchain;
+class DepthBuffer;
+class UniformBuffer;
+class RenderPass;
+class FrameBuffers;
+class DescriptorPool;
+class DescriptorSet;
+class PipelineCache;
+class DescriptorSetLayout;
+class PipelineLayout;
+class Pipeline;
+class ShaderProgram;
+class VertexBuffer;
+class IndexBuffer;
+
 class VulkanContext
 {
 public:
-	VulkanContext(const VulkanDevice& vk);
-	~VulkanContext();
+	VulkanContext(const VulkanDevice& vk_dev);
 
-	auto GetSurface() const { return m_surface; }
-
-	auto GetPhysicalDevice() const { return m_physical_device; }
-	auto GetDevice() const { return m_device; }
-
-	auto GetGraphicsQueue() const { return m_graphics_queue; }
-	auto GetPresentQueue() const { return m_present_queue; }
+	auto GetPhysicalDevice() const { return m_phy_dev; }
+	auto GetLogicalDevice() const { return m_logic_dev; }
 
 	void Init(uint32_t width, uint32_t height, void* hwnd);
 	void Resize(uint32_t width, uint32_t height);
 
-	size_t GetSwapchainImageCount() const { return m_swapchain_images.size(); }
+	int GetWidth() const { return m_width; }
+	int GetHeight() const { return m_height; }
 
-	static uint32_t FindMemoryType(VkPhysicalDevice phy_dev,
-		uint32_t type_filter, VkMemoryPropertyFlags properties);
+	auto GetSurface() const { return m_surface; }
+	auto GetSwapchain() const { return m_swapchain; }
+	auto GetDepthBuffer() const { return m_depth_buf; }
+	auto GetCommandBuffers() const { return m_cmd_bufs; }
+	auto GetRenderPass() const { return m_renderpass; }
+	auto GetFrameBuffers() const { return m_frame_buffers; }
+	auto GetDescriptorSet() const { return m_desc_set; }
+	auto GetPipelineLayout() const { return m_pipeline_layout; }
+	auto GetPipeline() const { return m_pipeline; }
+	auto GetVertexBuffer() const { return m_vert_buf; }
+	auto GetShaderProgram() const { return m_program; }
+	auto GetPipelineCache() const { return m_pipeline_cache; }
 
-private:
-	void CreateSurface(void* hwnd);
-	void PickPhysicalDevice();
-	void CreateLogicalDevice();
-	void CreateSwapChain(uint32_t width, uint32_t height);
-
-private:
-	struct QueueFamilyIndices 
-	{
-		std::optional<uint32_t> graphics_family;
-		std::optional<uint32_t> present_family;
-
-		bool IsComplete() {
-			return graphics_family.has_value() && present_family.has_value();
-		}
-	};
-
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;
-
-	bool IsDeviceSuitable(VkPhysicalDevice device) const;
-	bool CheckDeviceExtensionSupport(VkPhysicalDevice device) const;
+	void SetCurrentBuffer(uint32_t buffer) const {
+		m_current_buffer = buffer;
+	}
+	auto GetCurrentBuffer() const { return m_current_buffer; }
 
 private:
-	const VulkanDevice& m_vk_ctx;
+	const VulkanDevice& m_vk_dev;
 
-	VkSurfaceKHR m_surface;
+	int m_width = 0, m_height = 0;
 
-	VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
-	VkDevice m_device;
+	std::shared_ptr<Surface> m_surface = nullptr;
 
-	VkQueue m_graphics_queue;
-	VkQueue m_present_queue;
+	std::shared_ptr<PhysicalDevice> m_phy_dev = nullptr;
+	std::shared_ptr<LogicalDevice> m_logic_dev = nullptr;
 
-	VkSwapchainKHR m_swapchain;
-	std::vector<VkImage> m_swapchain_images;
-	VkFormat m_swapchain_image_format;
-	VkExtent2D m_swapchain_extent;
+    mutable uint32_t m_current_buffer = 0;
 
-	// todo
-	friend class Swapchain;
+    std::shared_ptr<CommandPool>    m_cmd_pool  = nullptr;
+    std::shared_ptr<CommandBuffers> m_cmd_bufs = nullptr;
+
+    std::shared_ptr<Swapchain>   m_swapchain = nullptr;
+    std::shared_ptr<DepthBuffer> m_depth_buf = nullptr;
+
+    std::shared_ptr<UniformBuffer> m_uniform_buf = nullptr;
+
+    std::unordered_map<std::string, std::shared_ptr<DescriptorSetLayout>> m_desc_set_layouts;
+    std::shared_ptr<PipelineLayout> m_pipeline_layout = nullptr;
+
+    std::shared_ptr<RenderPass>   m_renderpass = nullptr;
+    std::shared_ptr<FrameBuffers> m_frame_buffers = nullptr;
+
+    std::shared_ptr<VertexBuffer>  m_vert_buf = nullptr;
+    std::shared_ptr<IndexBuffer>   m_idx_buf  = nullptr;
+    std::shared_ptr<ShaderProgram> m_program  = nullptr;
+
+    std::shared_ptr<DescriptorPool> m_desc_pool = nullptr;
+    std::shared_ptr<DescriptorSet>  m_desc_set  = nullptr;
+
+    std::shared_ptr<PipelineCache> m_pipeline_cache = nullptr;
+    std::shared_ptr<Pipeline>      m_pipeline = nullptr;
+
+	bool m_include_depth = false;
+
+	struct {
+		VkDescriptorImageInfo image_info;
+	} m_texture_data;
 
 }; // VulkanContext
 

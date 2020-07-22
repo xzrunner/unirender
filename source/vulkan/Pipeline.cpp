@@ -1,11 +1,11 @@
 #include "unirender/vulkan/Pipeline.h"
 #include "unirender/vulkan/Utility.h"
-#include "unirender/vulkan/ContextInfo.h"
 #include "unirender/vulkan/PipelineLayout.h"
 #include "unirender/vulkan/RenderPass.h"
 #include "unirender/vulkan/PipelineCache.h"
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/ShaderProgram.h"
+#include "unirender/vulkan/VulkanContext.h"
 
 #include <assert.h>
 
@@ -24,7 +24,7 @@ Pipeline::~Pipeline()
 
 }
 
-void Pipeline::Create(const ContextInfo& ctx_info,
+void Pipeline::Create(const VulkanContext& vk_ctx,
                       bool include_depth, bool include_vi)
 {
     VkResult res;
@@ -40,13 +40,16 @@ void Pipeline::Create(const ContextInfo& ctx_info,
     VkPipelineVertexInputStateCreateInfo vi;
     memset(&vi, 0, sizeof(vi));
     vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    if (include_vi) {
+    if (include_vi) 
+    {
+        auto vert_buf = vk_ctx.GetVertexBuffer();
+
         vi.pNext = NULL;
         vi.flags = 0;
         vi.vertexBindingDescriptionCount = 1;
-        vi.pVertexBindingDescriptions = &ctx_info.vert_buf->GetVertInputBindDesc();
+        vi.pVertexBindingDescriptions = &vert_buf->GetVertInputBindDesc();
         vi.vertexAttributeDescriptionCount = 2;
-        vi.pVertexAttributeDescriptions = ctx_info.vert_buf->GetVertInputAttrDesc();
+        vi.pVertexAttributeDescriptions = vert_buf->GetVertInputAttrDesc();
     }
     VkPipelineInputAssemblyStateCreateInfo ia;
     ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -158,7 +161,7 @@ void Pipeline::Create(const ContextInfo& ctx_info,
     VkGraphicsPipelineCreateInfo pipeline;
     pipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipeline.pNext = NULL;
-    pipeline.layout = ctx_info.pipeline_layout->GetHandler();
+    pipeline.layout = vk_ctx.GetPipelineLayout()->GetHandler();
     pipeline.basePipelineHandle = VK_NULL_HANDLE;
     pipeline.basePipelineIndex = 0;
     pipeline.flags = 0;
@@ -171,12 +174,12 @@ void Pipeline::Create(const ContextInfo& ctx_info,
     pipeline.pDynamicState = &dynamicState;
     pipeline.pViewportState = &vp;
     pipeline.pDepthStencilState = &ds;
-    pipeline.pStages = ctx_info.program->GetShaderStages();
+    pipeline.pStages = vk_ctx.GetShaderProgram()->GetShaderStages();
     pipeline.stageCount = 2;
-    pipeline.renderPass = ctx_info.renderpass->GetHandler();
+    pipeline.renderPass = vk_ctx.GetRenderPass()->GetHandler();
     pipeline.subpass = 0;
 
-    res = vkCreateGraphicsPipelines(m_device, ctx_info.pipeline_cache->GetHandler(), 1, &pipeline, NULL, &m_handle);
+    res = vkCreateGraphicsPipelines(m_device, vk_ctx.GetPipelineCache()->GetHandler(), 1, &pipeline, NULL, &m_handle);
     assert(res == VK_SUCCESS);
 }
 

@@ -7,7 +7,7 @@ namespace ur
 namespace vulkan
 {
 
-class ContextInfo;
+class VulkanContext;
 
 class Pipeline
 {
@@ -15,7 +15,7 @@ public:
 	Pipeline(VkDevice device);
 	~Pipeline();
 
-	void Create(const ContextInfo& ctx_info,
+	void Create(const VulkanContext& vk_ctx,
 		bool include_depth, bool include_vi);
 
 	auto GetHandler() const { return m_handle; }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "unirender/Context.h"
-#include "unirender/vulkan/ContextInfo.h"
+#include "unirender/vulkan/VulkanContext.h"
 
 #undef DrawState
 
@@ -49,7 +49,7 @@ private:
     void BuildCommandBuffers();
 
 private:
-    ContextInfo m_info;
+    VulkanContext m_vk_ctx;
 
 }; // Context
 

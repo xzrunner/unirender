@@ -7,7 +7,7 @@ namespace ur
 namespace vulkan
 {
 
-class ContextInfo;
+class VulkanContext;
 
 class RenderPass
 {
@@ -15,7 +15,7 @@ public:
     RenderPass(VkDevice device);
     ~RenderPass();
 
-    void Create(const ContextInfo& ctx_info, 
+    void Create(const VulkanContext& vk_ctx, 
         bool include_depth, bool clear = true, 
         VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 		VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED);

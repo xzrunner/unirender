@@ -17,7 +17,7 @@ public:
 
     void SetQueueFamilyIndex(uint32_t index) { m_queue_family_index = index; }
 
-    auto GetHandle() const { return m_handle; }
+    auto GetHandler() const { return m_handle; }
 
 private:
     VkDevice m_device = VK_NULL_HANDLE;

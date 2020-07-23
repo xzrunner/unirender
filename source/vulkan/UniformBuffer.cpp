@@ -1,6 +1,5 @@
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/Utility.h"
-#include "unirender/vulkan/VulkanContext.h"
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
 
@@ -24,12 +23,10 @@ UniformBuffer::~UniformBuffer()
     vkFreeMemory(m_device, m_mem, NULL);
 }
 
-void UniformBuffer::Create(const VulkanContext& vk_ctx)
+void UniformBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
 {
     VkResult res;
 
-    int width = vk_ctx.GetWidth();
-    int height = vk_ctx.GetHeight();
     float fov = glm::radians(45.0f);
     if (width > height) {
         fov *= static_cast<float>(height) / static_cast<float>(width);
@@ -45,8 +42,6 @@ void UniformBuffer::Create(const VulkanContext& vk_ctx)
 
     MVP = Clip * Projection * View * Model;
 
-    auto device = vk_ctx.GetLogicalDevice()->GetHandler();
-
     /* VULKAN_KEY_START */
     VkBufferCreateInfo buf_info = {};
     buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -57,11 +52,11 @@ void UniformBuffer::Create(const VulkanContext& vk_ctx)
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     buf_info.flags = 0;
-    res = vkCreateBuffer(device, &buf_info, NULL, &m_buf);
+    res = vkCreateBuffer(m_device, &buf_info, NULL, &m_buf);
     assert(res == VK_SUCCESS);
 
     VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(device, m_buf, &mem_reqs);
+    vkGetBufferMemoryRequirements(m_device, m_buf, &mem_reqs);
 
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -70,22 +65,21 @@ void UniformBuffer::Create(const VulkanContext& vk_ctx)
 
     alloc_info.allocationSize = mem_reqs.size;
     alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
-        vk_ctx.GetPhysicalDevice()->GetHandler(), mem_reqs.memoryTypeBits,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-    res = vkAllocateMemory(device, &alloc_info, NULL, &(m_mem));
+    res = vkAllocateMemory(m_device, &alloc_info, NULL, &(m_mem));
     assert(res == VK_SUCCESS);
 
     uint8_t *pData;
-    res = vkMapMemory(device, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
+    res = vkMapMemory(m_device, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
     memcpy(pData, &MVP, sizeof(MVP));
 
-    vkUnmapMemory(device, m_mem);
+    vkUnmapMemory(m_device, m_mem);
 
-    res = vkBindBufferMemory(device, m_buf, m_mem, 0);
+    res = vkBindBufferMemory(m_device, m_buf, m_mem, 0);
     assert(res == VK_SUCCESS);
 
     m_buffer_info.buffer = m_buf;

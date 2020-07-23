@@ -9,12 +9,11 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanContext;
-
 class VertexBuffer : public ur::VertexBuffer
 {
 public:
-    VertexBuffer();
+    VertexBuffer(VkDevice device);
+    virtual ~VertexBuffer();
 
     virtual int GetSizeInBytes() const override;
     virtual BufferUsageHint GetUsageHint() const override;
@@ -27,7 +26,7 @@ public:
 
     virtual void Reset(int size_in_bytes) override;
 
-    void Create(const VulkanContext& vk_ctx, const void* data, size_t size, size_t stride, bool use_texture);
+    void Create(VkPhysicalDevice phy_dev, const void* data, size_t size, size_t stride, bool use_texture);
 
     auto& GetBuffer() const { return m_vertex_buffer.buf; }
 
@@ -41,6 +40,8 @@ public:
     } m_vertex_buffer;
 
 private:
+    VkDevice m_device = VK_NULL_HANDLE;
+
     VkVertexInputBindingDescription   m_vi_binding;
     VkVertexInputAttributeDescription m_vi_attribs[2];
 

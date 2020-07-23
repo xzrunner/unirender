@@ -28,7 +28,6 @@ struct TextureDescription;
 class TextureSampler;
 class WritePixelBuffer;
 class ComputeBuffer;
-class Context;
 
 class Device
 {

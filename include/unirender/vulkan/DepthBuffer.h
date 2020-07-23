@@ -7,15 +7,13 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanContext;
-
 class DepthBuffer
 {
 public:
     DepthBuffer(VkDevice device);
     ~DepthBuffer();
 
-	void Create(const VulkanContext& vk_ctx);
+	void Create(VkPhysicalDevice phy_dev, int width, int height);
 
     auto GetFormat() const { return m_format; }
     auto GetView() const { return m_view; }

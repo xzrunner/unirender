@@ -5,7 +5,7 @@
 #include "unirender/vulkan/PipelineCache.h"
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/ShaderProgram.h"
-#include "unirender/vulkan/VulkanContext.h"
+#include "unirender/vulkan/Context.h"
 
 #include <assert.h>
 
@@ -21,11 +21,10 @@ Pipeline::Pipeline(VkDevice device)
 
 Pipeline::~Pipeline()
 {
-
+    vkDestroyPipeline(m_device, m_handle, nullptr);
 }
 
-void Pipeline::Create(const VulkanContext& vk_ctx,
-                      bool include_depth, bool include_vi)
+void Pipeline::Create(const Context& ctx, bool include_depth, bool include_vi)
 {
     VkResult res;
 
@@ -42,7 +41,7 @@ void Pipeline::Create(const VulkanContext& vk_ctx,
     vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     if (include_vi) 
     {
-        auto vert_buf = vk_ctx.GetVertexBuffer();
+        auto vert_buf = ctx.GetVertexBuffer();
 
         vi.pNext = NULL;
         vi.flags = 0;
@@ -161,7 +160,7 @@ void Pipeline::Create(const VulkanContext& vk_ctx,
     VkGraphicsPipelineCreateInfo pipeline;
     pipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipeline.pNext = NULL;
-    pipeline.layout = vk_ctx.GetPipelineLayout()->GetHandler();
+    pipeline.layout = ctx.GetPipelineLayout()->GetHandler();
     pipeline.basePipelineHandle = VK_NULL_HANDLE;
     pipeline.basePipelineIndex = 0;
     pipeline.flags = 0;
@@ -174,12 +173,12 @@ void Pipeline::Create(const VulkanContext& vk_ctx,
     pipeline.pDynamicState = &dynamicState;
     pipeline.pViewportState = &vp;
     pipeline.pDepthStencilState = &ds;
-    pipeline.pStages = vk_ctx.GetShaderProgram()->GetShaderStages();
+    pipeline.pStages = ctx.GetShaderProgram()->GetShaderStages();
     pipeline.stageCount = 2;
-    pipeline.renderPass = vk_ctx.GetRenderPass()->GetHandler();
+    pipeline.renderPass = ctx.GetRenderPass()->GetHandler();
     pipeline.subpass = 0;
 
-    res = vkCreateGraphicsPipelines(m_device, vk_ctx.GetPipelineCache()->GetHandler(), 1, &pipeline, NULL, &m_handle);
+    res = vkCreateGraphicsPipelines(m_device, ctx.GetPipelineCache()->GetHandler(), 1, &pipeline, NULL, &m_handle);
     assert(res == VK_SUCCESS);
 }
 

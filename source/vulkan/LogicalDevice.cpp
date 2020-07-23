@@ -1,7 +1,6 @@
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/PhysicalDevice.h"
-#include "unirender/vulkan/VulkanDevice.h"
-#include "unirender/vulkan/Surface.h"
+#include "unirender/vulkan/ValidationLayers.h"
 
 #include <vector>
 #include <set>
@@ -29,13 +28,16 @@ LogicalDevice::~LogicalDevice()
 	vkDestroyDevice(m_handle, nullptr);
 }
 
-void LogicalDevice::Create(const VulkanDevice& vk_dev, const Surface& surface,
-                           const PhysicalDevice& phy_dev)
+void LogicalDevice::Create(bool enable_validation_layers, const PhysicalDevice& phy_dev, VkSurfaceKHR surface)
 {
-    PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev.GetHandler(), surface.GetHandler());
+    PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev.GetHandler(), surface);
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-    std::set<uint32_t> unique_queue_families = {indices.graphics_family.value(), indices.present_family.value()};
+
+    std::set<uint32_t> unique_queue_families = { indices.graphics_family.value() };
+    if (surface) {
+        unique_queue_families.insert(indices.present_family.value());
+    }
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : unique_queue_families) 
@@ -61,9 +63,9 @@ void LogicalDevice::Create(const VulkanDevice& vk_dev, const Surface& surface,
     device_ci.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
     device_ci.ppEnabledExtensionNames = deviceExtensions.data();
 
-    if (vk_dev.IsEnableValidationLayers())
+    if (enable_validation_layers)
     {
-        auto& validation_layers = vk_dev.GetValidationLayers();
+        auto& validation_layers = ValidationLayers::GetValidationLayers();
         device_ci.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
         device_ci.ppEnabledLayerNames = validation_layers.data();
     } 
@@ -77,7 +79,9 @@ void LogicalDevice::Create(const VulkanDevice& vk_dev, const Surface& surface,
     }
 
     vkGetDeviceQueue(m_handle, indices.graphics_family.value(), 0, &m_graphics_queue);
-    vkGetDeviceQueue(m_handle, indices.present_family.value(), 0, &m_present_queue);
+    if (surface) {
+        vkGetDeviceQueue(m_handle, indices.present_family.value(), 0, &m_present_queue);
+    }
 }
 
 }

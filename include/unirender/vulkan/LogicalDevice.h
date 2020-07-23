@@ -7,8 +7,6 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanDevice;
-class Surface;
 class PhysicalDevice;
 
 class LogicalDevice
@@ -17,8 +15,8 @@ public:
 	LogicalDevice();
 	~LogicalDevice();
 
-	void Create(const VulkanDevice& vk_dev, const Surface& surface, 
-		const PhysicalDevice& phy_dev);
+	void Create(bool enable_validation_layers, const PhysicalDevice& phy_dev,
+		VkSurfaceKHR surface = VK_NULL_HANDLE);
 
 	auto GetHandler() const { return m_handle; }
 
@@ -28,8 +26,8 @@ public:
 private:
 	VkDevice m_handle = VK_NULL_HANDLE;
 
-	VkQueue m_graphics_queue;
-	VkQueue m_present_queue;
+	VkQueue m_graphics_queue = VK_NULL_HANDLE;
+	VkQueue m_present_queue = VK_NULL_HANDLE;
 
 }; // LogicalDevice
 

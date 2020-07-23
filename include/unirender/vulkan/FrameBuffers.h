@@ -9,7 +9,7 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanContext;
+class Context;
 
 class FrameBuffers
 {
@@ -17,7 +17,7 @@ public:
 	FrameBuffers(VkDevice device);
 	~FrameBuffers();
 
-	void Create(const VulkanContext& vk_ctx, bool include_depth);
+	void Create(const Context& ctx, bool include_depth);
 
 	auto& GetHandler() const { return m_frame_buffers; }
 

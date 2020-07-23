@@ -98,6 +98,7 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Instance.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\LogicalDevice.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\PhysicalDevice.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Pipeline.h" />
@@ -112,10 +113,9 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\TypeConverter.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\UniformBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Utility.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ValidationLayers.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\VertexArray.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\VertexBuffer.h" />
-    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanContext.h" />
-    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanDevice.h" />
     <ClInclude Include="..\..\..\include\unirender\WindingOrder.h" />
     <ClInclude Include="..\..\..\include\unirender\WritePixelBuffer.h" />
   </ItemGroup>
@@ -245,6 +245,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Instance.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\LogicalDevice.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
@@ -293,19 +297,15 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ValidationLayers.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\VertexArray.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\VertexBuffer.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\VulkanContext.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\VulkanDevice.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>

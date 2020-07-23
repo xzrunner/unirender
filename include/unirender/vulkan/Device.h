@@ -1,12 +1,16 @@
 #pragma once
 
 #include "unirender/Device.h"
-#include "unirender/vulkan/VulkanDevice.h"
 
 namespace ur
 {
 namespace vulkan
 {
+
+class Instance;
+class ValidationLayers;
+class PhysicalDevice;
+class LogicalDevice;
 
 class Device : public ur::Device
 {
@@ -59,14 +63,22 @@ public:
     virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const override;
 
-    auto& GetVulkanDevice() const { return m_vk_dev; }
+    bool IsEnableValidationLayers() const { return m_enable_validation_layers; }
+
+    auto GetInstance() const { return m_instance; }
 
 private:
     int m_max_num_vert_attrs = 0;
     int m_max_num_tex_units = 0;
     int m_max_num_color_attachments = 0;
 
-    VulkanDevice m_vk_dev;
+    bool m_enable_validation_layers = false;
+
+    std::shared_ptr<Instance> m_instance = nullptr;
+    std::shared_ptr<ValidationLayers> m_valid_layers = nullptr;
+
+    std::shared_ptr<PhysicalDevice> m_phy_dev = nullptr;
+    std::shared_ptr<LogicalDevice>  m_logic_dev = nullptr;
 
 }; // Device
 }

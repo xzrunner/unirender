@@ -12,7 +12,7 @@ namespace vulkan
 class PhysicalDevice
 {
 public:
-	PhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
+	PhysicalDevice(VkInstance instance, VkSurfaceKHR surface = VK_NULL_HANDLE);
 	~PhysicalDevice();
 
 	void Create();
@@ -28,8 +28,13 @@ public:
 		std::optional<uint32_t> graphics_family;
 		std::optional<uint32_t> present_family;
 
-		bool IsComplete() {
-			return graphics_family.has_value() && present_family.has_value();
+		bool IsComplete(VkSurfaceKHR surface) 
+		{
+			if (surface) {
+				return graphics_family.has_value() && present_family.has_value();
+			} else {
+				return graphics_family.has_value();
+			}
 		}
 	};
 
@@ -42,7 +47,7 @@ private:
 
 private:
 	VkInstance m_instance;
-	VkSurfaceKHR m_surface;
+	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 
 	VkPhysicalDevice m_handle = VK_NULL_HANDLE;
 

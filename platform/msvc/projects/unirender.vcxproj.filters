@@ -295,12 +295,6 @@
     <ClInclude Include="..\..\..\include\unirender\Adaptor.h">
       <Filter>utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanDevice.h">
-      <Filter>api\vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\VulkanContext.h">
-      <Filter>api\vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\Surface.h">
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
@@ -308,6 +302,12 @@
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\LogicalDevice.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ValidationLayers.h">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Instance.h">
       <Filter>api\vulkan\z_component</Filter>
     </ClInclude>
   </ItemGroup>
@@ -448,12 +448,6 @@
     <ClCompile Include="..\..\..\source\Adaptor.cpp">
       <Filter>utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\VulkanDevice.cpp">
-      <Filter>api\vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\VulkanContext.cpp">
-      <Filter>api\vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\Surface.cpp">
       <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
@@ -461,6 +455,12 @@
       <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\LogicalDevice.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ValidationLayers.cpp">
+      <Filter>api\vulkan\z_component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Instance.cpp">
       <Filter>api\vulkan\z_component</Filter>
     </ClCompile>
   </ItemGroup>

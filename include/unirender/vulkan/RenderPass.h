@@ -7,7 +7,7 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanContext;
+class DepthBuffer;
 
 class RenderPass
 {
@@ -15,8 +15,8 @@ public:
     RenderPass(VkDevice device);
     ~RenderPass();
 
-    void Create(const VulkanContext& vk_ctx, 
-        bool include_depth, bool clear = true, 
+    void Create(VkPhysicalDevice phy_dev, VkSurfaceKHR surface, const DepthBuffer& depth_buf,
+        bool include_depth, bool clear = true,
         VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 		VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED);
 

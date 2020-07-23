@@ -9,7 +9,7 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanContext;
+class Context;
 
 class Swapchain
 {
@@ -17,7 +17,7 @@ public:
     Swapchain(VkDevice device);
     ~Swapchain();
 
-    void Create(const VulkanContext& vk_ctx);
+    void Create(const Context& ctx);
 
 	auto& GetHandler() const { return m_handle; }
 

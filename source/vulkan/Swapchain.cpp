@@ -1,9 +1,9 @@
 #define NOMINMAX
 
 #include "unirender/vulkan/Swapchain.h"
-#include "unirender/vulkan/VulkanContext.h"
 #include "unirender/vulkan/Surface.h"
 #include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/Context.h"
 
 #include <algorithm>
 
@@ -27,14 +27,13 @@ Swapchain::~Swapchain()
 	vkDestroySwapchainKHR(m_device, m_handle, NULL);
 }
 
-void Swapchain::Create(const VulkanContext& vk_ctx)
+void Swapchain::Create(const Context& ctx)
 {
     VkResult res;
     VkSurfaceCapabilitiesKHR surfCapabilities;
 
-    auto surface = vk_ctx.GetSurface()->GetHandler();
-
-    auto phy_dev = vk_ctx.GetPhysicalDevice()->GetHandler();
+    auto phy_dev = ctx.GetPhysicalDevice()->GetHandler();
+    auto surface = ctx.GetSurface()->GetHandler();
 
     res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phy_dev, surface, &surfCapabilities);
     assert(res == VK_SUCCESS);
@@ -52,8 +51,8 @@ void Swapchain::Create(const VulkanContext& vk_ctx)
     if (surfCapabilities.currentExtent.width == 0xFFFFFFFF) {
         // If the surface size is undefined, the size is set to
         // the size of the images requested.
-        swapchainExtent.width = vk_ctx.GetWidth();
-        swapchainExtent.height = vk_ctx.GetHeight();
+        swapchainExtent.width = ctx.GetWidth();
+        swapchainExtent.height = ctx.GetHeight();
         if (swapchainExtent.width < surfCapabilities.minImageExtent.width) {
             swapchainExtent.width = surfCapabilities.minImageExtent.width;
         } else if (swapchainExtent.width > surfCapabilities.maxImageExtent.width) {
@@ -195,7 +194,7 @@ void Swapchain::Create(const VulkanContext& vk_ctx)
         assert(res == VK_SUCCESS);
     }
     free(swapchainImages);
-    vk_ctx.SetCurrentBuffer(0);
+    ctx.SetCurrentBuffer(0);
 
     if (NULL != presentModes) {
         free(presentModes);

@@ -9,12 +9,11 @@ namespace ur
 namespace vulkan
 {
 
-class VulkanContext;
-
 class IndexBuffer : public ur::IndexBuffer
 {
 public:
-    IndexBuffer();
+    IndexBuffer(VkDevice device);
+    virtual ~IndexBuffer();
 
     virtual int GetSizeInBytes() const override;
     virtual BufferUsageHint GetUsageHint() const override;
@@ -30,12 +29,14 @@ public:
 
     virtual void SetDataType(IndexBufferDataType data_type) override {}
 
-    void Create(const VulkanContext& vk_ctx, const void* data, size_t size);
+    void Create(VkPhysicalDevice phy_dev, const void* data, size_t size);
 
     auto& GetBuffer() const { return m_buffer; }
     auto GetCount() const { return m_count; }
 
 private:
+    VkDevice m_device = VK_NULL_HANDLE;
+
     VkDeviceMemory m_memory;
     VkBuffer       m_buffer;
     uint32_t       m_count;

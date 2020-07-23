@@ -85,14 +85,17 @@ PhysicalDevice::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
             indices.graphics_family = i;
         }
 
-        VkBool32 present_support = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &present_support);
+        if (surface)
+        {
+            VkBool32 present_support = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &present_support);
 
-        if (present_support) {
-            indices.present_family = i;
+            if (present_support) {
+                indices.present_family = i;
+            }
         }
 
-        if (indices.IsComplete()) {
+        if (indices.IsComplete(surface)) {
             break;
         }
 
@@ -123,16 +126,23 @@ bool PhysicalDevice::IsDeviceSuitable(VkPhysicalDevice device) const
 {
     QueueFamilyIndices indices = FindQueueFamilies(device, m_surface);
 
-    bool extensionsSupported = CheckDeviceExtensionSupport(device);
+    bool extensions_supported = CheckDeviceExtensionSupport(device);
 
-    bool swapChainAdequate = false;
-    if (extensionsSupported) {
-        Swapchain::SwapChainSupportDetails swapChainSupport 
-            = Swapchain::QuerySwapChainSupport(device, m_surface);
-        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.present_modes.empty();
+    if (m_surface)
+    {
+        bool swap_chain_adequate = false;
+        if (extensions_supported) {
+            Swapchain::SwapChainSupportDetails swap_chain_support
+                = Swapchain::QuerySwapChainSupport(device, m_surface);
+            swap_chain_adequate = !swap_chain_support.formats.empty() && !swap_chain_support.present_modes.empty();
+        }
+
+        return indices.IsComplete(m_surface) && extensions_supported && swap_chain_adequate;
     }
-
-    return indices.IsComplete() && extensionsSupported && swapChainAdequate;
+    else
+    {
+        return indices.IsComplete(m_surface) && extensions_supported;
+    }
 }
 
 }

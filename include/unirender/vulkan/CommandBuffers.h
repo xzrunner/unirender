@@ -5,25 +5,27 @@
 #include <memory>
 #include <vector>
 
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
+class LogicalDevice;
 class CommandPool;
 
-class CommandBuffers
+class CommandBuffers : boost::noncopyable
 {
 public:
-    CommandBuffers(VkDevice device, const std::shared_ptr<CommandPool>& pool);
+    CommandBuffers(const std::shared_ptr<LogicalDevice>& device, 
+        const std::shared_ptr<CommandPool>& pool, int count);
     ~CommandBuffers();
-
-    void Create(int count);
 
     auto& GetHandler() const { return m_handle; }
 
 private:
-    VkDevice m_device = VK_NULL_HANDLE;
+    std::shared_ptr<LogicalDevice> m_device = VK_NULL_HANDLE;
 
     std::vector<VkCommandBuffer> m_handle;
 

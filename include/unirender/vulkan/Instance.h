@@ -2,12 +2,14 @@
 
 #include <vulkan/vulkan.h>
 
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
-class Instance
+class Instance : boost::noncopyable
 {
 public:
 	Instance(bool enable_validation_layers);

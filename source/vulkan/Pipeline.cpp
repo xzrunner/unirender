@@ -6,6 +6,7 @@
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/ShaderProgram.h"
 #include "unirender/vulkan/Context.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
 
@@ -14,17 +15,8 @@ namespace ur
 namespace vulkan
 {
 
-Pipeline::Pipeline(VkDevice device)
-    : m_device(device)
-{
-}
-
-Pipeline::~Pipeline()
-{
-    vkDestroyPipeline(m_device, m_handle, nullptr);
-}
-
-void Pipeline::Create(const Context& ctx, bool include_depth, bool include_vi)
+Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi)
+    : m_device(ctx.GetLogicalDevice())
 {
     VkResult res;
 
@@ -178,8 +170,13 @@ void Pipeline::Create(const Context& ctx, bool include_depth, bool include_vi)
     pipeline.renderPass = ctx.GetRenderPass()->GetHandler();
     pipeline.subpass = 0;
 
-    res = vkCreateGraphicsPipelines(m_device, ctx.GetPipelineCache()->GetHandler(), 1, &pipeline, NULL, &m_handle);
+    res = vkCreateGraphicsPipelines(m_device->GetHandler(), ctx.GetPipelineCache()->GetHandler(), 1, &pipeline, NULL, &m_handle);
     assert(res == VK_SUCCESS);
+}
+
+Pipeline::~Pipeline()
+{
+    vkDestroyPipeline(m_device->GetHandler(), m_handle, nullptr);
 }
 
 }

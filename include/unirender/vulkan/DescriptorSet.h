@@ -5,38 +5,40 @@
 #include <vector>
 #include <memory>
 
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
+class LogicalDevice;
 class DescriptorPool;
 class DescriptorSetLayout;
 
-class DescriptorSet
+class DescriptorSet : boost::noncopyable
 {
 public:
-	DescriptorSet(VkDevice device);
+	DescriptorSet(const std::shared_ptr<LogicalDevice>& device, 
+		const DescriptorPool& pool,
+		const std::vector<std::shared_ptr<DescriptorSetLayout>>& layouts,
+		const std::vector<VkWriteDescriptorSet>& descriptors);
 	~DescriptorSet();
 
-	void Create(const DescriptorPool& pool);
+	auto GetHandler() const { return m_handle; }
 
-	void AddLayout(const std::shared_ptr<DescriptorSetLayout>& layout) {
-		m_layouts.push_back(layout);
-	}
-
-	void AddDescriptor(VkDescriptorType type, const VkDescriptorBufferInfo* buffer_info);
-	void AddDescriptor(VkDescriptorType type, const VkDescriptorImageInfo* image_info);
-
-	auto& GetHandler() const { return m_handle; }
+	static void AddDescriptor(std::vector<VkWriteDescriptorSet>& descriptors,
+		VkDescriptorType type, const VkDescriptorBufferInfo* buffer_info);
+	static void AddDescriptor(std::vector<VkWriteDescriptorSet>& descriptors,
+		VkDescriptorType type, const VkDescriptorImageInfo* image_info);
 
 private:
-	VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = nullptr;
 
 	VkDescriptorSet m_handle = VK_NULL_HANDLE;
 
-	std::vector<std::shared_ptr<DescriptorSetLayout>> m_layouts;
-	std::vector<VkWriteDescriptorSet> m_descriptors;
+	//std::vector<std::shared_ptr<DescriptorSetLayout>> m_layouts;
+	//std::vector<VkWriteDescriptorSet> m_descriptors;
 
 }; // DescriptorSet
 

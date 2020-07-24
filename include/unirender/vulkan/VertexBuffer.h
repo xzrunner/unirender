@@ -4,15 +4,20 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
 namespace ur
 {
 namespace vulkan
 {
 
+class LogicalDevice;
+class PhysicalDevice;
+
 class VertexBuffer : public ur::VertexBuffer
 {
 public:
-    VertexBuffer(VkDevice device);
+    VertexBuffer(const std::shared_ptr<LogicalDevice>& device);
     virtual ~VertexBuffer();
 
     virtual int GetSizeInBytes() const override;
@@ -26,7 +31,8 @@ public:
 
     virtual void Reset(int size_in_bytes) override;
 
-    void Create(VkPhysicalDevice phy_dev, const void* data, size_t size, size_t stride, bool use_texture);
+    void Create(const PhysicalDevice& phy_dev, const void* data,
+        size_t size, size_t stride, bool use_texture);
 
     auto& GetBuffer() const { return m_vertex_buffer.buf; }
 
@@ -40,7 +46,7 @@ public:
     } m_vertex_buffer;
 
 private:
-    VkDevice m_device = VK_NULL_HANDLE;
+    std::shared_ptr<LogicalDevice> m_device = nullptr;
 
     VkVertexInputBindingDescription   m_vi_binding;
     VkVertexInputAttributeDescription m_vi_attribs[2];

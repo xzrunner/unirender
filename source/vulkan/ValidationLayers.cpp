@@ -1,4 +1,5 @@
 #include "unirender/vulkan/ValidationLayers.h"
+#include "unirender/vulkan/Instance.h"
 
 #include <vector>
 #include <iostream>
@@ -34,22 +35,22 @@ namespace ur
 namespace vulkan
 {
 
-ValidationLayers::ValidationLayers(VkInstance instance)
+ValidationLayers::ValidationLayers(const std::shared_ptr<Instance>& instance)
     : m_instance(instance)
 {
     VkDebugUtilsMessengerCreateInfoEXT debug_ci;
     PopulateDebugMessengerCreateInfo(debug_ci);
 
-    if (CreateDebugUtilsMessengerEXT(m_instance, &debug_ci, nullptr, &m_debug_messenger) != VK_SUCCESS) {
+    if (CreateDebugUtilsMessengerEXT(m_instance->GetHandler(), &debug_ci, nullptr, &m_debug_messenger) != VK_SUCCESS) {
         throw std::runtime_error("failed to set up debug messenger!");
     }
 }
 
 ValidationLayers::~ValidationLayers()
 {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkDestroyDebugUtilsMessengerEXT");
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance->GetHandler(), "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
-        func(m_instance, m_debug_messenger, nullptr);
+        func(m_instance->GetHandler(), m_debug_messenger, nullptr);
     }
 }
 

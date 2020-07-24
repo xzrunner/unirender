@@ -1,34 +1,17 @@
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/ValidationLayers.h"
+#include "unirender/vulkan/Surface.h"
 
 #include <vector>
 #include <set>
-
-namespace
-{
-
-const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
-}
 
 namespace ur
 {
 namespace vulkan
 {
 
-LogicalDevice::LogicalDevice()
-{
-}
-
-LogicalDevice::~LogicalDevice()
-{
-	vkDestroyDevice(m_handle, nullptr);
-}
-
-void LogicalDevice::Create(bool enable_validation_layers, const PhysicalDevice& phy_dev, VkSurfaceKHR surface)
+LogicalDevice::LogicalDevice(bool enable_validation_layers, const PhysicalDevice& phy_dev, const Surface* surface)
 {
     PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev.GetHandler(), surface);
 
@@ -60,8 +43,9 @@ void LogicalDevice::Create(bool enable_validation_layers, const PhysicalDevice& 
 
     device_ci.pEnabledFeatures = &deviceFeatures;
 
-    device_ci.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-    device_ci.ppEnabledExtensionNames = deviceExtensions.data();
+    auto& dev_exts = PhysicalDevice::GetDeviceExtensions();
+    device_ci.enabledExtensionCount = dev_exts.size();
+    device_ci.ppEnabledExtensionNames = dev_exts.data();
 
     if (enable_validation_layers)
     {
@@ -82,6 +66,11 @@ void LogicalDevice::Create(bool enable_validation_layers, const PhysicalDevice& 
     if (surface) {
         vkGetDeviceQueue(m_handle, indices.present_family.value(), 0, &m_present_queue);
     }
+}
+
+LogicalDevice::~LogicalDevice()
+{
+	vkDestroyDevice(m_handle, nullptr);
 }
 
 }

@@ -1,6 +1,7 @@
 #include "unirender/vulkan/DepthBuffer.h"
 #include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <iostream>
 
@@ -13,21 +14,12 @@ namespace ur
 namespace vulkan
 {
 
-DepthBuffer::DepthBuffer(VkDevice device)
+DepthBuffer::DepthBuffer(const std::shared_ptr<LogicalDevice>& device,
+                         const PhysicalDevice& phy_dev, int width, int height)
     : m_device(device)
 {
-    m_format = VK_FORMAT_D16_UNORM;
-}
+    auto format = VK_FORMAT_D16_UNORM;
 
-DepthBuffer::~DepthBuffer()
-{
-    vkDestroyImageView(m_device, m_view, NULL);
-    vkDestroyImage(m_device, m_image, NULL);
-    vkFreeMemory(m_device, m_mem, NULL);
-}
-
-void DepthBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
-{
     VkResult res;
     VkImageCreateInfo image_info = {};
     VkFormatProperties props;
@@ -36,7 +28,7 @@ void DepthBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
     m_format = VK_FORMAT_D16_UNORM;
 
     const VkFormat depth_format = m_format;
-    vkGetPhysicalDeviceFormatProperties(phy_dev, depth_format, &props);
+    vkGetPhysicalDeviceFormatProperties(phy_dev.GetHandler(), depth_format, &props);
     if (props.linearTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
         image_info.tiling = VK_IMAGE_TILING_LINEAR;
     } else if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
@@ -94,29 +86,39 @@ void DepthBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
 
     VkMemoryRequirements mem_reqs;
 
+    auto dev = m_device->GetHandler();
+
     /* Create image */
-    res = vkCreateImage(m_device, &image_info, NULL, &m_image);
+    res = vkCreateImage(dev, &image_info, NULL, &m_image);
     assert(res == VK_SUCCESS);
 
-    vkGetImageMemoryRequirements(m_device, m_image, &mem_reqs);
+    vkGetImageMemoryRequirements(dev, m_image, &mem_reqs);
 
     mem_alloc.allocationSize = mem_reqs.size;
     mem_alloc.memoryTypeIndex = PhysicalDevice::FindMemoryType(
-        phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 
     /* Allocate memory */
-    res = vkAllocateMemory(m_device, &mem_alloc, NULL, &m_mem);
+    res = vkAllocateMemory(dev, &mem_alloc, NULL, &m_mem);
     assert(res == VK_SUCCESS);
 
     /* Bind memory */
-    res = vkBindImageMemory(m_device, m_image, m_mem, 0);
+    res = vkBindImageMemory(dev, m_image, m_mem, 0);
     assert(res == VK_SUCCESS);
 
     /* Create image view */
     view_info.image = m_image;
-    res = vkCreateImageView(m_device, &view_info, NULL, &m_view);
+    res = vkCreateImageView(dev, &view_info, NULL, &m_view);
     assert(res == VK_SUCCESS);
+}
+
+DepthBuffer::~DepthBuffer()
+{
+    auto dev = m_device->GetHandler();
+    vkDestroyImageView(dev, m_view, NULL);
+    vkDestroyImage(dev, m_image, NULL);
+    vkFreeMemory(dev, m_mem, NULL);
 }
 
 }

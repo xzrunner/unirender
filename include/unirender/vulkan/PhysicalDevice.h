@@ -3,24 +3,29 @@
 #include <vulkan/vulkan.h>
 
 #include <optional>
+#include <vector>
+
+#include <boost/noncopyable.hpp>
 
 namespace ur
 {
 namespace vulkan
 {
 
-class PhysicalDevice
+class Instance;
+class Surface;
+
+class PhysicalDevice : boost::noncopyable
 {
 public:
-	PhysicalDevice(VkInstance instance, VkSurfaceKHR surface = VK_NULL_HANDLE);
-	~PhysicalDevice();
-
-	void Create();
+	PhysicalDevice(const Instance& instance, const Surface* surface = nullptr);
 
 	auto GetHandler() const { return m_handle; }
 
 	static uint32_t FindMemoryType(VkPhysicalDevice phy_dev,
 		uint32_t type_filter, VkMemoryPropertyFlags properties);
+
+	static const std::vector<const char*>& GetDeviceExtensions();
 
 public:
 	struct QueueFamilyIndices
@@ -28,7 +33,7 @@ public:
 		std::optional<uint32_t> graphics_family;
 		std::optional<uint32_t> present_family;
 
-		bool IsComplete(VkSurfaceKHR surface) 
+		bool IsComplete(const Surface* surface)
 		{
 			if (surface) {
 				return graphics_family.has_value() && present_family.has_value();
@@ -38,17 +43,14 @@ public:
 		}
 	};
 
-	static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
+	static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, const Surface* surface);
 
 private:
-	bool CheckDeviceExtensionSupport(VkPhysicalDevice device) const;
+	static bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 
-	bool IsDeviceSuitable(VkPhysicalDevice device) const;
+	static bool IsDeviceSuitable(VkPhysicalDevice device, const Surface* surface);
 
 private:
-	VkInstance m_instance;
-	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
-
 	VkPhysicalDevice m_handle = VK_NULL_HANDLE;
 
 }; // PhysicalDevice

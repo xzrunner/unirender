@@ -5,33 +5,29 @@
 #include <vector>
 #include <memory>
 
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
+class LogicalDevice;
 class DescriptorSetLayout;
 
-class PipelineLayout
+class PipelineLayout : boost::noncopyable
 {
 public:
-	PipelineLayout(VkDevice device);
+	PipelineLayout(const std::shared_ptr<LogicalDevice>& device,
+		const std::vector<std::shared_ptr<DescriptorSetLayout>>& layouts);
 	~PipelineLayout();
-
-	void Create();
-
-	void AddLayout(const std::shared_ptr<DescriptorSetLayout>& layout) {
-		m_layouts.push_back(layout);
-	}
 
 	auto GetHandler() const { return m_handle; }
 
 private:
-	VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = VK_NULL_HANDLE;
 
 	VkPipelineLayout m_handle = VK_NULL_HANDLE;
-
-	std::vector<std::shared_ptr<DescriptorSetLayout>> m_layouts;
 
 }; // PipelineLayout
 

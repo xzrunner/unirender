@@ -10,15 +10,15 @@ namespace ur
 namespace vulkan
 {
 
-VertexBuffer::VertexBuffer(VkDevice device)
+VertexBuffer::VertexBuffer(const std::shared_ptr<LogicalDevice>& device)
     : m_device(device)
 {
 }
 
 VertexBuffer::~VertexBuffer()
 {
-    vkDestroyBuffer(m_device, m_vertex_buffer.buf, NULL);
-    vkFreeMemory(m_device, m_vertex_buffer.mem, NULL);
+    vkDestroyBuffer(m_device->GetHandler(), m_vertex_buffer.buf, NULL);
+    vkFreeMemory(m_device->GetHandler(), m_vertex_buffer.mem, NULL);
 }
 
 int VertexBuffer::GetSizeInBytes() const
@@ -52,8 +52,11 @@ void VertexBuffer::Reset(int size_in_bytes)
 {
 }
 
-void VertexBuffer::Create(VkPhysicalDevice phy_dev, const void* data, size_t size, size_t stride, bool use_texture)
+void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data, 
+                          size_t size, size_t stride, bool use_texture)
 {
+    auto vk_dev = m_device->GetHandler();
+
     VkResult res;
 
     VkBufferCreateInfo buf_info = {};
@@ -65,11 +68,11 @@ void VertexBuffer::Create(VkPhysicalDevice phy_dev, const void* data, size_t siz
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     buf_info.flags = 0;
-    res = vkCreateBuffer(m_device, &buf_info, NULL, &m_vertex_buffer.buf);
+    res = vkCreateBuffer(vk_dev, &buf_info, NULL, &m_vertex_buffer.buf);
     assert(res == VK_SUCCESS);
 
     VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(m_device, m_vertex_buffer.buf, &mem_reqs);
+    vkGetBufferMemoryRequirements(vk_dev, m_vertex_buffer.buf, &mem_reqs);
 
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -78,23 +81,23 @@ void VertexBuffer::Create(VkPhysicalDevice phy_dev, const void* data, size_t siz
 
     alloc_info.allocationSize = mem_reqs.size;
     alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
-        phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-    res = vkAllocateMemory(m_device, &alloc_info, NULL, &(m_vertex_buffer.mem));
+    res = vkAllocateMemory(vk_dev, &alloc_info, NULL, &(m_vertex_buffer.mem));
     assert(res == VK_SUCCESS);
     m_vertex_buffer.buffer_info.range = mem_reqs.size;
     m_vertex_buffer.buffer_info.offset = 0;
 
     uint8_t *pData;
-    res = vkMapMemory(m_device, m_vertex_buffer.mem, 0, mem_reqs.size, 0, (void **)&pData);
+    res = vkMapMemory(vk_dev, m_vertex_buffer.mem, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
     memcpy(pData, data, size);
 
-    vkUnmapMemory(m_device, m_vertex_buffer.mem);
+    vkUnmapMemory(vk_dev, m_vertex_buffer.mem);
 
-    res = vkBindBufferMemory(m_device, m_vertex_buffer.buf, m_vertex_buffer.mem, 0);
+    res = vkBindBufferMemory(vk_dev, m_vertex_buffer.buf, m_vertex_buffer.mem, 0);
     assert(res == VK_SUCCESS);
 
     m_vi_binding.binding = 0;

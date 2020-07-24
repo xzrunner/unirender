@@ -27,14 +27,11 @@ Device::Device(bool enable_validation_layers)
     m_instance = std::make_shared<Instance>(enable_validation_layers);
 
     if (enable_validation_layers) {
-        m_valid_layers = std::make_shared<ValidationLayers>(m_instance->GetHandler());
+        m_valid_layers = std::make_shared<ValidationLayers>(m_instance);
     }
 
-    m_phy_dev = std::make_shared<PhysicalDevice>(m_instance->GetHandler());
-    m_phy_dev->Create();
-
-    m_logic_dev = std::make_shared<LogicalDevice>();
-    m_logic_dev->Create(enable_validation_layers, *m_phy_dev);
+    m_phy_dev = std::make_shared<PhysicalDevice>(*m_instance);
+    m_logic_dev = std::make_shared<LogicalDevice>(enable_validation_layers, *m_phy_dev);
 }
 
 std::shared_ptr<ur::VertexArray>
@@ -64,7 +61,7 @@ Device::CreateRenderBuffer(int width, int height, InternalFormat format, Attachm
 std::shared_ptr<ur::ShaderProgram>
 Device::CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const
 {
-    return std::make_shared<ur::vulkan::ShaderProgram>(m_logic_dev->GetHandler(), vs, fs);
+    return std::make_shared<ur::vulkan::ShaderProgram>(m_logic_dev, vs, fs);
 }
 
 std::shared_ptr<ur::ShaderProgram>
@@ -76,13 +73,13 @@ Device::CreateShaderProgram(const std::vector<unsigned int>& cs) const
 std::shared_ptr<ur::VertexBuffer>
 Device::CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {
-	return std::make_shared<ur::vulkan::VertexBuffer>(m_logic_dev->GetHandler());
+	return std::make_shared<ur::vulkan::VertexBuffer>(m_logic_dev);
 }
 
 std::shared_ptr<ur::IndexBuffer>
 Device::CreateIndexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {
-	return std::make_shared<ur::vulkan::IndexBuffer>(m_logic_dev->GetHandler());
+	return std::make_shared<ur::vulkan::IndexBuffer>(m_logic_dev);
 }
 
 std::shared_ptr<ur::WritePixelBuffer>

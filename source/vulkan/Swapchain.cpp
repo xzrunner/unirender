@@ -4,6 +4,7 @@
 #include "unirender/vulkan/Surface.h"
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/Context.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <algorithm>
 
@@ -14,36 +15,26 @@ namespace ur
 namespace vulkan
 {
 
-Swapchain::Swapchain(VkDevice device)
+Swapchain::Swapchain(const std::shared_ptr<LogicalDevice>& device, const PhysicalDevice& phy_dev,
+                     const Surface& surface, int width, int height)
     : m_device(device)
-{
-}
-
-Swapchain::~Swapchain()
-{
-	for (uint32_t i = 0; i < m_image_count; i++) {
-		vkDestroyImageView(m_device, m_buffers[i].view, NULL);
-	}
-	vkDestroySwapchainKHR(m_device, m_handle, NULL);
-}
-
-void Swapchain::Create(const Context& ctx)
 {
     VkResult res;
     VkSurfaceCapabilitiesKHR surfCapabilities;
 
-    auto phy_dev = ctx.GetPhysicalDevice()->GetHandler();
-    auto surface = ctx.GetSurface()->GetHandler();
+    auto vk_dev = m_device->GetHandler();
+    auto vk_phy_dev = phy_dev.GetHandler();
+    auto vk_surface = surface.GetHandler();
 
-    res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phy_dev, surface, &surfCapabilities);
+    res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vk_phy_dev, vk_surface, &surfCapabilities);
     assert(res == VK_SUCCESS);
 
     uint32_t presentModeCount;
-    res = vkGetPhysicalDeviceSurfacePresentModesKHR(phy_dev, surface, &presentModeCount, NULL);
+    res = vkGetPhysicalDeviceSurfacePresentModesKHR(vk_phy_dev, vk_surface, &presentModeCount, NULL);
     assert(res == VK_SUCCESS);
     VkPresentModeKHR *presentModes = (VkPresentModeKHR *)malloc(presentModeCount * sizeof(VkPresentModeKHR));
     assert(presentModes);
-    res = vkGetPhysicalDeviceSurfacePresentModesKHR(phy_dev, surface, &presentModeCount, presentModes);
+    res = vkGetPhysicalDeviceSurfacePresentModesKHR(vk_phy_dev, vk_surface, &presentModeCount, presentModes);
     assert(res == VK_SUCCESS);
 
     VkExtent2D swapchainExtent;
@@ -51,8 +42,8 @@ void Swapchain::Create(const Context& ctx)
     if (surfCapabilities.currentExtent.width == 0xFFFFFFFF) {
         // If the surface size is undefined, the size is set to
         // the size of the images requested.
-        swapchainExtent.width = ctx.GetWidth();
-        swapchainExtent.height = ctx.GetHeight();
+        swapchainExtent.width = width;
+        swapchainExtent.height = height;
         if (swapchainExtent.width < surfCapabilities.minImageExtent.width) {
             swapchainExtent.width = surfCapabilities.minImageExtent.width;
         } else if (swapchainExtent.width > surfCapabilities.maxImageExtent.width) {
@@ -106,13 +97,13 @@ void Swapchain::Create(const Context& ctx)
     }
 
     Swapchain::SwapChainSupportDetails swapChainSupport
-        = Swapchain::QuerySwapChainSupport(phy_dev, surface);
+        = Swapchain::QuerySwapChainSupport(vk_phy_dev, vk_surface);
     VkSurfaceFormatKHR surfaceFormat = Swapchain::ChooseSwapSurfaceFormat(swapChainSupport.formats);
 
     VkSwapchainCreateInfoKHR swapchain_ci = {};
     swapchain_ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapchain_ci.pNext = NULL;
-    swapchain_ci.surface = surface;
+    swapchain_ci.surface = vk_surface;
     swapchain_ci.minImageCount = desiredNumberOfSwapChainImages;
     swapchain_ci.imageFormat = surfaceFormat.format;
     swapchain_ci.imageExtent.width = swapchainExtent.width;
@@ -133,7 +124,7 @@ void Swapchain::Create(const Context& ctx)
     swapchain_ci.queueFamilyIndexCount = 0;
     swapchain_ci.pQueueFamilyIndices = NULL;
 
-    PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev, surface);
+    PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(vk_phy_dev, &surface);
     uint32_t queueFamilyIndices[] = { indices.graphics_family.value(), indices.present_family.value() };
     if (indices.graphics_family != indices.present_family) {
         swapchain_ci.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -153,15 +144,15 @@ void Swapchain::Create(const Context& ctx)
         swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 	}
 
-    res = vkCreateSwapchainKHR(m_device, &swapchain_ci, NULL, &m_handle);
+    res = vkCreateSwapchainKHR(vk_dev, &swapchain_ci, NULL, &m_handle);
     assert(res == VK_SUCCESS);
 
-    res = vkGetSwapchainImagesKHR(m_device, m_handle, &m_image_count, NULL);
+    res = vkGetSwapchainImagesKHR(vk_dev, m_handle, &m_image_count, NULL);
     assert(res == VK_SUCCESS);
 
     VkImage *swapchainImages = (VkImage *)malloc(m_image_count * sizeof(VkImage));
     assert(swapchainImages);
-    res = vkGetSwapchainImagesKHR(m_device, m_handle, &m_image_count, swapchainImages);
+    res = vkGetSwapchainImagesKHR(vk_dev, m_handle, &m_image_count, swapchainImages);
     assert(res == VK_SUCCESS);
 
     for (uint32_t i = 0; i < m_image_count; i++)
@@ -188,17 +179,26 @@ void Swapchain::Create(const Context& ctx)
 
         color_image_view.image = sc_buffer.image;
 
-        res = vkCreateImageView(m_device, &color_image_view, NULL, &sc_buffer.view);
+        res = vkCreateImageView(vk_dev, &color_image_view, NULL, &sc_buffer.view);
 
         m_buffers.push_back(sc_buffer);
         assert(res == VK_SUCCESS);
     }
     free(swapchainImages);
-    ctx.SetCurrentBuffer(0);
+    //ctx.SetCurrentBuffer(0);
 
     if (NULL != presentModes) {
         free(presentModes);
     }
+}
+
+Swapchain::~Swapchain()
+{
+    auto vk_dev = m_device->GetHandler();
+	for (uint32_t i = 0; i < m_image_count; i++) {
+		vkDestroyImageView(vk_dev, m_buffers[i].view, NULL);
+	}
+	vkDestroySwapchainKHR(vk_dev, m_handle, NULL);
 }
 
 VkResult Swapchain::QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore)

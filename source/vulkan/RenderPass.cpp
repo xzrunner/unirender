@@ -3,6 +3,8 @@
 #include "unirender/vulkan/Swapchain.h"
 #include "unirender/vulkan/Surface.h"
 #include "unirender/vulkan/PhysicalDevice.h"
+#include "unirender/vulkan/Context.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
 
@@ -13,25 +15,16 @@ namespace ur
 namespace vulkan
 {
 
-RenderPass::RenderPass(VkDevice device)
-	: m_device(device)
-{
-}
-
-RenderPass::~RenderPass()
-{
-	vkDestroyRenderPass(m_device, m_handle, NULL);
-}
-
-void RenderPass::Create(VkPhysicalDevice phy_dev, VkSurfaceKHR surface, const DepthBuffer& depth_buf, 
-                        bool include_depth, bool clear, VkImageLayout finalLayout, VkImageLayout initialLayout)
+RenderPass::RenderPass(const Context& ctx, bool include_depth, bool clear,
+                       VkImageLayout finalLayout, VkImageLayout initialLayout)
+	: m_device(ctx.GetLogicalDevice())
 {
     /* DEPENDS on init_swap_chain() and init_depth_buffer() */
 
 	assert(clear || (initialLayout != VK_IMAGE_LAYOUT_UNDEFINED));
 
     Swapchain::SwapChainSupportDetails swapChainSupport
-        = Swapchain::QuerySwapChainSupport(phy_dev, surface);
+        = Swapchain::QuerySwapChainSupport(ctx.GetPhysicalDevice()->GetHandler(), ctx.GetSurface()->GetHandler());
     VkSurfaceFormatKHR surfaceFormat = Swapchain::ChooseSwapSurfaceFormat(swapChainSupport.formats);
 
     VkResult res;
@@ -48,7 +41,7 @@ void RenderPass::Create(VkPhysicalDevice phy_dev, VkSurfaceKHR surface, const De
     attachments[0].flags = 0;
 
     if (include_depth) {
-        attachments[1].format = depth_buf.GetFormat();
+        attachments[1].format = ctx.GetDepthBuffer()->GetFormat();
         attachments[1].samples = NUM_SAMPLES;
         attachments[1].loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -99,8 +92,13 @@ void RenderPass::Create(VkPhysicalDevice phy_dev, VkSurfaceKHR surface, const De
     rp_info.dependencyCount = 1;
     rp_info.pDependencies = &subpass_dependency;
 
-    res = vkCreateRenderPass(m_device, &rp_info, NULL, &m_handle);
+    res = vkCreateRenderPass(m_device->GetHandler(), &rp_info, NULL, &m_handle);
     assert(res == VK_SUCCESS);
+}
+
+RenderPass::~RenderPass()
+{
+	vkDestroyRenderPass(m_device->GetHandler(), m_handle, NULL);
 }
 
 }

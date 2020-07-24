@@ -12,19 +12,8 @@ namespace ur
 namespace vulkan
 {
 
-FrameBuffers::FrameBuffers(VkDevice device)
-	: m_device(device)
-{
-}
-
-FrameBuffers::~FrameBuffers()
-{
-	for (auto& buf : m_frame_buffers) {
-		vkDestroyFramebuffer(m_device, buf, nullptr);
-	}
-}
-
-void FrameBuffers::Create(const Context& ctx, bool include_depth)
+FrameBuffers::FrameBuffers(const Context& ctx, bool include_depth)
+	: m_device(ctx.GetLogicalDevice())
 {
     /* DEPENDS on init_depth_buffer(), init_renderpass() and
      * init_swapchain_extension() */
@@ -52,6 +41,13 @@ void FrameBuffers::Create(const Context& ctx, bool include_depth)
         res = vkCreateFramebuffer(device, &fb_info, NULL, &m_frame_buffers[i]);
         assert(res == VK_SUCCESS);
     }
+}
+
+FrameBuffers::~FrameBuffers()
+{
+	for (auto& buf : m_frame_buffers) {
+		vkDestroyFramebuffer(m_device->GetHandler(), buf, nullptr);
+	}
 }
 
 }

@@ -1,4 +1,5 @@
 #include "unirender/vulkan/DescriptorPool.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
 
@@ -7,17 +8,8 @@ namespace ur
 namespace vulkan
 {
 
-DescriptorPool::DescriptorPool(VkDevice device)
+DescriptorPool::DescriptorPool(const std::shared_ptr<LogicalDevice>& device, bool use_texture)
 	: m_device(device)
-{
-}
-
-DescriptorPool::~DescriptorPool()
-{
-	vkDestroyDescriptorPool(m_device, m_handle, nullptr);
-}
-
-void DescriptorPool::Create(bool use_texture)
 {
     /* DEPENDS on init_uniform_buffer() and
      * init_descriptor_and_pipeline_layouts() */
@@ -38,8 +30,13 @@ void DescriptorPool::Create(bool use_texture)
     descriptor_pool.poolSizeCount = use_texture ? 2 : 1;
     descriptor_pool.pPoolSizes = type_count;
 
-    res = vkCreateDescriptorPool(m_device, &descriptor_pool, NULL, &m_handle);
+    res = vkCreateDescriptorPool(m_device->GetHandler(), &descriptor_pool, NULL, &m_handle);
     assert(res == VK_SUCCESS);
+}
+
+DescriptorPool::~DescriptorPool()
+{
+	vkDestroyDescriptorPool(m_device->GetHandler(), m_handle, nullptr);
 }
 
 }

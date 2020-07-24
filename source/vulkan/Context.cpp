@@ -180,23 +180,19 @@ void Context::Resize(uint32_t width, uint32_t height)
 	m_width = width;
 	m_height = height;
 
-	auto logic_dev = m_logic_dev->GetHandler();
+	auto vk_dev = m_logic_dev->GetHandler();
 
-	vkDeviceWaitIdle(logic_dev);
+	vkDeviceWaitIdle(vk_dev);
 
-	m_swapchain = std::make_shared<Swapchain>(logic_dev);
-	m_swapchain->Create(*this);
+	// should destroy before create
+	m_swapchain.reset();
+	m_swapchain = std::make_shared<Swapchain>(m_logic_dev, *m_phy_dev, *m_surface, m_width, m_height);
 
-	m_depth_buf = std::make_shared<DepthBuffer>(logic_dev);
-	m_depth_buf->Create(m_phy_dev->GetHandler(), m_width, m_height);
+	m_depth_buf = std::make_shared<DepthBuffer>(m_logic_dev, *m_phy_dev, m_width, m_height);
 
-	m_frame_buffers = std::make_shared<FrameBuffers>(logic_dev);
-	m_frame_buffers->Create(*this, m_include_depth);
+	m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-	m_cmd_bufs = std::make_shared<CommandBuffers>(logic_dev, m_cmd_pool);
-	m_cmd_bufs->Create(m_swapchain->GetImageCount());
-
-	vkDeviceWaitIdle(logic_dev);
+	m_cmd_bufs = std::make_shared<CommandBuffers>(m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
 
 	BuildCommandBuffers();
 }
@@ -266,18 +262,12 @@ void Context::Flush()
 
 void Context::Init(uint32_t width, uint32_t height, void* hwnd)
 {
-    auto inst = m_dev.GetInstance()->GetHandler();
+    m_surface = std::make_shared<Surface>(m_dev.GetInstance(), hwnd);
 
-    m_surface = std::make_shared<Surface>(inst);
-    m_surface->Create(hwnd);
+    m_phy_dev = std::make_shared<PhysicalDevice>(*m_dev.GetInstance(), m_surface.get());
 
-    m_phy_dev = std::make_shared<PhysicalDevice>(inst, m_surface->GetHandler());
-    m_phy_dev->Create();
-
-    m_logic_dev = std::make_shared<LogicalDevice>();
-    m_logic_dev->Create(m_dev.IsEnableValidationLayers(), *m_phy_dev, m_surface->GetHandler());
-
-    auto logic_dev = m_logic_dev->GetHandler();
+    m_logic_dev = std::make_shared<LogicalDevice>(m_dev.IsEnableValidationLayers(), *m_phy_dev, m_surface.get());
+    //auto vk_dev = m_logic_dev->GetHandler();
 
     m_width = width;
     m_height = height;
@@ -285,47 +275,38 @@ void Context::Init(uint32_t width, uint32_t height, void* hwnd)
 	const bool use_texture = false;
 	const bool include_vi = true;
 
-    m_swapchain = std::make_shared<Swapchain>(logic_dev);
-    m_swapchain->Create(*this);
+    m_swapchain = std::make_shared<Swapchain>(m_logic_dev, *m_phy_dev, *m_surface, m_width, m_height);
 
-    m_cmd_pool = std::make_shared<CommandPool>(logic_dev);
-    m_cmd_pool->Create();
+    m_cmd_pool = std::make_shared<CommandPool>(m_logic_dev);
+    m_cmd_bufs = std::make_shared<CommandBuffers>(m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
 
-    m_cmd_bufs = std::make_shared<CommandBuffers>(logic_dev, m_cmd_pool);
-    m_cmd_bufs->Create(m_swapchain->GetImageCount());
+    m_depth_buf = std::make_shared<DepthBuffer>(m_logic_dev, *m_phy_dev, m_width, m_height);
 
-    m_depth_buf = std::make_shared<DepthBuffer>(logic_dev);
-    m_depth_buf->Create(m_phy_dev->GetHandler(), m_width, m_height);
+    m_uniform_buf = std::make_shared<UniformBuffer>(m_logic_dev, *m_phy_dev, m_width, m_height);
 
-    m_uniform_buf = std::make_shared<UniformBuffer>(logic_dev);
-    m_uniform_buf->Create(m_phy_dev->GetHandler(), m_width, m_height);
-
-    auto single_ubo_binding_point = std::make_shared<DescriptorSetLayout>(logic_dev);
+	std::vector<VkDescriptorSetLayoutBinding> single_ubo_bindings;
+	DescriptorSetLayout::AddBinding(single_ubo_bindings, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
+    auto single_ubo_binding_point = std::make_shared<DescriptorSetLayout>(m_logic_dev, single_ubo_bindings);
     m_desc_set_layouts["single_ubo"] = single_ubo_binding_point;
-    single_ubo_binding_point->AddBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-    single_ubo_binding_point->Create();
 
-    auto single_img_binding_point = std::make_shared<DescriptorSetLayout>(logic_dev);
-    m_desc_set_layouts["single_img"] = single_ubo_binding_point;
-    single_img_binding_point->AddBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-    single_img_binding_point->Create();
+	std::vector<VkDescriptorSetLayoutBinding> single_img_bindings;
+	DescriptorSetLayout::AddBinding(single_img_bindings, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+    auto single_img_binding_point = std::make_shared<DescriptorSetLayout>(m_logic_dev, single_img_bindings);
+    m_desc_set_layouts["single_img"] = single_img_binding_point;
 
-    m_pipeline_layout = std::make_shared<PipelineLayout>(logic_dev);
-    m_pipeline_layout->AddLayout(single_ubo_binding_point);
-    if (use_texture) {
-        m_pipeline_layout->AddLayout(single_img_binding_point);
-    }
-    m_pipeline_layout->Create();
+	std::vector<std::shared_ptr<DescriptorSetLayout>> layouts = { single_ubo_binding_point };
+	if (use_texture) {
+		layouts.push_back(single_img_binding_point);
+	}
+    m_pipeline_layout = std::make_shared<PipelineLayout>(m_logic_dev, layouts);
 
-    m_renderpass = std::make_shared<RenderPass>(logic_dev);
-    m_renderpass->Create(m_phy_dev->GetHandler(), m_surface->GetHandler(), *m_depth_buf, m_include_depth);
+    m_renderpass = std::make_shared<RenderPass>(*this, m_include_depth);
 
-    m_frame_buffers = std::make_shared<FrameBuffers>(logic_dev);
-    m_frame_buffers->Create(*this, m_include_depth);
+    m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-    m_vert_buf = std::make_shared<vulkan::VertexBuffer>(logic_dev);
-    m_vert_buf->Create(m_phy_dev->GetHandler(), g_vb_solid_face_colors_Data, sizeof(g_vb_solid_face_colors_Data),
-        sizeof(g_vb_solid_face_colors_Data[0]), false);
+    m_vert_buf = std::make_shared<vulkan::VertexBuffer>(m_logic_dev);
+	m_vert_buf->Create(*m_phy_dev, g_vb_solid_face_colors_Data,
+		sizeof(g_vb_solid_face_colors_Data), sizeof(g_vb_solid_face_colors_Data[0]), false);
     //uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
     //vert_buf->Create(vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
 
@@ -336,25 +317,21 @@ void Context::Init(uint32_t width, uint32_t height, void* hwnd)
     std::vector<unsigned int> _vs, _fs;
     shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::VertexShader), vs, _vs);
     shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::FragmentShader), fs, _fs);
-    m_program = std::make_shared<vulkan::ShaderProgram>(logic_dev, _vs, _fs);
+    m_program = std::make_shared<vulkan::ShaderProgram>(m_logic_dev, _vs, _fs);
 
-    m_desc_pool = std::make_shared<DescriptorPool>(logic_dev);
-    m_desc_pool->Create(use_texture);
+    m_desc_pool = std::make_shared<DescriptorPool>(m_logic_dev, use_texture);
 
-    m_desc_set = std::make_shared<DescriptorSet>(logic_dev);
-    m_desc_set->AddLayout(single_ubo_binding_point);
-    m_desc_set->AddDescriptor(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_uniform_buf->GetBufferInfo());
+	std::vector<std::shared_ptr<DescriptorSetLayout>> desc_layouts = { single_ubo_binding_point };
+	std::vector<VkWriteDescriptorSet> desc_descriptors;
+	DescriptorSet::AddDescriptor(desc_descriptors, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_uniform_buf->GetBufferInfo());
     if (use_texture) {
-        m_desc_set->AddLayout(single_img_binding_point);
-        m_desc_set->AddDescriptor(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &m_texture_data.image_info);
+		desc_layouts.push_back(single_img_binding_point);
+		DescriptorSet::AddDescriptor(desc_descriptors, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &m_texture_data.image_info);
     }
-    m_desc_set->Create(*m_desc_pool);
+	m_desc_set = std::make_shared<DescriptorSet>(m_logic_dev, *m_desc_pool, desc_layouts, desc_descriptors);
 
-    m_pipeline_cache = std::make_shared<PipelineCache>(logic_dev);
-    m_pipeline_cache->Create();
-
-    m_pipeline = std::make_shared<Pipeline>(logic_dev);
-    m_pipeline->Create(*this, m_include_depth, include_vi);
+    m_pipeline_cache = std::make_shared<PipelineCache>(m_logic_dev);
+    m_pipeline = std::make_shared<Pipeline>(*this, m_include_depth, include_vi);
 }
 
 void Context::Draw()

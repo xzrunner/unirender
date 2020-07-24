@@ -2,25 +2,28 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
 class Context;
+class LogicalDevice;
 
-class Pipeline
+class Pipeline : boost::noncopyable
 {
 public:
-	Pipeline(VkDevice device);
+	Pipeline(const Context& ctx, bool include_depth, bool include_vi);
 	~Pipeline();
-
-	void Create(const Context& ctx, bool include_depth, bool include_vi);
 
 	auto GetHandler() const { return m_handle; }
 
 private:
-	VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = nullptr;
 
 	VkPipeline m_handle;
 

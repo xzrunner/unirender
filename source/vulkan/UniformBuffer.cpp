@@ -12,19 +12,12 @@ namespace ur
 namespace vulkan
 {
 
-UniformBuffer::UniformBuffer(VkDevice device)
+UniformBuffer::UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
+                             const PhysicalDevice& phy_dev, int width, int height)
     : m_device(device)
 {
-}
+    auto vk_dev = device->GetHandler();
 
-UniformBuffer::~UniformBuffer()
-{
-    vkDestroyBuffer(m_device, m_buf, NULL);
-    vkFreeMemory(m_device, m_mem, NULL);
-}
-
-void UniformBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
-{
     VkResult res;
 
     float fov = glm::radians(45.0f);
@@ -52,11 +45,11 @@ void UniformBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     buf_info.flags = 0;
-    res = vkCreateBuffer(m_device, &buf_info, NULL, &m_buf);
+    res = vkCreateBuffer(vk_dev, &buf_info, NULL, &m_buf);
     assert(res == VK_SUCCESS);
 
     VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(m_device, m_buf, &mem_reqs);
+    vkGetBufferMemoryRequirements(vk_dev, m_buf, &mem_reqs);
 
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -65,26 +58,32 @@ void UniformBuffer::Create(VkPhysicalDevice phy_dev, int width, int height)
 
     alloc_info.allocationSize = mem_reqs.size;
     alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
-        phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-    res = vkAllocateMemory(m_device, &alloc_info, NULL, &(m_mem));
+    res = vkAllocateMemory(vk_dev, &alloc_info, NULL, &(m_mem));
     assert(res == VK_SUCCESS);
 
     uint8_t *pData;
-    res = vkMapMemory(m_device, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
+    res = vkMapMemory(vk_dev, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
     memcpy(pData, &MVP, sizeof(MVP));
 
-    vkUnmapMemory(m_device, m_mem);
+    vkUnmapMemory(vk_dev, m_mem);
 
-    res = vkBindBufferMemory(m_device, m_buf, m_mem, 0);
+    res = vkBindBufferMemory(vk_dev, m_buf, m_mem, 0);
     assert(res == VK_SUCCESS);
 
     m_buffer_info.buffer = m_buf;
     m_buffer_info.offset = 0;
     m_buffer_info.range = sizeof(MVP);
+}
+
+UniformBuffer::~UniformBuffer()
+{
+    vkDestroyBuffer(m_device->GetHandler(), m_buf, NULL);
+    vkFreeMemory(m_device->GetHandler(), m_mem, NULL);
 }
 
 }

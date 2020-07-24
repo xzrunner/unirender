@@ -3,6 +3,9 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <memory>
+
+#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -10,19 +13,18 @@ namespace vulkan
 {
 
 class Context;
+class LogicalDevice;
 
-class FrameBuffers
+class FrameBuffers : boost::noncopyable
 {
 public:
-	FrameBuffers(VkDevice device);
+	FrameBuffers(const Context& ctx, bool include_depth);
 	~FrameBuffers();
-
-	void Create(const Context& ctx, bool include_depth);
 
 	auto& GetHandler() const { return m_frame_buffers; }
 
 private:
-	VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = nullptr;
 
 	std::vector<VkFramebuffer> m_frame_buffers;
 

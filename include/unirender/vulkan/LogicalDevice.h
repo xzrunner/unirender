@@ -2,21 +2,24 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
 class PhysicalDevice;
+class Surface;
 
-class LogicalDevice
+class LogicalDevice : boost::noncopyable
 {
 public:
-	LogicalDevice();
+	LogicalDevice(bool enable_validation_layers, 
+		const PhysicalDevice& phy_dev, const Surface* surface = nullptr);
 	~LogicalDevice();
-
-	void Create(bool enable_validation_layers, const PhysicalDevice& phy_dev,
-		VkSurfaceKHR surface = VK_NULL_HANDLE);
 
 	auto GetHandler() const { return m_handle; }
 
@@ -27,7 +30,7 @@ private:
 	VkDevice m_handle = VK_NULL_HANDLE;
 
 	VkQueue m_graphics_queue = VK_NULL_HANDLE;
-	VkQueue m_present_queue = VK_NULL_HANDLE;
+	VkQueue m_present_queue  = VK_NULL_HANDLE;
 
 }; // LogicalDevice
 

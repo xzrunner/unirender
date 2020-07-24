@@ -2,28 +2,30 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
-class DepthBuffer;
+class Context;
+class LogicalDevice;
 
-class RenderPass
+class RenderPass : boost::noncopyable
 {
 public:
-    RenderPass(VkDevice device);
-    ~RenderPass();
-
-    void Create(VkPhysicalDevice phy_dev, VkSurfaceKHR surface, const DepthBuffer& depth_buf,
-        bool include_depth, bool clear = true,
+    RenderPass(const Context& ctx, bool include_depth, bool clear = true,
         VkImageLayout finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-		VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED);
+        VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED);
+    ~RenderPass();
 
     auto GetHandler() const { return m_handle; }
 
 private:
-    VkDevice m_device = VK_NULL_HANDLE;
+    std::shared_ptr<LogicalDevice> m_device = VK_NULL_HANDLE;
 
 	VkRenderPass m_handle = VK_NULL_HANDLE;
 

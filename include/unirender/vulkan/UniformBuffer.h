@@ -3,23 +3,29 @@
 #include <vulkan/vulkan.h>
 #include <glm/matrix.hpp>
 
+#include <memory>
+
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
-class UniformBuffer
+class LogicalDevice;
+class PhysicalDevice;
+
+class UniformBuffer : boost::noncopyable
 {
 public:
-	UniformBuffer(VkDevice device);
+	UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
+		const PhysicalDevice& phy_dev, int width, int height);
 	~UniformBuffer();
-
-	void Create(VkPhysicalDevice phy_dev, int width, int height);
 
 	auto GetBufferInfo() const { return m_buffer_info; }
 
 private:
-	VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = nullptr;
 
 	VkBuffer m_buf;
 	VkDeviceMemory m_mem;

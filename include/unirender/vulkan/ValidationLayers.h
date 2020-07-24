@@ -3,16 +3,21 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <memory>
+
+#include <boost/noncopyable.hpp>
 
 namespace ur
 {
 namespace vulkan
 {
 
-class ValidationLayers
+class Instance;
+
+class ValidationLayers : boost::noncopyable
 {
 public:
-	ValidationLayers(VkInstance instance);
+	ValidationLayers(const std::shared_ptr<Instance>& instance);
 	~ValidationLayers();
 
 	static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -22,7 +27,7 @@ public:
 	static bool CheckValidationLayerSuppor();
 
 private:
-	VkInstance m_instance;
+	std::shared_ptr<Instance> m_instance = nullptr;
 
 	VkDebugUtilsMessengerEXT m_debug_messenger;
 

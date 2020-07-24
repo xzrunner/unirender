@@ -2,23 +2,27 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
-class Surface
+class Instance;
+
+class Surface : boost::noncopyable
 {
 public:
-	Surface(VkInstance instance);
+	Surface(const std::shared_ptr<Instance>& instance, void* hwnd);
 	~Surface();
-
-	void Create(void* hwnd);
 
 	auto GetHandler() const { return m_handle; }
 
 private:
-	VkInstance m_instance;
+	std::shared_ptr<Instance> m_instance = nullptr;
 
 	VkSurfaceKHR m_handle;
 

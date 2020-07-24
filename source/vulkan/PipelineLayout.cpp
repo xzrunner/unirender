@@ -1,5 +1,6 @@
 #include "unirender/vulkan/PipelineLayout.h"
 #include "unirender/vulkan/DescriptorSetLayout.h"
+#include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
 
@@ -8,21 +9,13 @@ namespace ur
 namespace vulkan
 {
 
-PipelineLayout::PipelineLayout(VkDevice device)
+PipelineLayout::PipelineLayout(const std::shared_ptr<LogicalDevice>& device,
+	                           const std::vector<std::shared_ptr<DescriptorSetLayout>>& _layouts)
 	: m_device(device)
 {
-}
-
-PipelineLayout::~PipelineLayout()
-{
-	vkDestroyPipelineLayout(m_device, m_handle, NULL);
-}
-
-void PipelineLayout::Create()
-{
-	std::vector<VkDescriptorSetLayout> layouts(m_layouts.size());
-	for (size_t i = 0, n = m_layouts.size(); i < n; ++i) {
-		layouts[i] = m_layouts[i]->GetHandler();
+	std::vector<VkDescriptorSetLayout> layouts(_layouts.size());
+	for (size_t i = 0, n = _layouts.size(); i < n; ++i) {
+		layouts[i] = _layouts[i]->GetHandler();
 	}
 
 	VkPipelineLayoutCreateInfo pPipelineLayoutCreateInfo = {};
@@ -33,8 +26,13 @@ void PipelineLayout::Create()
 	pPipelineLayoutCreateInfo.setLayoutCount = layouts.size();
 	pPipelineLayoutCreateInfo.pSetLayouts = layouts.data();
 
-	VkResult res = vkCreatePipelineLayout(m_device, &pPipelineLayoutCreateInfo, NULL, &m_handle);
+	VkResult res = vkCreatePipelineLayout(m_device->GetHandler(), &pPipelineLayoutCreateInfo, NULL, &m_handle);
 	assert(res == VK_SUCCESS);
+}
+
+PipelineLayout::~PipelineLayout()
+{
+	vkDestroyPipelineLayout(m_device->GetHandler(), m_handle, NULL);
 }
 
 }

@@ -7,26 +7,31 @@
 #include <string>
 #include <vector>
 
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
-class ShaderObject
+class LogicalDevice;
+
+class ShaderObject : boost::noncopyable
 {
 public:
-	ShaderObject(VkDevice dev, ShaderType type, const std::vector<unsigned int>& spirv);
+	ShaderObject(const std::shared_ptr<LogicalDevice>& device, 
+		ShaderType type, const std::vector<unsigned int>& spirv);
 	~ShaderObject();
 
-	auto GetHandler() const { return m_stage; }
+	auto GetHandler() const { return m_handle; }
 
 private:
 	void Init(ShaderType type, const std::vector<unsigned int>& spirv);
 
 private:
-	VkDevice m_dev;
+	std::shared_ptr<LogicalDevice> m_device = VK_NULL_HANDLE;
 
-	VkPipelineShaderStageCreateInfo m_stage;
+	VkPipelineShaderStageCreateInfo m_handle;
 
 }; // ShaderObject
 

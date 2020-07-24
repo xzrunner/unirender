@@ -10,15 +10,15 @@ namespace ur
 namespace vulkan
 {
 
-IndexBuffer::IndexBuffer(VkDevice device)
+IndexBuffer::IndexBuffer(const std::shared_ptr<LogicalDevice>& device)
 	: m_device(device)
 {
 }
 
 IndexBuffer::~IndexBuffer()
 {
-	vkDestroyBuffer(m_device, m_buffer, NULL);
-	vkFreeMemory(m_device, m_memory, NULL);
+	vkDestroyBuffer(m_device->GetHandler(), m_buffer, NULL);
+	vkFreeMemory(m_device->GetHandler(), m_memory, NULL);
 }
 
 int IndexBuffer::GetSizeInBytes() const
@@ -57,8 +57,10 @@ void IndexBuffer::Reset(int size_in_bytes)
 {
 }
 
-void IndexBuffer::Create(VkPhysicalDevice phy_dev, const void* data, size_t size)
+void IndexBuffer::Create(const PhysicalDevice& phy_dev, const void* data, size_t size)
 {
+	auto vk_dev = m_device->GetHandler();
+
 	// Index buffer
 	VkBufferCreateInfo indexbufferInfo = {};
 	indexbufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -66,32 +68,32 @@ void IndexBuffer::Create(VkPhysicalDevice phy_dev, const void* data, size_t size
 	indexbufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
 	// Copy index data to a buffer visible to the host
-	auto res = vkCreateBuffer(m_device, &indexbufferInfo, nullptr, &m_buffer);
+	auto res = vkCreateBuffer(vk_dev, &indexbufferInfo, nullptr, &m_buffer);
 	assert(res == VK_SUCCESS);
 
 	VkMemoryRequirements mem_reqs;
-	vkGetBufferMemoryRequirements(m_device, m_buffer, &mem_reqs);
+	vkGetBufferMemoryRequirements(vk_dev, m_buffer, &mem_reqs);
 
 	VkMemoryAllocateInfo alloc_info = {};
 	alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	alloc_info.allocationSize = mem_reqs.size;
 	alloc_info.memoryTypeIndex = 0;
 	alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
-		phy_dev, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 	);
 
-	res = vkAllocateMemory(m_device, &alloc_info, nullptr, &m_memory);
+	res = vkAllocateMemory(vk_dev, &alloc_info, nullptr, &m_memory);
 	assert(res == VK_SUCCESS);
 
 	uint8_t* pData;
-	res = vkMapMemory(m_device, m_memory, 0, size, 0, (void**)&pData);
+	res = vkMapMemory(vk_dev, m_memory, 0, size, 0, (void**)&pData);
 	assert(res == VK_SUCCESS);
 
 	memcpy(pData, data, size);
 
-	vkUnmapMemory(m_device, m_memory);
+	vkUnmapMemory(vk_dev, m_memory);
 
-	res = vkBindBufferMemory(m_device, m_buffer, m_memory, 0);
+	res = vkBindBufferMemory(vk_dev, m_buffer, m_memory, 0);
 	assert(res == VK_SUCCESS);
 }
 

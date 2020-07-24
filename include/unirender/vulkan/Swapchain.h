@@ -3,21 +3,25 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <memory>
+
+#include <boost/noncopyable.hpp>
 
 namespace ur
 {
 namespace vulkan
 {
 
-class Context;
+class LogicalDevice;
+class PhysicalDevice;
+class Surface;
 
-class Swapchain
+class Swapchain : boost::noncopyable
 {
 public:
-    Swapchain(VkDevice device);
+    Swapchain(const std::shared_ptr<LogicalDevice>& device, const PhysicalDevice& phy_dev,
+		const Surface& surface, int width, int height);
     ~Swapchain();
-
-    void Create(const Context& ctx);
 
 	auto& GetHandler() const { return m_handle; }
 
@@ -52,7 +56,7 @@ private:
 	};
 
 private:
-    VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = VK_NULL_HANDLE;
 
     VkSwapchainKHR m_handle = VK_NULL_HANDLE;
 

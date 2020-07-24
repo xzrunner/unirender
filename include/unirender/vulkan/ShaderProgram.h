@@ -13,11 +13,13 @@ namespace vulkan
 {
 
 class ShaderObject;
+class LogicalDevice;
+
 class ShaderProgram : public ur::ShaderProgram
 {
 public:
-    ShaderProgram(VkDevice dev, const std::vector<unsigned int>& vs,
-        const std::vector<unsigned int>& fs);
+    ShaderProgram(const std::shared_ptr<LogicalDevice>& device, 
+        const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs);
     ShaderProgram(const std::vector<unsigned int>& cs);
     virtual ~ShaderProgram();
 

@@ -4,15 +4,20 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
 namespace ur
 {
 namespace vulkan
 {
 
+class LogicalDevice;
+class PhysicalDevice;
+
 class IndexBuffer : public ur::IndexBuffer
 {
 public:
-    IndexBuffer(VkDevice device);
+    IndexBuffer(const std::shared_ptr<LogicalDevice>& device);
     virtual ~IndexBuffer();
 
     virtual int GetSizeInBytes() const override;
@@ -29,13 +34,13 @@ public:
 
     virtual void SetDataType(IndexBufferDataType data_type) override {}
 
-    void Create(VkPhysicalDevice phy_dev, const void* data, size_t size);
+    void Create(const PhysicalDevice& phy_dev, const void* data, size_t size);
 
     auto& GetBuffer() const { return m_buffer; }
     auto GetCount() const { return m_count; }
 
 private:
-    VkDevice m_device = VK_NULL_HANDLE;
+    std::shared_ptr<LogicalDevice> m_device = nullptr;
 
     VkDeviceMemory m_memory;
     VkBuffer       m_buffer;

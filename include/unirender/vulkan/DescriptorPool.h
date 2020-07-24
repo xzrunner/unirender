@@ -2,23 +2,27 @@
 
 #include <vulkan/vulkan.h>
 
+#include <memory>
+
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 namespace vulkan
 {
 
-class DescriptorPool
+class LogicalDevice;
+
+class DescriptorPool : boost::noncopyable
 {
 public:
-	DescriptorPool(VkDevice device);
+	DescriptorPool(const std::shared_ptr<LogicalDevice>& device, bool use_texture);
 	~DescriptorPool();
-
-	void Create(bool use_texture);
 
 	auto GetHandler() const { return m_handle; }
 
 private:
-	VkDevice m_device = VK_NULL_HANDLE;
+	std::shared_ptr<LogicalDevice> m_device = nullptr;
 
 	VkDescriptorPool m_handle = VK_NULL_HANDLE;
 

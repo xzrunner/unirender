@@ -26,17 +26,25 @@
     <ClInclude Include="..\..\..\include\unirender\Context.h" />
     <ClInclude Include="..\..\..\include\unirender\DepthRange.h" />
     <ClInclude Include="..\..\..\include\unirender\DepthTest.h" />
+    <ClInclude Include="..\..\..\include\unirender\DescriptorPool.h" />
+    <ClInclude Include="..\..\..\include\unirender\DescriptorSet.h" />
+    <ClInclude Include="..\..\..\include\unirender\DescriptorSetLayout.h" />
+    <ClInclude Include="..\..\..\include\unirender\DescriptorType.h" />
     <ClInclude Include="..\..\..\include\unirender\Device.h" />
     <ClInclude Include="..\..\..\include\unirender\DrawState.h" />
     <ClInclude Include="..\..\..\include\unirender\FacetCulling.h" />
     <ClInclude Include="..\..\..\include\unirender\Factory.h" />
     <ClInclude Include="..\..\..\include\unirender\Framebuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\ImageLayout.h" />
+    <ClInclude Include="..\..\..\include\unirender\ImageView.h" />
     <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\InternalFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\Sampler.h" />
     <ClInclude Include="..\..\..\include\unirender\TextureUnit.h" />
     <ClInclude Include="..\..\..\include\unirender\typedef.h" />
+    <ClInclude Include="..\..\..\include\unirender\UniformBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\UniformUpdater.h" />
     <ClInclude Include="..\..\..\include\unirender\UniformValue.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\Buffer.h" />
@@ -97,6 +105,8 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Sampler.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ImageView.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Instance.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\LogicalDevice.h" />
@@ -121,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\Adaptor.cpp" />
+    <ClCompile Include="..\..\..\source\Context.cpp" />
     <ClCompile Include="..\..\..\source\Factory.cpp" />
     <ClCompile Include="..\..\..\source\opengl\Buffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
@@ -238,6 +249,14 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\FrameBuffers.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Sampler.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ImageView.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>

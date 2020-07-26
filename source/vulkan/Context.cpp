@@ -7,10 +7,10 @@
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/RenderPass.h"
 #include "unirender/vulkan/FrameBuffers.h"
-#include "unirender/vulkan/DescriptorPool.h"
 #include "unirender/vulkan/DescriptorSet.h"
 #include "unirender/vulkan/PipelineCache.h"
 #include "unirender/vulkan/DescriptorSetLayout.h"
+#include "unirender/vulkan/DescriptorPool.h"
 #include "unirender/vulkan/PipelineLayout.h"
 #include "unirender/vulkan/Pipeline.h"
 #include "unirender/vulkan/ShaderProgram.h"
@@ -21,6 +21,7 @@
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/Instance.h"
+#include "unirender/vulkan/Texture.h"
 #include "unirender/Adaptor.h"
 
 #include <vulkan/vulkan.h>
@@ -121,9 +122,9 @@ namespace vulkan
 
 Context::Context(const ur::Device& device, void* hwnd,
 	             uint32_t width, uint32_t height)
-	: m_dev(static_cast<const vulkan::Device&>(device))
+	: m_device(static_cast<const vulkan::Device&>(device))
 {
-	Init(width, height, hwnd);
+	Init(hwnd, width, height);
 
     //VkSemaphoreCreateInfo imageAcquiredSemaphoreCreateInfo;
     //imageAcquiredSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -138,7 +139,7 @@ Context::Context(const ur::Device& device, void* hwnd,
 	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphoreCreateInfo.pNext = nullptr;
 
-	auto logic_dev = m_logic_dev->GetHandler();
+	auto logic_dev = m_device.m_logic_dev->GetHandler();
 
 	// Semaphore used to ensures that image presentation is complete before starting to submit again
 	VkResult res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
@@ -165,7 +166,7 @@ Context::Context(const ur::Device& device, void* hwnd,
 
 Context::~Context()
 { 
-	auto logic_dev = m_logic_dev->GetHandler();
+	auto logic_dev = m_device.m_logic_dev->GetHandler();
 
 	for (auto& fence : waitFences) {
 		vkDestroyFence(logic_dev, fence, nullptr);
@@ -180,19 +181,19 @@ void Context::Resize(uint32_t width, uint32_t height)
 	m_width = width;
 	m_height = height;
 
-	auto vk_dev = m_logic_dev->GetHandler();
+	auto vk_dev = m_device.m_logic_dev->GetHandler();
 
 	vkDeviceWaitIdle(vk_dev);
 
 	// should destroy before create
 	m_swapchain.reset();
-	m_swapchain = std::make_shared<Swapchain>(m_logic_dev, *m_phy_dev, *m_surface, m_width, m_height);
+	m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, m_width, m_height);
 
-	m_depth_buf = std::make_shared<DepthBuffer>(m_logic_dev, *m_phy_dev, m_width, m_height);
+	m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
 
 	m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-	m_cmd_bufs = std::make_shared<CommandBuffers>(m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
+	m_cmd_bufs = std::make_shared<CommandBuffers>(m_device.m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
 
 	BuildCommandBuffers();
 }
@@ -257,17 +258,28 @@ bool Context::CheckRenderTargetStatus()
 
 void Context::Flush()
 {
-	vkDeviceWaitIdle(m_logic_dev->GetHandler());
+	vkDeviceWaitIdle(m_device.m_logic_dev->GetHandler());
 }
 
-void Context::Init(uint32_t width, uint32_t height, void* hwnd)
+void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 {
-    m_surface = std::make_shared<Surface>(m_dev.GetInstance(), hwnd);
+    m_surface = std::make_shared<Surface>(m_device.m_instance, hwnd);
 
-    m_phy_dev = std::make_shared<PhysicalDevice>(*m_dev.GetInstance(), m_surface.get());
+    auto phy_dev = std::make_shared<PhysicalDevice>(*m_device.m_instance, m_surface.get());
+	if (phy_dev->GetHandler() != m_device.m_phy_dev->GetHandler()) {
+		throw std::runtime_error("different physical device!");
+	}
 
-    m_logic_dev = std::make_shared<LogicalDevice>(m_dev.IsEnableValidationLayers(), *m_phy_dev, m_surface.get());
-    //auto vk_dev = m_logic_dev->GetHandler();
+	PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev->GetHandler(), m_surface.get());
+
+	if (!m_device.m_logic_dev) {
+		const_cast<Device&>(m_device).m_logic_dev = std::make_shared<LogicalDevice>(m_device.m_enable_validation_layers, *m_device.m_phy_dev, m_surface.get());
+		const_cast<Device&>(m_device).m_present_family_id = indices.present_family.value();
+	} else {
+		if (indices.present_family.value() != m_device.m_present_family_id) {
+			throw std::runtime_error("different logic device!");
+		}
+	}
 
     m_width = width;
     m_height = height;
@@ -275,37 +287,37 @@ void Context::Init(uint32_t width, uint32_t height, void* hwnd)
 	const bool use_texture = false;
 	const bool include_vi = true;
 
-    m_swapchain = std::make_shared<Swapchain>(m_logic_dev, *m_phy_dev, *m_surface, m_width, m_height);
+    m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, m_width, m_height);
 
-    m_cmd_pool = std::make_shared<CommandPool>(m_logic_dev);
-    m_cmd_bufs = std::make_shared<CommandBuffers>(m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
+    m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
+    m_cmd_bufs = std::make_shared<CommandBuffers>(m_device.m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
 
-    m_depth_buf = std::make_shared<DepthBuffer>(m_logic_dev, *m_phy_dev, m_width, m_height);
+    m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
 
-    m_uniform_buf = std::make_shared<UniformBuffer>(m_logic_dev, *m_phy_dev, m_width, m_height);
+    m_uniform_buf = std::make_shared<UniformBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
 
-	std::vector<VkDescriptorSetLayoutBinding> single_ubo_bindings;
-	DescriptorSetLayout::AddBinding(single_ubo_bindings, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT);
-    auto single_ubo_binding_point = std::make_shared<DescriptorSetLayout>(m_logic_dev, single_ubo_bindings);
-    m_desc_set_layouts["single_ubo"] = single_ubo_binding_point;
+	std::vector<std::pair<DescriptorType, ShaderType>> single_ubo_bindings = {
+		{ ur::DescriptorType::UniformBuffer, ur::ShaderType::VertexShader } 
+	};
+	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_ubo", m_device.CreateDescriptorSetLayout(single_ubo_bindings));
 
-	std::vector<VkDescriptorSetLayoutBinding> single_img_bindings;
-	DescriptorSetLayout::AddBinding(single_img_bindings, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-    auto single_img_binding_point = std::make_shared<DescriptorSetLayout>(m_logic_dev, single_img_bindings);
-    m_desc_set_layouts["single_img"] = single_img_binding_point;
+	std::vector<std::pair<DescriptorType, ShaderType>> single_img_bindings = {
+		{ ur::DescriptorType::CombinedImageSampler, ur::ShaderType::FragmentShader }
+	};
+	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_img", m_device.CreateDescriptorSetLayout(single_img_bindings));
 
-	std::vector<std::shared_ptr<DescriptorSetLayout>> layouts = { single_ubo_binding_point };
+	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = { m_device.GetDescriptorSetLayout("single_ubo") };
 	if (use_texture) {
-		layouts.push_back(single_img_binding_point);
+		layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
 	}
-    m_pipeline_layout = std::make_shared<PipelineLayout>(m_logic_dev, layouts);
+    m_pipeline_layout = std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts);
 
     m_renderpass = std::make_shared<RenderPass>(*this, m_include_depth);
 
     m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-    m_vert_buf = std::make_shared<vulkan::VertexBuffer>(m_logic_dev);
-	m_vert_buf->Create(*m_phy_dev, g_vb_solid_face_colors_Data,
+    m_vert_buf = std::make_shared<vulkan::VertexBuffer>(m_device.m_logic_dev);
+	m_vert_buf->Create(*m_device.m_phy_dev, g_vb_solid_face_colors_Data,
 		sizeof(g_vb_solid_face_colors_Data), sizeof(g_vb_solid_face_colors_Data[0]), false);
     //uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
     //vert_buf->Create(vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
@@ -314,29 +326,46 @@ void Context::Init(uint32_t width, uint32_t height, void* hwnd)
     //uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
     //idx_buf->Create(vertexBuffer.data(), indexBufferSize);
 
+	std::vector<std::pair<ur::DescriptorType, size_t>> pool_sizes = {
+		{ ur::DescriptorType::UniformBuffer,        1024 },
+		{ ur::DescriptorType::CombinedImageSampler, 1024 },
+	};
+	m_desc_pool = m_device.CreateDescriptorPool(1024, pool_sizes);
+
     std::vector<unsigned int> _vs, _fs;
     shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::VertexShader), vs, _vs);
     shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::FragmentShader), fs, _fs);
-    m_program = std::make_shared<vulkan::ShaderProgram>(m_logic_dev, _vs, _fs);
+    m_program = std::make_shared<vulkan::ShaderProgram>(m_device.m_logic_dev, _vs, _fs);
 
-    m_desc_pool = std::make_shared<DescriptorPool>(m_logic_dev, use_texture);
+	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> desc_layouts = { m_device.GetDescriptorSetLayout("single_ubo") };
+	std::vector<ur::DescriptorSet::Descriptor> desc_descriptors = {{ DescriptorType::UniformBuffer, m_uniform_buf }};
+	if (use_texture && m_texture) 
+	{
+		desc_layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
 
-	std::vector<std::shared_ptr<DescriptorSetLayout>> desc_layouts = { single_ubo_binding_point };
-	std::vector<VkWriteDescriptorSet> desc_descriptors;
-	DescriptorSet::AddDescriptor(desc_descriptors, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, &m_uniform_buf->GetBufferInfo());
-    if (use_texture) {
-		desc_layouts.push_back(single_img_binding_point);
-		DescriptorSet::AddDescriptor(desc_descriptors, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &m_texture_data.image_info);
-    }
-	m_desc_set = std::make_shared<DescriptorSet>(m_logic_dev, *m_desc_pool, desc_layouts, desc_descriptors);
+		auto& descriptor = std::static_pointer_cast<vulkan::Texture>(m_texture)->GetDescriptor();
+		desc_descriptors.push_back(DescriptorSet::Descriptor(DescriptorType::CombinedImageSampler, m_texture));
+	}
+	auto& vk_desc_pool = static_cast<const vulkan::DescriptorPool&>(*m_desc_pool);
+	m_desc_set = std::make_shared<DescriptorSet>(m_device.m_logic_dev, vk_desc_pool, desc_layouts, desc_descriptors);
 
-    m_pipeline_cache = std::make_shared<PipelineCache>(m_logic_dev);
+    m_pipeline_cache = std::make_shared<PipelineCache>(m_device.m_logic_dev);
     m_pipeline = std::make_shared<Pipeline>(*this, m_include_depth, include_vi);
+}
+
+std::shared_ptr<PhysicalDevice> Context::GetPhysicalDevice() const
+{ 
+	return m_device.m_phy_dev; 
+}
+
+std::shared_ptr<LogicalDevice> Context::GetLogicalDevice() const
+{ 
+	return m_device.m_logic_dev; 
 }
 
 void Context::Draw()
 {
-	auto vk_dev = m_logic_dev->GetHandler();
+	auto vk_dev = m_device.m_logic_dev->GetHandler();
 
 	// Get next image in the swap chain (back/front buffer)
 	VkResult res = vkAcquireNextImageKHR(vk_dev, m_swapchain->GetHandler(),
@@ -363,7 +392,7 @@ void Context::Draw()
 	submitInfo.pCommandBuffers = &m_cmd_bufs->GetHandler()[m_current_buffer];                // Command buffers(s) to execute in this batch (submission)
 	submitInfo.commandBufferCount = 1;                           // One command buffer
 
-	auto graphics_queue = m_logic_dev->GetGraphicsQueue();
+	auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
 
 	// Submit to the graphics queue passing a wait fence
 	res = vkQueueSubmit(graphics_queue, 1, &submitInfo, waitFences[m_current_buffer]);

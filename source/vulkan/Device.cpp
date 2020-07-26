@@ -9,6 +9,8 @@
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/Instance.h"
+#include "unirender/vulkan/DescriptorPool.h"
+#include "unirender/vulkan/DescriptorSetLayout.h"
 
 #include <SM_Vector.h>
 
@@ -31,7 +33,7 @@ Device::Device(bool enable_validation_layers)
     }
 
     m_phy_dev = std::make_shared<PhysicalDevice>(*m_instance);
-    m_logic_dev = std::make_shared<LogicalDevice>(enable_validation_layers, *m_phy_dev);
+    //m_logic_dev = std::make_shared<LogicalDevice>(enable_validation_layers, *m_phy_dev);
 }
 
 std::shared_ptr<ur::VertexArray>
@@ -129,6 +131,18 @@ std::shared_ptr<ur::TextureSampler>
 Device::GetTextureSampler(TextureSamplerType type) const
 {
     return nullptr;
+}
+
+std::shared_ptr<ur::DescriptorPool>
+Device::CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const
+{
+    return std::make_shared<DescriptorPool>(m_logic_dev, max_sets, pool_sizes);
+}
+
+std::shared_ptr<ur::DescriptorSetLayout>
+Device::CreateDescriptorSetLayout(const std::vector<std::pair<ur::DescriptorType, ur::ShaderType>>& bindings) const
+{
+    return std::make_shared<DescriptorSetLayout>(m_logic_dev, bindings);
 }
 
 void Device::DispatchCompute(int thread_group_count) const

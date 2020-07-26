@@ -49,12 +49,17 @@ public:
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const override;
     virtual std::shared_ptr<ur::Texture>
         CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz) const override;
-	virtual std::shared_ptr<Texture>
+	virtual std::shared_ptr<ur::Texture>
 		CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const override;
-    virtual std::shared_ptr<TextureSampler>
+    virtual std::shared_ptr<ur::TextureSampler>
         CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const override;
-    virtual std::shared_ptr<TextureSampler>
+    virtual std::shared_ptr<ur::TextureSampler>
         GetTextureSampler(TextureSamplerType type) const override;
+
+    virtual std::shared_ptr<ur::DescriptorPool>
+        CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const override;
+    virtual std::shared_ptr<ur::DescriptorSetLayout>
+        CreateDescriptorSetLayout(const std::vector<std::pair<DescriptorType, ShaderType>>& bindings) const override;
 
     virtual void DispatchCompute(int thread_group_count) const override;
 
@@ -62,10 +67,6 @@ public:
         int x, int y, int w, int h) const override;
     virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const override;
-
-    bool IsEnableValidationLayers() const { return m_enable_validation_layers; }
-
-    auto GetInstance() const { return m_instance; }
 
 private:
     int m_max_num_vert_attrs = 0;
@@ -79,6 +80,9 @@ private:
 
     std::shared_ptr<PhysicalDevice> m_phy_dev = nullptr;
     std::shared_ptr<LogicalDevice>  m_logic_dev = nullptr;
+    uint32_t m_present_family_id = 0;
+
+    friend class Context;
 
 }; // Device
 }

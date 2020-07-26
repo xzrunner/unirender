@@ -19,10 +19,10 @@ class Device;
 namespace vulkan
 {
 
-class Device;
-class Surface;
 class PhysicalDevice;
 class LogicalDevice;
+class Device;
+class Surface;
 class CommandPool;
 class CommandBuffers;
 class Swapchain;
@@ -30,7 +30,6 @@ class DepthBuffer;
 class UniformBuffer;
 class RenderPass;
 class FrameBuffers;
-class DescriptorPool;
 class DescriptorSet;
 class PipelineCache;
 class DescriptorSetLayout;
@@ -70,13 +69,13 @@ public:
 
     virtual void Flush() override;
 
-    void Init(uint32_t width, uint32_t height, void* hwnd);
+    void Init(void* hwnd, uint32_t width, uint32_t height);
 
     int GetWidth() const { return m_width; }
     int GetHeight() const { return m_height; }
 
-	auto GetPhysicalDevice() const { return m_phy_dev; }
-	auto GetLogicalDevice() const { return m_logic_dev; }
+    std::shared_ptr<PhysicalDevice> GetPhysicalDevice() const;
+    std::shared_ptr<LogicalDevice> GetLogicalDevice() const;
 	auto GetSurface() const { return m_surface; }
 	auto GetSwapchain() const { return m_swapchain; }
 	auto GetDepthBuffer() const { return m_depth_buf; }
@@ -101,21 +100,16 @@ private:
     void BuildCommandBuffers();
 
 private:
-    const Device& m_dev;
+    const Device& m_device;
 
     VkSemaphore presentCompleteSemaphore;
     VkSemaphore renderCompleteSemaphore;
-
-    //VkSemaphore imageAcquiredSemaphore;
 
     std::vector<VkFence> waitFences;
 
 	int m_width = 0, m_height = 0;
 
 	std::shared_ptr<Surface> m_surface = nullptr;
-
-	std::shared_ptr<PhysicalDevice> m_phy_dev = nullptr;
-	std::shared_ptr<LogicalDevice> m_logic_dev = nullptr;
 
     mutable uint32_t m_current_buffer = 0;
 
@@ -127,7 +121,6 @@ private:
 
     std::shared_ptr<UniformBuffer> m_uniform_buf = nullptr;
 
-    std::unordered_map<std::string, std::shared_ptr<DescriptorSetLayout>> m_desc_set_layouts;
     std::shared_ptr<PipelineLayout> m_pipeline_layout = nullptr;
 
     std::shared_ptr<RenderPass>   m_renderpass = nullptr;
@@ -138,16 +131,17 @@ private:
     std::shared_ptr<ShaderProgram> m_program  = nullptr;
 
     std::shared_ptr<DescriptorPool> m_desc_pool = nullptr;
-    std::shared_ptr<DescriptorSet>  m_desc_set  = nullptr;
+    std::shared_ptr<DescriptorSet>  m_desc_set = nullptr;
 
     std::shared_ptr<PipelineCache> m_pipeline_cache = nullptr;
     std::shared_ptr<Pipeline>      m_pipeline = nullptr;
 
 	bool m_include_depth = false;
 
-	struct {
-		VkDescriptorImageInfo image_info;
-	} m_texture_data;
+	//struct {
+	//	VkDescriptorImageInfo image_info;
+	//} m_texture_data;
+    std::shared_ptr<Texture> m_texture = nullptr;
 
 }; // Context
 

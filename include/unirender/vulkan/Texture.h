@@ -4,6 +4,8 @@
 #include "unirender/TextureDescription.h"
 #include "unirender/TextureTarget.h"
 
+#include <vulkan/vulkan.h>
+
 namespace ur
 {
 
@@ -34,8 +36,12 @@ public:
 
     virtual void ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler) override;
 
+    auto& GetDescriptor() const { return m_descriptor; }
+
 private:
 	TextureDescription m_desc;
+
+    VkDescriptorImageInfo m_descriptor;
 
 }; // Texture
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "unirender/UniformBuffer.h"
+
 #include <vulkan/vulkan.h>
 #include <glm/matrix.hpp>
 
@@ -15,7 +17,7 @@ namespace vulkan
 class LogicalDevice;
 class PhysicalDevice;
 
-class UniformBuffer : boost::noncopyable
+class UniformBuffer : public ur::UniformBuffer
 {
 public:
 	UniformBuffer(const std::shared_ptr<LogicalDevice>& device,

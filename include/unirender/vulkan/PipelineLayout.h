@@ -9,17 +9,19 @@
 
 namespace ur
 {
+
+class DescriptorSetLayout;
+
 namespace vulkan
 {
 
 class LogicalDevice;
-class DescriptorSetLayout;
 
 class PipelineLayout : boost::noncopyable
 {
 public:
 	PipelineLayout(const std::shared_ptr<LogicalDevice>& device,
-		const std::vector<std::shared_ptr<DescriptorSetLayout>>& layouts);
+		const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts);
 	~PipelineLayout();
 
 	auto GetHandler() const { return m_handle; }

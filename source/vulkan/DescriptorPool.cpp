@@ -1,5 +1,6 @@
 #include "unirender/vulkan/DescriptorPool.h"
 #include "unirender/vulkan/LogicalDevice.h"
+#include "unirender/vulkan/TypeConverter.h"
 
 #include <assert.h>
 
@@ -8,30 +9,29 @@ namespace ur
 namespace vulkan
 {
 
-DescriptorPool::DescriptorPool(const std::shared_ptr<LogicalDevice>& device, bool use_texture)
+DescriptorPool::DescriptorPool(const std::shared_ptr<LogicalDevice>& device, size_t max_sets, 
+                               const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes)
 	: m_device(device)
 {
-    /* DEPENDS on init_uniform_buffer() and
-     * init_descriptor_and_pipeline_layouts() */
-
-    VkResult res;
-    VkDescriptorPoolSize type_count[2];
-    type_count[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    type_count[0].descriptorCount = 1;
-    if (use_texture) {
-        type_count[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        type_count[1].descriptorCount = 1;
+    std::vector<VkDescriptorPoolSize> vk_pool_sizes(pool_sizes.size());
+    for (int i = 0, n = pool_sizes.size(); i < n; ++i) 
+    {
+        auto& src = pool_sizes[i];
+        auto& dst = vk_pool_sizes[i];
+        dst.type = TypeConverter::To(src.first);
+        dst.descriptorCount = src.second;
     }
 
-    VkDescriptorPoolCreateInfo descriptor_pool = {};
-    descriptor_pool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptor_pool.pNext = NULL;
-    descriptor_pool.maxSets = 1;
-    descriptor_pool.poolSizeCount = use_texture ? 2 : 1;
-    descriptor_pool.pPoolSizes = type_count;
+    VkDescriptorPoolCreateInfo desc_pool_ci = {};
+    desc_pool_ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    desc_pool_ci.pNext = NULL;
+    desc_pool_ci.maxSets = max_sets;
+    desc_pool_ci.poolSizeCount = vk_pool_sizes.size();
+    desc_pool_ci.pPoolSizes = vk_pool_sizes.data();
 
-    res = vkCreateDescriptorPool(m_device->GetHandler(), &descriptor_pool, NULL, &m_handle);
-    assert(res == VK_SUCCESS);
+    if (vkCreateDescriptorPool(m_device->GetHandler(), &desc_pool_ci, NULL, &m_handle) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor pool!");
+    }
 }
 
 DescriptorPool::~DescriptorPool()

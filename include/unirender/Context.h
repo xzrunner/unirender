@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+#include <boost/noncopyable.hpp>
+
 namespace ur
 {
 
@@ -18,8 +20,9 @@ class Framebuffer;
 class ShaderProgram;
 class TextureUnit;
 class TextureSampler;
+class DescriptorPool;
 
-class Context
+class Context : boost::noncopyable
 {
 public:
     virtual ~Context() {}

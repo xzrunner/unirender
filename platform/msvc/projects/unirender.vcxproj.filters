@@ -268,36 +268,6 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\RenderPass.h">
       <Filter>api\vulkan\2.pipeline</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\UniformBuffer.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorPool.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSet.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\VertexBuffer.h">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderObject.h">
       <Filter>api\vulkan\2.pipeline</Filter>
     </ClInclude>
@@ -309,6 +279,66 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\Texture.h">
       <Filter>api\vulkan\9.utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorSet.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorPool.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorType.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorSetLayout.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageLayout.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageView.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Sampler.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorPool.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSet.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\UniformBuffer.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VertexBuffer.h">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ImageView.h">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Sampler.h">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformBuffer.h">
+      <Filter>uniform_buffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -421,36 +451,6 @@
     <ClCompile Include="..\..\..\source\vulkan\RenderPass.cpp">
       <Filter>api\vulkan\2.pipeline</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\CommandBuffers.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\CommandPool.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\DescriptorPool.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\DescriptorSet.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\DescriptorSetLayout.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\FrameBuffers.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\UniformBuffer.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\IndexBuffer.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\VertexBuffer.cpp">
-      <Filter>api\vulkan\3.drawing</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\ShaderObject.cpp">
       <Filter>api\vulkan\2.pipeline</Filter>
     </ClCompile>
@@ -462,6 +462,43 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\Texture.cpp">
       <Filter>api\vulkan\9.utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Context.cpp" />
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorPool.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorSet.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorSetLayout.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandBuffers.cpp">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandPool.cpp">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\UniformBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\IndexBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VertexBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\FrameBuffers.cpp">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ImageView.cpp">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Sampler.cpp">
+      <Filter>api\vulkan\3.drawing\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -527,6 +564,27 @@
     </Filter>
     <Filter Include="api\vulkan\9.utility">
       <UniqueIdentifier>{6deb3e8b-5c15-4c78-9b31-f54414c3586e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uniform_buffer">
+      <UniqueIdentifier>{e670a6b2-3daa-4a0c-8d6c-9aa8eac3eabf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="image">
+      <UniqueIdentifier>{665f8d31-ba17-4288-b8e8-ff6a3090d5a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\uniform">
+      <UniqueIdentifier>{5a639f33-4cda-4e14-89b3-09ddc39faf29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\image">
+      <UniqueIdentifier>{2c6d8ec1-5df2-4c1f-b4b6-531136d51b3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\command">
+      <UniqueIdentifier>{13ad40e2-de41-4497-84a1-37d4600c51f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\vertex">
+      <UniqueIdentifier>{99c15570-d8dd-462b-8e58-9beaee02d162}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\pixels">
+      <UniqueIdentifier>{0b12d6c1-2ed3-481c-ab7d-f6b4066fb8ed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

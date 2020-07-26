@@ -1,10 +1,10 @@
 #pragma once
 
+#include "unirender/DescriptorPool.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
-
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -13,10 +13,11 @@ namespace vulkan
 
 class LogicalDevice;
 
-class DescriptorPool : boost::noncopyable
+class DescriptorPool : public ur::DescriptorPool
 {
 public:
-	DescriptorPool(const std::shared_ptr<LogicalDevice>& device, bool use_texture);
+	DescriptorPool(const std::shared_ptr<LogicalDevice>& device, size_t max_sets, 
+		const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes);
 	~DescriptorPool();
 
 	auto GetHandler() const { return m_handle; }

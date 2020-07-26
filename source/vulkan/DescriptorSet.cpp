@@ -3,6 +3,8 @@
 #include "unirender/vulkan/DescriptorSetLayout.h"
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/LogicalDevice.h"
+#include "unirender/vulkan/TypeConverter.h"
+#include "unirender/vulkan/Texture.h"
 
 #include <assert.h>
 
@@ -12,13 +14,13 @@ namespace vulkan
 {
 
 DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const DescriptorPool& pool,
-                             const std::vector<std::shared_ptr<DescriptorSetLayout>>& _layouts,
-                             const std::vector<VkWriteDescriptorSet>& descriptors)
+                             const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& _layouts,
+                             const std::vector<ur::DescriptorSet::Descriptor>& descriptors)
 	: m_device(device)
 {
     std::vector<VkDescriptorSetLayout> layouts(_layouts.size());
     for (size_t i = 0, n = _layouts.size(); i < n; ++i) {
-        layouts[i] = _layouts[i]->GetHandler();
+        layouts[i] = std::static_pointer_cast<vulkan::DescriptorSetLayout>(_layouts[i])->GetHandler();
     }
 
     VkDescriptorSetAllocateInfo alloc_info[1];
@@ -31,38 +33,31 @@ DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const
     VkResult res = vkAllocateDescriptorSets(m_device->GetHandler(), alloc_info, &m_handle);
     assert(res == VK_SUCCESS);
 
-    for (auto& desc : descriptors) {
-        const_cast<VkWriteDescriptorSet&>(desc).dstSet = m_handle;
+    std::vector<VkWriteDescriptorSet> vk_descriptors;
+    vk_descriptors.reserve(descriptors.size());
+    for (auto& desc : descriptors) 
+    {
+        VkWriteDescriptorSet write_desc_set = {};
+
+        write_desc_set.dstSet = m_handle;
+
+        write_desc_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_desc_set.descriptorType = TypeConverter::To(desc.type);
+        write_desc_set.dstBinding = vk_descriptors.size();
+        if (desc.uniform) {
+            write_desc_set.pBufferInfo = &std::static_pointer_cast<UniformBuffer>(desc.uniform)->GetBufferInfo();
+        } else if (desc.texture) {
+            write_desc_set.pImageInfo = &std::static_pointer_cast<Texture>(desc.texture)->GetDescriptor();
+        }
+        write_desc_set.descriptorCount = 1;
+
+        vk_descriptors.push_back(write_desc_set);
     }
-    vkUpdateDescriptorSets(m_device->GetHandler(), descriptors.size(), descriptors.data(), 0, NULL);
+    vkUpdateDescriptorSets(m_device->GetHandler(), vk_descriptors.size(), vk_descriptors.data(), 0, NULL);
 }
 
 DescriptorSet::~DescriptorSet()
 {
-}
-
-void DescriptorSet::AddDescriptor(std::vector<VkWriteDescriptorSet>& descriptors,
-                                  VkDescriptorType type, const VkDescriptorBufferInfo* buffer_info)
-{
-    VkWriteDescriptorSet writeDescriptorSet = {};
-    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDescriptorSet.descriptorType = type;
-    writeDescriptorSet.dstBinding = descriptors.size();
-    writeDescriptorSet.pBufferInfo = buffer_info;
-    writeDescriptorSet.descriptorCount = 1;
-    descriptors.push_back(writeDescriptorSet);
-}
-
-void DescriptorSet::AddDescriptor(std::vector<VkWriteDescriptorSet>& descriptors,
-                                  VkDescriptorType type, const VkDescriptorImageInfo* image_info)
-{
-    VkWriteDescriptorSet writeDescriptorSet = {};
-    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDescriptorSet.descriptorType = type;
-    writeDescriptorSet.dstBinding = descriptors.size();
-    writeDescriptorSet.pImageInfo = image_info;
-    writeDescriptorSet.descriptorCount = 1;
-    descriptors.push_back(writeDescriptorSet);
 }
 
 }

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "unirender/PipelineLayout.h"
+
 #include <vulkan/vulkan.h>
 
 #include <vector>
 #include <memory>
-
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -17,7 +17,7 @@ namespace vulkan
 
 class LogicalDevice;
 
-class PipelineLayout : boost::noncopyable
+class PipelineLayout : public ur::PipelineLayout
 {
 public:
 	PipelineLayout(const std::shared_ptr<LogicalDevice>& device,

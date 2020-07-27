@@ -21,6 +21,9 @@ class ShaderProgram;
 class TextureUnit;
 class TextureSampler;
 class DescriptorPool;
+class Pipeline;
+class PipelineLayout;
+class VertexBuffer;
 
 class Context : boost::noncopyable
 {
@@ -50,6 +53,9 @@ public:
     virtual bool CheckRenderTargetStatus() = 0;
 
     virtual void Flush() = 0;
+
+    virtual std::shared_ptr<Pipeline> CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
+        const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const = 0;
 
 }; // Context
 

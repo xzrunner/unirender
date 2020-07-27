@@ -11,6 +11,9 @@
 #include "unirender/vulkan/Instance.h"
 #include "unirender/vulkan/DescriptorPool.h"
 #include "unirender/vulkan/DescriptorSetLayout.h"
+#include "unirender/vulkan/DescriptorSet.h"
+#include "unirender/vulkan/UniformBuffer.h"
+#include "unirender/vulkan/Pipeline.h"
 
 #include <SM_Vector.h>
 
@@ -133,6 +136,12 @@ Device::GetTextureSampler(TextureSamplerType type) const
     return nullptr;
 }
 
+std::shared_ptr<ur::UniformBuffer>
+Device::CreateUniformBuffer(const void* data, size_t size) const
+{
+    return std::make_shared<UniformBuffer>(m_logic_dev, *m_phy_dev, data, size);
+}
+
 std::shared_ptr<ur::DescriptorPool>
 Device::CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const
 {
@@ -143,6 +152,21 @@ std::shared_ptr<ur::DescriptorSetLayout>
 Device::CreateDescriptorSetLayout(const std::vector<std::pair<ur::DescriptorType, ur::ShaderType>>& bindings) const
 {
     return std::make_shared<DescriptorSetLayout>(m_logic_dev, bindings);
+}
+
+std::shared_ptr<ur::DescriptorSet> 
+Device::CreateDescriptorSet(const ur::DescriptorPool& pool, const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts,
+                            const std::vector<ur::Descriptor>& descriptors) const
+{
+    return std::make_shared<DescriptorSet>(m_logic_dev, pool, layouts, descriptors);
+}
+
+std::shared_ptr<ur::VertexBuffer>
+Device::CreateVertexBuffer(const void* data, size_t size, size_t stride) const
+{
+    auto vb = std::make_shared<VertexBuffer>(m_logic_dev);
+    vb->Create(*m_phy_dev, data, size, stride, false);
+    return vb;
 }
 
 void Device::DispatchCompute(int thread_group_count) const

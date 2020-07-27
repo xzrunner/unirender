@@ -310,9 +310,6 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h">
       <Filter>api\vulkan\3.drawing\uniform</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h">
-      <Filter>api\vulkan\3.drawing\command</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h">
       <Filter>api\vulkan\3.drawing\command</Filter>
     </ClInclude>
@@ -339,6 +336,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\UniformBuffer.h">
       <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h">
+      <Filter>pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\RenderPass.h">
+      <Filter>pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Pipeline.h">
+      <Filter>pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Descriptor.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffer.h">
+      <Filter>api\vulkan\3.drawing\command</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -463,7 +475,6 @@
     <ClCompile Include="..\..\..\source\vulkan\Texture.cpp">
       <Filter>api\vulkan\9.utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\Context.cpp" />
     <ClCompile Include="..\..\..\source\vulkan\DescriptorPool.cpp">
       <Filter>api\vulkan\3.drawing\uniform</Filter>
     </ClCompile>
@@ -472,9 +483,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\DescriptorSetLayout.cpp">
       <Filter>api\vulkan\3.drawing\uniform</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\CommandBuffers.cpp">
-      <Filter>api\vulkan\3.drawing\command</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\CommandPool.cpp">
       <Filter>api\vulkan\3.drawing\command</Filter>
@@ -499,6 +507,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\Sampler.cpp">
       <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\command</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -585,6 +596,9 @@
     </Filter>
     <Filter Include="api\vulkan\3.drawing\pixels">
       <UniqueIdentifier>{0b12d6c1-2ed3-481c-ab7d-f6b4066fb8ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline">
+      <UniqueIdentifier>{ba4349c8-f541-4821-81ee-318e6f56a1b3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

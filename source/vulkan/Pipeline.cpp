@@ -15,7 +15,9 @@ namespace ur
 namespace vulkan
 {
 
-Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi)
+Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
+                   const ur::PipelineLayout& layout, const ur::VertexBuffer& vb,
+                   const ur::ShaderProgram& prog)
     : m_device(ctx.GetLogicalDevice())
 {
     VkResult res;
@@ -33,14 +35,14 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi)
     vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     if (include_vi) 
     {
-        auto vert_buf = ctx.GetVertexBuffer();
+        auto& vert_buf = static_cast<const vulkan::VertexBuffer&>(vb);
 
         vi.pNext = NULL;
         vi.flags = 0;
         vi.vertexBindingDescriptionCount = 1;
-        vi.pVertexBindingDescriptions = &vert_buf->GetVertInputBindDesc();
+        vi.pVertexBindingDescriptions = &vert_buf.GetVertInputBindDesc();
         vi.vertexAttributeDescriptionCount = 2;
-        vi.pVertexAttributeDescriptions = vert_buf->GetVertInputAttrDesc();
+        vi.pVertexAttributeDescriptions = vert_buf.GetVertInputAttrDesc();
     }
     VkPipelineInputAssemblyStateCreateInfo ia;
     ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -152,7 +154,7 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi)
     VkGraphicsPipelineCreateInfo pipeline;
     pipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipeline.pNext = NULL;
-    pipeline.layout = ctx.GetPipelineLayout()->GetHandler();
+    pipeline.layout = static_cast<const PipelineLayout&>(layout).GetHandler();
     pipeline.basePipelineHandle = VK_NULL_HANDLE;
     pipeline.basePipelineIndex = 0;
     pipeline.flags = 0;
@@ -165,7 +167,7 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi)
     pipeline.pDynamicState = &dynamicState;
     pipeline.pViewportState = &vp;
     pipeline.pDepthStencilState = &ds;
-    pipeline.pStages = ctx.GetShaderProgram()->GetShaderStages();
+    pipeline.pStages = static_cast<const vulkan::ShaderProgram&>(prog).GetShaderStages();
     pipeline.stageCount = 2;
     pipeline.renderPass = ctx.GetRenderPass()->GetHandler();
     pipeline.subpass = 0;

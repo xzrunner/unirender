@@ -17,8 +17,8 @@ VertexBuffer::VertexBuffer(const std::shared_ptr<LogicalDevice>& device)
 
 VertexBuffer::~VertexBuffer()
 {
-    vkDestroyBuffer(m_device->GetHandler(), m_vertex_buffer.buf, NULL);
-    vkFreeMemory(m_device->GetHandler(), m_vertex_buffer.mem, NULL);
+    vkDestroyBuffer(m_device->GetHandler(), m_buffer, NULL);
+    vkFreeMemory(m_device->GetHandler(), m_memory, NULL);
 }
 
 int VertexBuffer::GetSizeInBytes() const
@@ -55,9 +55,11 @@ void VertexBuffer::Reset(int size_in_bytes)
 void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data, 
                           size_t size, size_t stride, bool use_texture)
 {
+    VkResult res;
+
     auto vk_dev = m_device->GetHandler();
 
-    VkResult res;
+    m_vertex_count = size / stride;
 
     VkBufferCreateInfo buf_info = {};
     buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -68,11 +70,11 @@ void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data,
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     buf_info.flags = 0;
-    res = vkCreateBuffer(vk_dev, &buf_info, NULL, &m_vertex_buffer.buf);
+    res = vkCreateBuffer(vk_dev, &buf_info, NULL, &m_buffer);
     assert(res == VK_SUCCESS);
 
     VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(vk_dev, m_vertex_buffer.buf, &mem_reqs);
+    vkGetBufferMemoryRequirements(vk_dev, m_buffer, &mem_reqs);
 
     VkMemoryAllocateInfo alloc_info = {};
     alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -84,20 +86,20 @@ void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data,
         phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     );
 
-    res = vkAllocateMemory(vk_dev, &alloc_info, NULL, &(m_vertex_buffer.mem));
+    res = vkAllocateMemory(vk_dev, &alloc_info, NULL, &m_memory);
     assert(res == VK_SUCCESS);
-    m_vertex_buffer.buffer_info.range = mem_reqs.size;
-    m_vertex_buffer.buffer_info.offset = 0;
+    m_info.range = mem_reqs.size;
+    m_info.offset = 0;
 
     uint8_t *pData;
-    res = vkMapMemory(vk_dev, m_vertex_buffer.mem, 0, mem_reqs.size, 0, (void **)&pData);
+    res = vkMapMemory(vk_dev, m_memory, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
     memcpy(pData, data, size);
 
-    vkUnmapMemory(vk_dev, m_vertex_buffer.mem);
+    vkUnmapMemory(vk_dev, m_memory);
 
-    res = vkBindBufferMemory(vk_dev, m_vertex_buffer.buf, m_vertex_buffer.mem, 0);
+    res = vkBindBufferMemory(vk_dev, m_buffer, m_memory, 0);
     assert(res == VK_SUCCESS);
 
     m_vi_binding.binding = 0;

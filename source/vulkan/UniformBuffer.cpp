@@ -13,34 +13,34 @@ namespace vulkan
 {
 
 UniformBuffer::UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
-                             const PhysicalDevice& phy_dev, int width, int height)
+                             const PhysicalDevice& phy_dev, const void* data, size_t size)
     : m_device(device)
 {
     auto vk_dev = device->GetHandler();
 
     VkResult res;
 
-    float fov = glm::radians(45.0f);
-    if (width > height) {
-        fov *= static_cast<float>(height) / static_cast<float>(width);
-    }
-    Projection = glm::perspective(fov, static_cast<float>(width) / static_cast<float>(height), 0.1f, 100.0f);
-    View = glm::lookAt(glm::vec3(-5, 3, -10),  // Camera is at (-5,3,-10), in World Space
-                            glm::vec3(0, 0, 0),     // and looks at the origin
-                            glm::vec3(0, -1, 0)     // Head is up (set to 0,-1,0 to look upside-down)
-    );
-    Model = glm::mat4(1.0f);
-    // Vulkan clip space has inverted Y and half Z.
-    Clip = glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 1.0f);
+    //float fov = glm::radians(45.0f);
+    //if (width > height) {
+    //    fov *= static_cast<float>(height) / static_cast<float>(width);
+    //}
+    //Projection = glm::perspective(fov, static_cast<float>(width) / static_cast<float>(height), 0.1f, 100.0f);
+    //View = glm::lookAt(glm::vec3(-5, 3, -10),  // Camera is at (-5,3,-10), in World Space
+    //                        glm::vec3(0, 0, 0),     // and looks at the origin
+    //                        glm::vec3(0, -1, 0)     // Head is up (set to 0,-1,0 to look upside-down)
+    //);
+    //Model = glm::mat4(1.0f);
+    //// Vulkan clip space has inverted Y and half Z.
+    //Clip = glm::mat4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 1.0f);
 
-    MVP = Clip * Projection * View * Model;
+    //MVP = Clip * Projection * View * Model;
 
     /* VULKAN_KEY_START */
     VkBufferCreateInfo buf_info = {};
     buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buf_info.pNext = NULL;
     buf_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    buf_info.size = sizeof(MVP);
+    buf_info.size = size;
     buf_info.queueFamilyIndexCount = 0;
     buf_info.pQueueFamilyIndices = NULL;
     buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -68,7 +68,7 @@ UniformBuffer::UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
     res = vkMapMemory(vk_dev, m_mem, 0, mem_reqs.size, 0, (void **)&pData);
     assert(res == VK_SUCCESS);
 
-    memcpy(pData, &MVP, sizeof(MVP));
+    memcpy(pData, data, size);
 
     vkUnmapMemory(vk_dev, m_mem);
 
@@ -77,7 +77,7 @@ UniformBuffer::UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
 
     m_buffer_info.buffer = m_buf;
     m_buffer_info.offset = 0;
-    m_buffer_info.range = sizeof(MVP);
+    m_buffer_info.range = size;
 }
 
 UniformBuffer::~UniformBuffer()

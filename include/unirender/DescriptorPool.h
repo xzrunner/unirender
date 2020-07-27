@@ -1,10 +1,6 @@
 #pragma once
 
-#include "unirender/DescriptorType.h"
-
 #include <boost/noncopyable.hpp>
-
-#include <vector>
 
 namespace ur
 {

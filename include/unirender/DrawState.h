@@ -9,6 +9,9 @@ namespace ur
 
 class ShaderProgram;
 class VertexArray;
+class DescriptorSet;
+class PipelineLayout;
+class Pipeline;
 
 struct DrawState
 {
@@ -18,6 +21,10 @@ struct DrawState
 
     int offset = 0;
     int count = 0;
+
+    std::shared_ptr<DescriptorSet>  desc_set        = nullptr;
+    std::shared_ptr<PipelineLayout> pipeline_layout = nullptr;
+    std::shared_ptr<Pipeline>       pipeline        = nullptr;
 
 }; // DrawState
 

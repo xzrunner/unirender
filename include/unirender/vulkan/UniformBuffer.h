@@ -3,7 +3,6 @@
 #include "unirender/UniformBuffer.h"
 
 #include <vulkan/vulkan.h>
-#include <glm/matrix.hpp>
 
 #include <memory>
 
@@ -21,7 +20,7 @@ class UniformBuffer : public ur::UniformBuffer
 {
 public:
 	UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
-		const PhysicalDevice& phy_dev, int width, int height);
+		const PhysicalDevice& phy_dev, const void* data, size_t size);
 	~UniformBuffer();
 
 	auto GetBufferInfo() const { return m_buffer_info; }
@@ -32,12 +31,6 @@ private:
 	VkBuffer m_buf;
 	VkDeviceMemory m_mem;
 	VkDescriptorBufferInfo m_buffer_info;
-
-	glm::mat4 Projection;
-	glm::mat4 View;
-	glm::mat4 Model;
-	glm::mat4 Clip;
-	glm::mat4 MVP;
 
 }; // UniformBuffer
 

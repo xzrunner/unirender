@@ -3,7 +3,7 @@
 #include "unirender/vulkan/Swapchain.h"
 #include "unirender/vulkan/DepthBuffer.h"
 #include "unirender/vulkan/CommandPool.h"
-#include "unirender/vulkan/CommandBuffers.h"
+#include "unirender/vulkan/CommandBuffer.h"
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/RenderPass.h"
 #include "unirender/vulkan/FrameBuffers.h"
@@ -23,97 +23,14 @@
 #include "unirender/vulkan/Instance.h"
 #include "unirender/vulkan/Texture.h"
 #include "unirender/Adaptor.h"
+#include "unirender/DrawState.h"
+#include "unirender/VertexArray.h"
 
 #include <vulkan/vulkan.h>
 
 #include <iostream>
 
 #include <assert.h>
-
-namespace
-{
-
-struct Vertex {
-    float posX, posY, posZ, posW;  // Position data
-    float r, g, b, a;              // Color
-};
-
-#define XYZ1(_x_, _y_, _z_) (_x_), (_y_), (_z_), 1.f
-#define UV(_u_, _v_) (_u_), (_v_)
-
-static const Vertex g_vb_solid_face_colors_Data[] = {
-    // red face
-    {XYZ1(-1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
-    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
-    {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
-    {XYZ1(1, -1, 1), XYZ1(1.f, 0.f, 0.f)},
-    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
-    {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 0.f)},
-    // green face
-    {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
-    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
-    {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
-    {XYZ1(-1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
-    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 0.f)},
-    {XYZ1(1, 1, -1), XYZ1(0.f, 1.f, 0.f)},
-    // blue face
-    {XYZ1(-1, 1, 1), XYZ1(0.f, 0.f, 1.f)},
-    {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
-    {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
-    {XYZ1(-1, 1, -1), XYZ1(0.f, 0.f, 1.f)},
-    {XYZ1(-1, -1, 1), XYZ1(0.f, 0.f, 1.f)},
-    {XYZ1(-1, -1, -1), XYZ1(0.f, 0.f, 1.f)},
-    // yellow face
-    {XYZ1(1, 1, 1), XYZ1(1.f, 1.f, 0.f)},
-    {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
-    {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
-    {XYZ1(1, -1, 1), XYZ1(1.f, 1.f, 0.f)},
-    {XYZ1(1, 1, -1), XYZ1(1.f, 1.f, 0.f)},
-    {XYZ1(1, -1, -1), XYZ1(1.f, 1.f, 0.f)},
-    // magenta face
-    {XYZ1(1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
-    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
-    {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
-    {XYZ1(1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
-    {XYZ1(-1, 1, 1), XYZ1(1.f, 0.f, 1.f)},
-    {XYZ1(-1, 1, -1), XYZ1(1.f, 0.f, 1.f)},
-    // cyan face
-    {XYZ1(1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
-    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
-    {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
-    {XYZ1(-1, -1, 1), XYZ1(0.f, 1.f, 1.f)},
-    {XYZ1(1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
-    {XYZ1(-1, -1, -1), XYZ1(0.f, 1.f, 1.f)},
-};
-
-const char* vs = R"(
-#version 400
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
-layout (std140, binding = 0) uniform bufferVals {
-    mat4 mvp;
-} myBufferVals;
-layout (location = 0) in vec4 pos;
-layout (location = 1) in vec4 inColor;
-layout (location = 0) out vec4 outColor;
-void main() {
-   outColor = inColor;
-   gl_Position = myBufferVals.mvp * pos;
-}
-)";
-
-const char* fs = R"(
-#version 400
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
-layout (location = 0) in vec4 color;
-layout (location = 0) out vec4 outColor;
-void main() {
-    outColor = color;
-}
-)";
-
-}
 
 namespace ur
 {
@@ -150,27 +67,19 @@ Context::Context(const ur::Device& device, void* hwnd,
 	assert(res == VK_SUCCESS);
 
 	// Fences (Used to check draw command buffer completion)
-	VkFenceCreateInfo fenceCreateInfo = {};
-	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	VkFenceCreateInfo fence_ci = {};
+	fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	// Create in signaled state so we don't wait on first render of each command buffer
-	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	waitFences.resize(m_swapchain->GetImageCount());
-	for (auto& fence : waitFences)
-	{
-		VkResult res = vkCreateFence(logic_dev, &fenceCreateInfo, nullptr, &fence);
-		assert(res == VK_SUCCESS);
-	}
-
-	BuildCommandBuffers();
+	fence_ci.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	res = vkCreateFence(logic_dev, &fence_ci, nullptr, &m_wait_fence);
+	assert(res == VK_SUCCESS);
 }
 
 Context::~Context()
 { 
 	auto logic_dev = m_device.m_logic_dev->GetHandler();
 
-	for (auto& fence : waitFences) {
-		vkDestroyFence(logic_dev, fence, nullptr);
-	}
+	vkDestroyFence(logic_dev, m_wait_fence, nullptr);
 
 	vkDestroySemaphore(logic_dev, presentCompleteSemaphore, nullptr);
 	vkDestroySemaphore(logic_dev, renderCompleteSemaphore, nullptr);
@@ -193,9 +102,7 @@ void Context::Resize(uint32_t width, uint32_t height)
 
 	m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-	m_cmd_bufs = std::make_shared<CommandBuffers>(m_device.m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
-
-	BuildCommandBuffers();
+	m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
 }
 
 void Context::Clear(const ClearState& clear_state)
@@ -205,12 +112,12 @@ void Context::Clear(const ClearState& clear_state)
 
 void Context::Draw(PrimitiveType prim_type, int offset, int count, const DrawState& draw, const void* scene)
 {
-	Draw();
+	Draw(draw);
 }
 
 void Context::Draw(PrimitiveType prim_type, const DrawState& draw, const void* scene)
 {
-	Draw();
+	Draw(draw);
 }
 
 void Context::SetViewport(int x, int y, int w, int h)
@@ -261,6 +168,13 @@ void Context::Flush()
 	vkDeviceWaitIdle(m_device.m_logic_dev->GetHandler());
 }
 
+std::shared_ptr<ur::Pipeline>
+Context::CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
+                        const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const
+{
+    return std::make_shared<Pipeline>(*this, m_include_depth, include_vi, layout, vb, prog);
+}
+
 void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 {
     m_surface = std::make_shared<Surface>(m_device.m_instance, hwnd);
@@ -290,11 +204,9 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
     m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, m_width, m_height);
 
     m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
-    m_cmd_bufs = std::make_shared<CommandBuffers>(m_device.m_logic_dev, m_cmd_pool, m_swapchain->GetImageCount());
+    m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
 
     m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
-
-    m_uniform_buf = std::make_shared<UniformBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
 
 	std::vector<std::pair<DescriptorType, ShaderType>> single_ubo_bindings = {
 		{ ur::DescriptorType::UniformBuffer, ur::ShaderType::VertexShader } 
@@ -307,50 +219,22 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_img", m_device.CreateDescriptorSetLayout(single_img_bindings));
 
 	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = { m_device.GetDescriptorSetLayout("single_ubo") };
-	if (use_texture) {
-		layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
-	}
-    m_pipeline_layout = std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts);
+	//if (use_texture) {
+	//	layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
+	//}
+	const_cast<Device&>(m_device).SetPipelineLayout("single_img", std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts));
 
     m_renderpass = std::make_shared<RenderPass>(*this, m_include_depth);
 
     m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-    m_vert_buf = std::make_shared<vulkan::VertexBuffer>(m_device.m_logic_dev);
-	m_vert_buf->Create(*m_device.m_phy_dev, g_vb_solid_face_colors_Data,
-		sizeof(g_vb_solid_face_colors_Data), sizeof(g_vb_solid_face_colors_Data[0]), false);
-    //uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
-    //vert_buf->Create(vertexBuffer.data(), vertexBufferSize, sizeof(Vertex), false);
-
-    //idx_buf = std::make_shared<vulkan::IndexBuffer>();
-    //uint32_t indexBufferSize = indexBuffer.size() * sizeof(uint32_t);
-    //idx_buf->Create(vertexBuffer.data(), indexBufferSize);
-
 	std::vector<std::pair<ur::DescriptorType, size_t>> pool_sizes = {
 		{ ur::DescriptorType::UniformBuffer,        1024 },
 		{ ur::DescriptorType::CombinedImageSampler, 1024 },
 	};
-	m_desc_pool = m_device.CreateDescriptorPool(1024, pool_sizes);
-
-    std::vector<unsigned int> _vs, _fs;
-    shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::VertexShader), vs, _vs);
-    shadertrans::ShaderTrans::GLSL2SpirV(Adaptor::ToShaderTransStage(ShaderType::FragmentShader), fs, _fs);
-    m_program = std::make_shared<vulkan::ShaderProgram>(m_device.m_logic_dev, _vs, _fs);
-
-	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> desc_layouts = { m_device.GetDescriptorSetLayout("single_ubo") };
-	std::vector<ur::DescriptorSet::Descriptor> desc_descriptors = {{ DescriptorType::UniformBuffer, m_uniform_buf }};
-	if (use_texture && m_texture) 
-	{
-		desc_layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
-
-		auto& descriptor = std::static_pointer_cast<vulkan::Texture>(m_texture)->GetDescriptor();
-		desc_descriptors.push_back(DescriptorSet::Descriptor(DescriptorType::CombinedImageSampler, m_texture));
-	}
-	auto& vk_desc_pool = static_cast<const vulkan::DescriptorPool&>(*m_desc_pool);
-	m_desc_set = std::make_shared<DescriptorSet>(m_device.m_logic_dev, vk_desc_pool, desc_layouts, desc_descriptors);
+	const_cast<Device&>(m_device).SetDescriptorPool(m_device.CreateDescriptorPool(1024, pool_sizes));
 
     m_pipeline_cache = std::make_shared<PipelineCache>(m_device.m_logic_dev);
-    m_pipeline = std::make_shared<Pipeline>(*this, m_include_depth, include_vi);
 }
 
 std::shared_ptr<PhysicalDevice> Context::GetPhysicalDevice() const
@@ -363,7 +247,7 @@ std::shared_ptr<LogicalDevice> Context::GetLogicalDevice() const
 	return m_device.m_logic_dev; 
 }
 
-void Context::Draw()
+void Context::Draw(const DrawState& draw)
 {
 	auto vk_dev = m_device.m_logic_dev->GetHandler();
 
@@ -373,30 +257,45 @@ void Context::Draw()
     assert(res == VK_SUCCESS);
 
 	// Use a fence to wait until the command buffer has finished execution before using it again
-	res = vkWaitForFences(vk_dev, 1, &waitFences[m_current_buffer], VK_TRUE, UINT64_MAX);
+	res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
 	assert(res == VK_SUCCESS);
-	res = vkResetFences(vk_dev, 1, &waitFences[m_current_buffer]);
+	res = vkResetFences(vk_dev, 1, &m_wait_fence);
 	assert(res == VK_SUCCESS);
+
+	BuildCommandBuffers(draw);
 
 	// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	// The submit info structure specifices a command buffer queue submission batch
-	VkSubmitInfo submitInfo = {};
-	//submitInfo.pNext = NULL;
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.pWaitDstStageMask = &waitStageMask;               // Pointer to the list of pipeline stages that the semaphore waits will occur at
-	submitInfo.pWaitSemaphores = &presentCompleteSemaphore;      // Semaphore(s) to wait upon before the submitted command buffer starts executing
-	submitInfo.waitSemaphoreCount = 1;                           // One wait semaphore
-	submitInfo.pSignalSemaphores = &renderCompleteSemaphore;     // Semaphore(s) to be signaled when command buffers have completed
-	submitInfo.signalSemaphoreCount = 1;                         // One signal semaphore
-	submitInfo.pCommandBuffers = &m_cmd_bufs->GetHandler()[m_current_buffer];                // Command buffers(s) to execute in this batch (submission)
-	submitInfo.commandBufferCount = 1;                           // One command buffer
+	VkSubmitInfo submit_info = {};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit_info.pWaitDstStageMask = &waitStageMask;               // Pointer to the list of pipeline stages that the semaphore waits will occur at
+	submit_info.pWaitSemaphores = &presentCompleteSemaphore;      // Semaphore(s) to wait upon before the submitted command buffer starts executing
+	submit_info.waitSemaphoreCount = 1;                           // One wait semaphore
+	submit_info.pSignalSemaphores = &renderCompleteSemaphore;     // Semaphore(s) to be signaled when command buffers have completed
+	submit_info.signalSemaphoreCount = 1;                         // One signal semaphore
+	auto cmd_buf = m_cmd_buf->GetHandler();
+	submit_info.pCommandBuffers = &cmd_buf;                       // Command buffers(s) to execute in this batch (submission)
+	submit_info.commandBufferCount = 1;                           // One command buffer
 
 	auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
 
 	// Submit to the graphics queue passing a wait fence
-	res = vkQueueSubmit(graphics_queue, 1, &submitInfo, waitFences[m_current_buffer]);
+
+	//// Create fence to ensure that the command buffer has finished executing
+	//VkFenceCreateInfo fence_ci = {};
+	//fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	//fence_ci.flags = 0;
+	//VkFence fence;
+	//res = vkCreateFence(vk_dev, &fence_ci, nullptr, &fence);
+	//assert(res == VK_SUCCESS);
+
+	res = vkQueueSubmit(graphics_queue, 1, &submit_info, m_wait_fence);
 	assert(res == VK_SUCCESS);
+
+	//res = vkWaitForFences(vk_dev, 1, &fence, VK_TRUE, UINT64_MAX);
+	//assert(res == VK_SUCCESS);
+	//vkDestroyFence(vk_dev, fence, nullptr);
 
 	// Present the current buffer to the swap chain
 	// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
@@ -407,8 +306,12 @@ void Context::Draw()
 	}
 }
 
-void Context::BuildCommandBuffers()
+void Context::BuildCommandBuffers(const DrawState& draw)
 {
+	VkResult res;
+
+	auto vk_dev = m_device.m_logic_dev->GetHandler();
+
 	VkCommandBufferBeginInfo cmdBufInfo = {};
 	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	cmdBufInfo.pNext = nullptr;
@@ -430,65 +333,74 @@ void Context::BuildCommandBuffers()
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clearValues;
 
-	auto& cmd_bufs = m_cmd_bufs->GetHandler();
+	auto cmd_buf = m_cmd_buf->GetHandler();
 	auto& frame_bufs = m_frame_buffers->GetHandler();
-	for (size_t i = 0; i < cmd_bufs.size(); ++i)
+
+	// Set target frame buffer
+	renderPassBeginInfo.framebuffer = frame_bufs[m_current_buffer];
+
+	res = vkBeginCommandBuffer(cmd_buf, &cmdBufInfo);
+	assert(res == VK_SUCCESS);
+
+	// Start the first sub pass specified in our default render pass setup by the base class
+	// This will clear the color and depth attachment
+	vkCmdBeginRenderPass(cmd_buf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	// Update dynamic viewport state
+	VkViewport viewport = {};
+	viewport.width = (float)m_width;
+	viewport.height = (float)m_height;
+	viewport.minDepth = (float) 0.0f;
+	viewport.maxDepth = (float) 1.0f;
+	vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
+
+	// Update dynamic scissor state
+	VkRect2D scissor = {};
+	scissor.extent.width = m_width;
+	scissor.extent.height = m_height;
+	scissor.offset.x = 0;
+	scissor.offset.y = 0;
+	vkCmdSetScissor(cmd_buf, 0, 1, &scissor);
+
+	// Bind descriptor sets describing shader binding points
+	std::vector<VkDescriptorSet> desc_sets;
+	desc_sets.push_back(std::static_pointer_cast<vulkan::DescriptorSet>(draw.desc_set)->GetHandler());
+	vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		std::static_pointer_cast<vulkan::PipelineLayout>(draw.pipeline_layout)->GetHandler(), 0, desc_sets.size(), desc_sets.data(), 0, nullptr);
+
+	// Bind the rendering pipeline
+	// The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time
+	vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		std::static_pointer_cast<vulkan::Pipeline>(draw.pipeline)->GetHandler());
+
+	// Bind triangle vertex buffer (contains position and colors)
+	VkDeviceSize offsets[1] = { 0 };
+	vkCmdBindVertexBuffers(cmd_buf, 0, 1, &std::static_pointer_cast<vulkan::VertexBuffer>(draw.vertex_array->GetVertexBuffer())->GetBuffer(), offsets);
+
+	//// Bind triangle index buffer
+	//vkCmdBindIndexBuffer(cmd_buf, m_info.idx_buf->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+	//// Draw indexed triangle
+	//vkCmdDrawIndexed(cmd_buf, m_info.idx_buf->GetCount(), 1, 0, 0, 1);
+
+	auto ib = draw.vertex_array->GetIndexBuffer();
+	auto vb = draw.vertex_array->GetVertexBuffer();
+	if (ib)
 	{
-		// Set target frame buffer
-		renderPassBeginInfo.framebuffer = frame_bufs[i];
 
-		VkResult res = vkBeginCommandBuffer(cmd_bufs[i], &cmdBufInfo);
-		assert(res == VK_SUCCESS);
-
-		// Start the first sub pass specified in our default render pass setup by the base class
-		// This will clear the color and depth attachment
-		vkCmdBeginRenderPass(cmd_bufs[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		// Update dynamic viewport state
-		VkViewport viewport = {};
-		viewport.width = (float)m_width;
-		viewport.height = (float)m_height;
-		viewport.minDepth = (float) 0.0f;
-		viewport.maxDepth = (float) 1.0f;
-		vkCmdSetViewport(cmd_bufs[i], 0, 1, &viewport);
-
-		// Update dynamic scissor state
-		VkRect2D scissor = {};
-		scissor.extent.width = m_width;
-		scissor.extent.height = m_height;
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		vkCmdSetScissor(cmd_bufs[i], 0, 1, &scissor);
-
-		// Bind descriptor sets describing shader binding points
-		std::vector<VkDescriptorSet> desc_sets;
-		desc_sets.push_back(m_desc_set->GetHandler());
-		vkCmdBindDescriptorSets(cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline_layout->GetHandler(), 0, desc_sets.size(), desc_sets.data(), 0, nullptr);
-
-		// Bind the rendering pipeline
-		// The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time
-		vkCmdBindPipeline(cmd_bufs[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline->GetHandler());
-
-		// Bind triangle vertex buffer (contains position and colors)
-		VkDeviceSize offsets[1] = { 0 };
-		vkCmdBindVertexBuffers(cmd_bufs[i], 0, 1, &m_vert_buf->GetBuffer(), offsets);
-
-		//// Bind triangle index buffer
-		//vkCmdBindIndexBuffer(cmd_bufs[i], m_info.idx_buf->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-		//// Draw indexed triangle
-		//vkCmdDrawIndexed(cmd_bufs[i], m_info.idx_buf->GetCount(), 1, 0, 0, 1);
-
-		vkCmdDraw(cmd_bufs[i], 12 * 3, 1, 0, 0);
-
-		vkCmdEndRenderPass(cmd_bufs[i]);
-
-		// Ending the render pass will add an implicit barrier transitioning the frame buffer color attachment to
-		// VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system
-
-		res = vkEndCommandBuffer(cmd_bufs[i]);
-		assert(res == VK_SUCCESS);
 	}
+	else
+	{
+		vkCmdDraw(cmd_buf, vb->GetVertexCount(), 1, 0, 0);
+	}
+
+	vkCmdEndRenderPass(cmd_buf);
+
+	// Ending the render pass will add an implicit barrier transitioning the frame buffer color attachment to
+	// VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system
+
+	res = vkEndCommandBuffer(cmd_buf);
+	assert(res == VK_SUCCESS);
 }
 
 }

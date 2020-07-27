@@ -62,11 +62,18 @@ public:
         CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const override;
     virtual std::shared_ptr<TextureSampler>
         GetTextureSampler(TextureSamplerType type) const override;
+    virtual std::shared_ptr<VertexBuffer>
+        CreateVertexBuffer(const void* data, size_t size, size_t stride) const override { return nullptr; }
 
+    virtual std::shared_ptr<UniformBuffer>
+        CreateUniformBuffer(const void* data, size_t size) const { return nullptr; }
     virtual std::shared_ptr<ur::DescriptorPool>
         CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const override { return nullptr; }
     virtual std::shared_ptr<ur::DescriptorSetLayout>
         CreateDescriptorSetLayout(const std::vector<std::pair<DescriptorType, ShaderType>>& bindings) const override { return nullptr; }
+    virtual std::shared_ptr<ur::DescriptorSet> CreateDescriptorSet(const ur::DescriptorPool& pool,
+        const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts,
+        const std::vector<ur::Descriptor>& descriptors) const override { return nullptr; }
 
     virtual void DispatchCompute(int thread_group_count) const override;
 

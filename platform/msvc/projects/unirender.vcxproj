@@ -26,6 +26,7 @@
     <ClInclude Include="..\..\..\include\unirender\Context.h" />
     <ClInclude Include="..\..\..\include\unirender\DepthRange.h" />
     <ClInclude Include="..\..\..\include\unirender\DepthTest.h" />
+    <ClInclude Include="..\..\..\include\unirender\Descriptor.h" />
     <ClInclude Include="..\..\..\include\unirender\DescriptorPool.h" />
     <ClInclude Include="..\..\..\include\unirender\DescriptorSet.h" />
     <ClInclude Include="..\..\..\include\unirender\DescriptorSetLayout.h" />
@@ -41,6 +42,9 @@
     <ClInclude Include="..\..\..\include\unirender\InternalFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\Pipeline.h" />
+    <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h" />
+    <ClInclude Include="..\..\..\include\unirender\RenderPass.h" />
     <ClInclude Include="..\..\..\include\unirender\Sampler.h" />
     <ClInclude Include="..\..\..\include\unirender\TextureUnit.h" />
     <ClInclude Include="..\..\..\include\unirender\typedef.h" />
@@ -96,7 +100,7 @@
     <ClInclude Include="..\..\..\include\unirender\VertexArray.h" />
     <ClInclude Include="..\..\..\include\unirender\VertexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\VertexLayoutType.h" />
-    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffers.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Context.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h" />
@@ -131,7 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\Adaptor.cpp" />
-    <ClCompile Include="..\..\..\source\Context.cpp" />
     <ClCompile Include="..\..\..\source\Factory.cpp" />
     <ClCompile Include="..\..\..\source\opengl\Buffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
@@ -216,7 +219,7 @@
     <ClCompile Include="..\..\..\source\ShaderProgram.cpp" />
     <ClCompile Include="..\..\..\source\TextureUtility.cpp" />
     <ClCompile Include="..\..\..\source\VertexBufferAttribute.cpp" />
-    <ClCompile Include="..\..\..\source\vulkan\CommandBuffers.cpp">
+    <ClCompile Include="..\..\..\source\vulkan\CommandBuffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>

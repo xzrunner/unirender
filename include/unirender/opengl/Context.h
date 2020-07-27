@@ -51,6 +51,9 @@ public:
 
     virtual void Flush() override;
 
+    virtual std::shared_ptr<Pipeline> CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
+        const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const override { return nullptr; }
+
 private:
     void Init();
 

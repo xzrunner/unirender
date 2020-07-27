@@ -31,25 +31,27 @@ public:
 
     virtual void Reset(int size_in_bytes) override;
 
+    virtual size_t GetVertexCount() const override { return m_vertex_count; }
+
     void Create(const PhysicalDevice& phy_dev, const void* data,
         size_t size, size_t stride, bool use_texture);
 
-    auto& GetBuffer() const { return m_vertex_buffer.buf; }
+    auto& GetBuffer() const { return m_buffer; }
 
     auto& GetVertInputBindDesc() const { return m_vi_binding; }
     auto& GetVertInputAttrDesc() const { return m_vi_attribs; }
-
-    struct {
-        VkBuffer buf;
-        VkDeviceMemory mem;
-        VkDescriptorBufferInfo buffer_info;
-    } m_vertex_buffer;
 
 private:
     std::shared_ptr<LogicalDevice> m_device = nullptr;
 
     VkVertexInputBindingDescription   m_vi_binding;
     VkVertexInputAttributeDescription m_vi_attribs[2];
+
+    VkBuffer               m_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory         m_memory = VK_NULL_HANDLE;
+    VkDescriptorBufferInfo m_info;
+
+    size_t m_vertex_count = 0;
 
 }; // VertexBuffer
 

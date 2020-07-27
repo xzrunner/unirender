@@ -1,10 +1,12 @@
 #pragma once
 
 #include "unirender/DescriptorPool.h"
+#include "unirender/DescriptorType.h"
 
 #include <vulkan/vulkan.h>
 
 #include <memory>
+#include <vector>
 
 namespace ur
 {

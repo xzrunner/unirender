@@ -24,6 +24,8 @@ public:
 
     virtual void Reset(int size_in_bytes) override;
 
+    virtual size_t GetVertexCount() const override { return 0; }
+
 private:
     Buffer m_buf;
 

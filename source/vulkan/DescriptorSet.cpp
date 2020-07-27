@@ -13,9 +13,9 @@ namespace ur
 namespace vulkan
 {
 
-DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const DescriptorPool& pool,
+DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const ur::DescriptorPool& pool,
                              const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& _layouts,
-                             const std::vector<ur::DescriptorSet::Descriptor>& descriptors)
+                             const std::vector<ur::Descriptor>& descriptors)
 	: m_device(device)
 {
     std::vector<VkDescriptorSetLayout> layouts(_layouts.size());
@@ -26,7 +26,7 @@ DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const
     VkDescriptorSetAllocateInfo alloc_info[1];
     alloc_info[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     alloc_info[0].pNext = NULL;
-    alloc_info[0].descriptorPool = pool.GetHandler();
+    alloc_info[0].descriptorPool = static_cast<const vulkan::DescriptorPool&>(pool).GetHandler();
     alloc_info[0].descriptorSetCount = layouts.size();
     alloc_info[0].pSetLayouts = layouts.data();
 

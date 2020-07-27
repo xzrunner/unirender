@@ -33,6 +33,12 @@ class WritePixelBuffer;
 class ComputeBuffer;
 class DescriptorPool;
 class DescriptorSetLayout;
+class Pipeline;
+class PipelineLayout;
+class RenderPass;
+class UniformBuffer;
+class DescriptorSet;
+struct Descriptor;
 
 class Device
 {
@@ -81,10 +87,17 @@ public:
     virtual std::shared_ptr<TextureSampler>
         CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const = 0;
 
+    virtual std::shared_ptr<UniformBuffer>
+        CreateUniformBuffer(const void* data, size_t size) const = 0;
     virtual std::shared_ptr<DescriptorPool>
         CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const = 0;
     virtual std::shared_ptr<DescriptorSetLayout>
         CreateDescriptorSetLayout(const std::vector<std::pair<DescriptorType, ShaderType>>& bindings) const = 0;
+    virtual std::shared_ptr<DescriptorSet> CreateDescriptorSet(const DescriptorPool& pool, 
+        const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts, 
+        const std::vector<ur::Descriptor>& descriptors) const = 0;
+    virtual std::shared_ptr<VertexBuffer>
+        CreateVertexBuffer(const void* data, size_t size, size_t stride) const = 0;
 
     enum class TextureSamplerType
     {
@@ -103,6 +116,22 @@ public:
     virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const = 0;
 
+    void SetPipelineLayout(const std::string& name, const std::shared_ptr<PipelineLayout>& layout) {
+        m_pipeline_layouts[name] = layout;
+    }
+    std::shared_ptr<PipelineLayout> GetPipelineLayout(const std::string& name) const {
+        auto itr = m_pipeline_layouts.find(name);
+        return itr == m_pipeline_layouts.end() ? nullptr : itr->second;
+    }
+
+    void SetRenderPass(const std::string& name, const std::shared_ptr<RenderPass>& pass) {
+        m_render_passes[name] = pass;
+    }
+    std::shared_ptr<RenderPass> GetRenderPass(const std::string& name) const {
+        auto itr = m_render_passes.find(name);
+        return itr == m_render_passes.end() ? nullptr : itr->second;
+    }
+
     void SetDescriptorSetLayout(const std::string& name, const std::shared_ptr<DescriptorSetLayout>& layout) {
         m_desc_set_layouts[name] = layout;
     }
@@ -111,8 +140,26 @@ public:
         return itr == m_desc_set_layouts.end() ? nullptr : itr->second;
     }
 
+    void SetPipeline(const std::string& name, const std::shared_ptr<Pipeline>& pipelines) {
+        m_pipelines[name] = pipelines;
+    }
+    std::shared_ptr<Pipeline> GetPipeline(const std::string& name) const {
+        auto itr = m_pipelines.find(name);
+        return itr == m_pipelines.end() ? nullptr : itr->second;
+    }
+
+    void SetDescriptorPool(const std::shared_ptr<DescriptorPool>& desc_pool) { 
+        m_desc_pool = desc_pool;
+    }
+    auto GetDescriptorPool() const { return m_desc_pool; }
+
 private:
+    std::unordered_map<std::string, std::shared_ptr<PipelineLayout>>      m_pipeline_layouts;
+    std::unordered_map<std::string, std::shared_ptr<RenderPass>>          m_render_passes;
     std::unordered_map<std::string, std::shared_ptr<DescriptorSetLayout>> m_desc_set_layouts;
+    std::unordered_map<std::string, std::shared_ptr<Pipeline>>            m_pipelines;
+
+    std::shared_ptr<DescriptorPool> m_desc_pool = nullptr;
 
 }; // Device
 

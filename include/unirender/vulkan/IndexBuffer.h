@@ -42,9 +42,9 @@ public:
 private:
     std::shared_ptr<LogicalDevice> m_device = nullptr;
 
-    VkDeviceMemory m_memory;
-    VkBuffer       m_buffer;
-    uint32_t       m_count;
+    VkDeviceMemory m_memory = VK_NULL_HANDLE;
+    VkBuffer       m_buffer = VK_NULL_HANDLE;
+    uint32_t       m_count  = 0;
 
 }; // IndexBuffer
 

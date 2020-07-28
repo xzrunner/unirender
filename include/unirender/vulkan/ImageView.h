@@ -1,20 +1,34 @@
 #pragma once
 
-#include "unirender/Sampler.h"
+#include <vulkan/vulkan.h>
+
+#include <memory>
+
+#include <boost/noncopyable.hpp>
 
 namespace ur
 {
 namespace vulkan
 {
 
-class Sampler : public ur::Sampler
+class LogicalDevice;
+class Image;
+
+class ImageView : boost::noncopyable
 {
 public:
-	Sampler() {}
+	ImageView(const std::shared_ptr<LogicalDevice>& device, VkImageViewType type, 
+		VkFormat format, VkImageSubresourceRange range, const Image& image);
+	~ImageView();
+
+	auto GetHandler() const { return m_handle; }
 
 private:
+	std::shared_ptr<LogicalDevice> m_device = nullptr;
 
-}; // Sampler
+	VkImageView m_handle;
+
+}; // ImageView
 
 }
 }

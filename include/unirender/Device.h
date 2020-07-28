@@ -85,7 +85,7 @@ public:
 	virtual std::shared_ptr<Texture>
 		CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const = 0;
     virtual std::shared_ptr<TextureSampler>
-        CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const = 0;
+        CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const = 0;
 
     virtual std::shared_ptr<UniformBuffer>
         CreateUniformBuffer(const void* data, size_t size) const = 0;
@@ -99,6 +99,15 @@ public:
     virtual std::shared_ptr<VertexBuffer>
         CreateVertexBuffer(const void* data, size_t size, size_t stride) const = 0;
 
+    virtual void DispatchCompute(int thread_group_count) const = 0;
+
+    virtual void ReadPixels(const unsigned char* pixels, ur::TextureFormat fmt,
+        int x, int y, int w, int h) const = 0;
+    virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
+        int x, int y, int w, int h) const = 0;
+
+    void Init();
+
     enum class TextureSamplerType
     {
         NearestClamp,
@@ -106,15 +115,8 @@ public:
         NearestRepeat,
         LinearRepeat,
     };
-    virtual std::shared_ptr<TextureSampler>
-        GetTextureSampler(TextureSamplerType type) const = 0;
-
-    virtual void DispatchCompute(int thread_group_count) const = 0;
-
-    virtual void ReadPixels(const unsigned char* pixels, ur::TextureFormat fmt,
-        int x, int y, int w, int h) const = 0;
-    virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
-        int x, int y, int w, int h) const = 0;
+    std::shared_ptr<TextureSampler> 
+        GetTextureSampler(TextureSamplerType type) const;
 
     void SetPipelineLayout(const std::string& name, const std::shared_ptr<PipelineLayout>& layout) {
         m_pipeline_layouts[name] = layout;
@@ -160,6 +162,11 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Pipeline>>            m_pipelines;
 
     std::shared_ptr<DescriptorPool> m_desc_pool = nullptr;
+
+    std::shared_ptr<TextureSampler> m_nearest_clamp  = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_clamp   = nullptr;
+    std::shared_ptr<TextureSampler> m_nearest_repeat = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_repeat  = nullptr;
 
 }; // Device
 

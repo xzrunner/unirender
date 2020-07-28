@@ -6,8 +6,6 @@
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
-
 namespace ur
 {
 namespace vulkan
@@ -22,6 +20,8 @@ public:
 	UniformBuffer(const std::shared_ptr<LogicalDevice>& device,
 		const PhysicalDevice& phy_dev, const void* data, size_t size);
 	~UniformBuffer();
+
+	virtual void Update(const void* data, size_t size) override;
 
 	auto GetBufferInfo() const { return m_buffer_info; }
 

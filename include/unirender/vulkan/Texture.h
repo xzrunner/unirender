@@ -14,10 +14,16 @@ class Device;
 namespace vulkan
 {
 
+class Image;
+class ImageView;
+class LogicalDevice;
+class PhysicalDevice;
+
 class Texture : public ur::Texture
 {
 public:
-    Texture(TextureDescription desc, const ur::Device& device);
+    Texture(const std::shared_ptr<LogicalDevice>& device, 
+        const std::shared_ptr<PhysicalDevice>& phy_dev);
     virtual ~Texture();
 
     virtual int GetTexID() const override { return 0; }
@@ -36,12 +42,18 @@ public:
 
     virtual void ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler) override;
 
-    auto& GetDescriptor() const { return m_descriptor; }
+    void ReadFromMemory(const TextureDescription& desc, const void* pixels, int row_alignment, int mip_level = 0);
+
+    auto& GetImageView() const { return m_image_view; }
 
 private:
+    std::shared_ptr<LogicalDevice>  m_device;
+    std::shared_ptr<PhysicalDevice> m_phy_dev;
+
 	TextureDescription m_desc;
 
-    VkDescriptorImageInfo m_descriptor;
+    std::shared_ptr<Image>     m_image      = nullptr;
+    std::shared_ptr<ImageView> m_image_view = nullptr;
 
 }; // Texture
 

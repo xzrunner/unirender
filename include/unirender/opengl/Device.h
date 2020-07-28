@@ -58,10 +58,8 @@ public:
         CreateTexture(size_t width, size_t height, ur::TextureFormat format, const void* buf, size_t buf_sz) const override;
     virtual std::shared_ptr<ur::Texture>
         CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const override;
-    virtual std::shared_ptr<TextureSampler>
-        CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const override;
-    virtual std::shared_ptr<TextureSampler>
-        GetTextureSampler(TextureSamplerType type) const override;
+    virtual std::shared_ptr<TextureSampler> CreateTextureSampler(TextureMinificationFilter min_filter, 
+        TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const override;
     virtual std::shared_ptr<VertexBuffer>
         CreateVertexBuffer(const void* data, size_t size, size_t stride) const override { return nullptr; }
 
@@ -94,11 +92,6 @@ private:
     int m_max_num_vert_attrs        = 0;
     int m_max_num_tex_units         = 0;
     int m_max_num_color_attachments = 0;
-
-    std::shared_ptr<TextureSampler> m_nearest_clamp  = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_clamp   = nullptr;
-    std::shared_ptr<TextureSampler> m_nearest_repeat = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_repeat  = nullptr;
 
     mutable std::shared_ptr<VertexArray> m_cube_va[static_cast<int>(VertexLayoutType::MaxCount)];
     mutable std::shared_ptr<VertexArray> m_quad_va[static_cast<int>(VertexLayoutType::MaxCount)];

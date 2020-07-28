@@ -5,6 +5,9 @@
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/TypeConverter.h"
 #include "unirender/vulkan/Texture.h"
+#include "unirender/vulkan/ImageView.h"
+#include "unirender/vulkan/TextureSampler.h"
+#include "unirender/Device.h"
 
 #include <assert.h>
 
@@ -13,7 +16,7 @@ namespace ur
 namespace vulkan
 {
 
-DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const ur::DescriptorPool& pool,
+DescriptorSet::DescriptorSet(const ur::Device& dev, const std::shared_ptr<LogicalDevice>& device, const ur::DescriptorPool& pool,
                              const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& _layouts,
                              const std::vector<ur::Descriptor>& descriptors)
 	: m_device(device)
@@ -44,10 +47,19 @@ DescriptorSet::DescriptorSet(const std::shared_ptr<LogicalDevice>& device, const
         write_desc_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         write_desc_set.descriptorType = TypeConverter::To(desc.type);
         write_desc_set.dstBinding = vk_descriptors.size();
-        if (desc.uniform) {
+        if (desc.uniform) 
+        {
             write_desc_set.pBufferInfo = &std::static_pointer_cast<UniformBuffer>(desc.uniform)->GetBufferInfo();
-        } else if (desc.texture) {
-            write_desc_set.pImageInfo = &std::static_pointer_cast<Texture>(desc.texture)->GetDescriptor();
+        } 
+        else if (desc.texture) 
+        {
+            VkDescriptorImageInfo image_info = {};
+            image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            image_info.imageView = std::static_pointer_cast<Texture>(desc.texture)->GetImageView()->GetHandler();
+            auto sampler = dev.GetTextureSampler(ur::Device::TextureSamplerType::LinearRepeat);
+            image_info.sampler = std::static_pointer_cast<vulkan::TextureSampler>(sampler)->GetHandler();
+
+            write_desc_set.pImageInfo = &image_info;
         }
         write_desc_set.descriptorCount = 1;
 

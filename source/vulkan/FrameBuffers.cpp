@@ -15,9 +15,6 @@ namespace vulkan
 FrameBuffers::FrameBuffers(const Context& ctx, bool include_depth)
 	: m_device(ctx.GetLogicalDevice())
 {
-    /* DEPENDS on init_depth_buffer(), init_renderpass() and
-     * init_swapchain_extension() */
-
     VkResult res;
     VkImageView attachments[2];
     attachments[1] = ctx.GetDepthBuffer()->GetView();

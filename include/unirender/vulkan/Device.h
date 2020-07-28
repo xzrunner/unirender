@@ -23,7 +23,6 @@ public:
 
     virtual std::shared_ptr<VertexArray>
         GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const override;
-
     virtual std::shared_ptr<VertexArray> CreateVertexArray() const override;
     virtual std::shared_ptr<Framebuffer> CreateFramebuffer() const override;
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(
@@ -51,10 +50,8 @@ public:
         CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz) const override;
 	virtual std::shared_ptr<ur::Texture>
 		CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const override;
-    virtual std::shared_ptr<ur::TextureSampler>
-        CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const override;
-    virtual std::shared_ptr<ur::TextureSampler>
-        GetTextureSampler(TextureSamplerType type) const override;
+    virtual std::shared_ptr<TextureSampler> CreateTextureSampler(TextureMinificationFilter min_filter,
+        TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const override;
 
     virtual std::shared_ptr<ur::UniformBuffer>
         CreateUniformBuffer(const void* data, size_t size) const override;

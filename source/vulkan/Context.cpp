@@ -59,11 +59,11 @@ Context::Context(const ur::Device& device, void* hwnd,
 	auto logic_dev = m_device.m_logic_dev->GetHandler();
 
 	// Semaphore used to ensures that image presentation is complete before starting to submit again
-	VkResult res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &presentCompleteSemaphore);
+	VkResult res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &m_semaphores.present_complete);
 	assert(res == VK_SUCCESS);
 
 	// Semaphore used to ensures that all commands submitted have been finished before submitting the image to the queue
-	res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &renderCompleteSemaphore);
+	res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &m_semaphores.render_complete);
 	assert(res == VK_SUCCESS);
 
 	// Fences (Used to check draw command buffer completion)
@@ -79,10 +79,10 @@ Context::~Context()
 { 
 	auto logic_dev = m_device.m_logic_dev->GetHandler();
 
-	vkDestroyFence(logic_dev, m_wait_fence, nullptr);
+	vkDestroySemaphore(logic_dev, m_semaphores.present_complete, nullptr);
+	vkDestroySemaphore(logic_dev, m_semaphores.render_complete, nullptr);
 
-	vkDestroySemaphore(logic_dev, presentCompleteSemaphore, nullptr);
-	vkDestroySemaphore(logic_dev, renderCompleteSemaphore, nullptr);
+	vkDestroyFence(logic_dev, m_wait_fence, nullptr);
 }
 
 void Context::Resize(uint32_t width, uint32_t height)
@@ -96,9 +96,9 @@ void Context::Resize(uint32_t width, uint32_t height)
 
 	// should destroy before create
 	m_swapchain.reset();
-	m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, m_width, m_height);
+	m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
 
-	m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
+	m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
 
 	m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
@@ -107,7 +107,19 @@ void Context::Resize(uint32_t width, uint32_t height)
 
 void Context::Clear(const ClearState& clear_state)
 {
+	m_clear_flag = clear_state.buffers;
 
+	if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::ColorBuffer)) {
+		m_clear_color = clear_state.color;
+	}
+
+	if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::DepthBuffer)) {
+		m_clear_depth = clear_state.depth;
+	}
+
+	if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::StencilBuffer)) {
+		m_clear_stencil = clear_state.stencil;
+	}
 }
 
 void Context::Draw(PrimitiveType prim_type, int offset, int count, const DrawState& draw, const void* scene)
@@ -122,11 +134,15 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw, const void* s
 
 void Context::SetViewport(int x, int y, int w, int h)
 {
-
+	m_viewport = Rectangle(x, y, w, h);
 }
 
 void Context::GetViewport(int& x, int& y, int& w, int& h) const
 {
+	x = m_viewport.x;
+	y = m_viewport.y;
+	w = m_viewport.w;
+	h = m_viewport.h;
 }
 
 void Context::SetTexture(size_t slot, const ur::TexturePtr& tex)
@@ -177,6 +193,9 @@ Context::CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineL
 
 void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 {
+	m_width  = width;
+	m_height = height;
+
     m_surface = std::make_shared<Surface>(m_device.m_instance, hwnd);
 
     auto phy_dev = std::make_shared<PhysicalDevice>(*m_device.m_instance, m_surface.get());
@@ -195,18 +214,12 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 		}
 	}
 
-    m_width = width;
-    m_height = height;
-
-	const bool use_texture = false;
-	const bool include_vi = true;
-
-    m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, m_width, m_height);
+    m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
 
     m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
     m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
 
-    m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, m_width, m_height);
+    m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
 
 	std::vector<std::pair<DescriptorType, ShaderType>> single_ubo_bindings = {
 		{ ur::DescriptorType::UniformBuffer, ur::ShaderType::VertexShader } 
@@ -218,10 +231,12 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 	};
 	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_img", m_device.CreateDescriptorSetLayout(single_img_bindings));
 
+	const bool use_texture = false;
+
 	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = { m_device.GetDescriptorSetLayout("single_ubo") };
-	//if (use_texture) {
-	//	layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
-	//}
+	if (use_texture) {
+		layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
+	}
 	const_cast<Device&>(m_device).SetPipelineLayout("single_img", std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts));
 
     m_renderpass = std::make_shared<RenderPass>(*this, m_include_depth);
@@ -253,14 +268,10 @@ void Context::Draw(const DrawState& draw)
 
 	// Get next image in the swap chain (back/front buffer)
 	VkResult res = vkAcquireNextImageKHR(vk_dev, m_swapchain->GetHandler(),
-		UINT64_MAX, presentCompleteSemaphore, VK_NULL_HANDLE, &m_current_buffer);
+		UINT64_MAX, m_semaphores.present_complete, VK_NULL_HANDLE, &m_current_buffer);
     assert(res == VK_SUCCESS);
 
-	// Use a fence to wait until the command buffer has finished execution before using it again
-	res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
-	assert(res == VK_SUCCESS);
-	res = vkResetFences(vk_dev, 1, &m_wait_fence);
-	assert(res == VK_SUCCESS);
+	WaitSync();
 
 	BuildCommandBuffers(draw);
 
@@ -270,9 +281,9 @@ void Context::Draw(const DrawState& draw)
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit_info.pWaitDstStageMask = &waitStageMask;               // Pointer to the list of pipeline stages that the semaphore waits will occur at
-	submit_info.pWaitSemaphores = &presentCompleteSemaphore;      // Semaphore(s) to wait upon before the submitted command buffer starts executing
+	submit_info.pWaitSemaphores = &m_semaphores.present_complete; // Semaphore(s) to wait upon before the submitted command buffer starts executing
 	submit_info.waitSemaphoreCount = 1;                           // One wait semaphore
-	submit_info.pSignalSemaphores = &renderCompleteSemaphore;     // Semaphore(s) to be signaled when command buffers have completed
+	submit_info.pSignalSemaphores = &m_semaphores.render_complete;// Semaphore(s) to be signaled when command buffers have completed
 	submit_info.signalSemaphoreCount = 1;                         // One signal semaphore
 	auto cmd_buf = m_cmd_buf->GetHandler();
 	submit_info.pCommandBuffers = &cmd_buf;                       // Command buffers(s) to execute in this batch (submission)
@@ -300,56 +311,62 @@ void Context::Draw(const DrawState& draw)
 	// Present the current buffer to the swap chain
 	// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
 	// This ensures that the image is not presented to the windowing system until all commands have been submitted
-	VkResult present = m_swapchain->QueuePresent(graphics_queue, m_current_buffer, renderCompleteSemaphore);
+	VkResult present = m_swapchain->QueuePresent(graphics_queue, m_current_buffer, m_semaphores.render_complete);
 	if (!((present == VK_SUCCESS) || (present == VK_SUBOPTIMAL_KHR))) {
 		assert(present == VK_SUCCESS);
 	}
 }
 
-void Context::BuildCommandBuffers(const DrawState& draw)
+void Context::BuildCommandBuffers(const DrawState& ds)
 {
 	VkResult res;
 
 	auto vk_dev = m_device.m_logic_dev->GetHandler();
 
-	VkCommandBufferBeginInfo cmdBufInfo = {};
-	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	cmdBufInfo.pNext = nullptr;
+	VkCommandBufferBeginInfo cb_begin_info = {};
+	cb_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cb_begin_info.pNext = nullptr;
 
-	// Set clear values for all framebuffer attachments with loadOp set to clear
-	// We use two attachments (color and depth) that are cleared at the start of the subpass and as such we need to set clear values for both
-	VkClearValue clearValues[2];
-	clearValues[0].color = { { 0.0f, 0.0f, 0.2f, 1.0f } };
-	clearValues[1].depthStencil = { 1.0f, 0 };
+	std::vector<VkClearValue> clear_values;
+	clear_values.resize(m_include_depth ? 2 : 1);
+	auto& dst_col = clear_values[0].color.float32;
+	dst_col[0] = m_clear_color.r / 255.0f;
+	dst_col[1] = m_clear_color.r / 255.0f;
+	dst_col[2] = m_clear_color.r / 255.0f;
+	dst_col[3] = m_clear_color.r / 255.0f;
+	if (m_include_depth) {
+		clear_values[1].depthStencil.depth = static_cast<float>(m_clear_depth);
+		clear_values[1].depthStencil.stencil = m_clear_stencil;
+	}
 
-	VkRenderPassBeginInfo renderPassBeginInfo = {};
-	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.pNext = nullptr;
-	renderPassBeginInfo.renderPass = m_renderpass->GetHandler();
-	renderPassBeginInfo.renderArea.offset.x = 0;
-	renderPassBeginInfo.renderArea.offset.y = 0;
-	renderPassBeginInfo.renderArea.extent.width = m_width;
-	renderPassBeginInfo.renderArea.extent.height = m_height;
-	renderPassBeginInfo.clearValueCount = 2;
-	renderPassBeginInfo.pClearValues = clearValues;
+	VkRenderPassBeginInfo rp_begin_info = {};
+	rp_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	rp_begin_info.pNext = nullptr;
+	rp_begin_info.renderPass = m_renderpass->GetHandler();
+	rp_begin_info.renderArea.offset.x = 0;
+	rp_begin_info.renderArea.offset.y = 0;
+	rp_begin_info.renderArea.extent.width = m_width;
+	rp_begin_info.renderArea.extent.height = m_height;
+	rp_begin_info.clearValueCount = clear_values.size();
+	rp_begin_info.pClearValues = clear_values.data();
 
 	auto cmd_buf = m_cmd_buf->GetHandler();
 	auto& frame_bufs = m_frame_buffers->GetHandler();
 
 	// Set target frame buffer
-	renderPassBeginInfo.framebuffer = frame_bufs[m_current_buffer];
+	rp_begin_info.framebuffer = frame_bufs[m_current_buffer];
 
-	res = vkBeginCommandBuffer(cmd_buf, &cmdBufInfo);
+	res = vkBeginCommandBuffer(cmd_buf, &cb_begin_info);
 	assert(res == VK_SUCCESS);
 
 	// Start the first sub pass specified in our default render pass setup by the base class
 	// This will clear the color and depth attachment
-	vkCmdBeginRenderPass(cmd_buf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(cmd_buf, &rp_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
 	// Update dynamic viewport state
 	VkViewport viewport = {};
-	viewport.width = (float)m_width;
-	viewport.height = (float)m_height;
+	viewport.width = (float)m_viewport.w;
+	viewport.height = (float)m_viewport.h;
 	viewport.minDepth = (float) 0.0f;
 	viewport.maxDepth = (float) 1.0f;
 	vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
@@ -364,18 +381,18 @@ void Context::BuildCommandBuffers(const DrawState& draw)
 
 	// Bind descriptor sets describing shader binding points
 	std::vector<VkDescriptorSet> desc_sets;
-	desc_sets.push_back(std::static_pointer_cast<vulkan::DescriptorSet>(draw.desc_set)->GetHandler());
+	desc_sets.push_back(std::static_pointer_cast<vulkan::DescriptorSet>(ds.desc_set)->GetHandler());
 	vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
-		std::static_pointer_cast<vulkan::PipelineLayout>(draw.pipeline_layout)->GetHandler(), 0, desc_sets.size(), desc_sets.data(), 0, nullptr);
+		std::static_pointer_cast<vulkan::PipelineLayout>(ds.pipeline_layout)->GetHandler(), 0, desc_sets.size(), desc_sets.data(), 0, nullptr);
 
 	// Bind the rendering pipeline
 	// The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time
 	vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
-		std::static_pointer_cast<vulkan::Pipeline>(draw.pipeline)->GetHandler());
+		std::static_pointer_cast<vulkan::Pipeline>(ds.pipeline)->GetHandler());
 
 	// Bind triangle vertex buffer (contains position and colors)
 	VkDeviceSize offsets[1] = { 0 };
-	vkCmdBindVertexBuffers(cmd_buf, 0, 1, &std::static_pointer_cast<vulkan::VertexBuffer>(draw.vertex_array->GetVertexBuffer())->GetBuffer(), offsets);
+	vkCmdBindVertexBuffers(cmd_buf, 0, 1, &std::static_pointer_cast<vulkan::VertexBuffer>(ds.vertex_array->GetVertexBuffer())->GetBuffer(), offsets);
 
 	//// Bind triangle index buffer
 	//vkCmdBindIndexBuffer(cmd_buf, m_info.idx_buf->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
@@ -383,8 +400,8 @@ void Context::BuildCommandBuffers(const DrawState& draw)
 	//// Draw indexed triangle
 	//vkCmdDrawIndexed(cmd_buf, m_info.idx_buf->GetCount(), 1, 0, 0, 1);
 
-	auto ib = draw.vertex_array->GetIndexBuffer();
-	auto vb = draw.vertex_array->GetVertexBuffer();
+	auto ib = ds.vertex_array->GetIndexBuffer();
+	auto vb = ds.vertex_array->GetVertexBuffer();
 	if (ib)
 	{
 
@@ -400,6 +417,17 @@ void Context::BuildCommandBuffers(const DrawState& draw)
 	// VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system
 
 	res = vkEndCommandBuffer(cmd_buf);
+	assert(res == VK_SUCCESS);
+}
+
+void Context::WaitSync()
+{
+	VkResult res;
+	auto vk_dev = m_device.m_logic_dev->GetHandler();
+
+	res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
+	assert(res == VK_SUCCESS);
+	res = vkResetFences(vk_dev, 1, &m_wait_fence);
 	assert(res == VK_SUCCESS);
 }
 

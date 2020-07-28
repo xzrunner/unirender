@@ -3,6 +3,7 @@
 #undef DrawState
 
 #include "unirender/Context.h"
+#include "unirender/ClearState.h"
 
 #include <vulkan/vulkan.h>
 
@@ -97,15 +98,25 @@ private:
 
     void BuildCommandBuffers(const DrawState& draw);
 
+    void WaitSync();
+
 private:
     const Device& m_device;
 
-    VkSemaphore presentCompleteSemaphore;
-    VkSemaphore renderCompleteSemaphore;
+    int m_width = 0, m_height = 0;
+
+    ClearBuffers m_clear_flag;
+    Color  m_clear_color   = Color(0, 0, 0, 0);
+    double m_clear_depth   = 0;
+    int    m_clear_stencil = 0;
+    Rectangle m_viewport;
+
+    struct {
+        VkSemaphore present_complete;
+        VkSemaphore render_complete;
+    } m_semaphores;
 
     VkFence m_wait_fence;
-
-	int m_width = 0, m_height = 0;
 
 	std::shared_ptr<Surface> m_surface = nullptr;
 

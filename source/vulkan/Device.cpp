@@ -14,6 +14,7 @@
 #include "unirender/vulkan/DescriptorSet.h"
 #include "unirender/vulkan/UniformBuffer.h"
 #include "unirender/vulkan/Pipeline.h"
+#include "unirender/vulkan/TextureSampler.h"
 
 #include <SM_Vector.h>
 
@@ -108,32 +109,35 @@ Device::CreateComputeBuffer(const std::vector<float>& buf, size_t index) const
 std::shared_ptr<ur::Texture>
 Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 {
-	return std::make_shared<ur::vulkan::Texture>(desc, *this);
+	auto tex = std::make_shared<ur::vulkan::Texture>(m_logic_dev, m_phy_dev);
+    if (pixels) {
+        tex->ReadFromMemory(desc, pixels, 4);
+    }
+    return tex;
 }
 
 std::shared_ptr<ur::Texture>
 Device::CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz) const
 {
-	TextureDescription desc;
-	return std::make_shared<ur::vulkan::Texture>(desc, *this);
+    TextureDescription desc;
+    desc.target = ur::TextureTarget::Texture2D;
+    desc.width  = width;
+    desc.height = height;
+    desc.format = format;
+    return CreateTexture(desc, buf);
 }
 
 std::shared_ptr<ur::TextureSampler>
-Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const
+Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, 
+                             TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy) const
 {
-    return nullptr;
+    return std::make_shared<vulkan::TextureSampler>(m_logic_dev, wrap_s, wrap_t, wrap_s, min_filter, mag_filter, max_anistropy);
 }
 
 std::shared_ptr<ur::Texture>
 Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
 {
 	return nullptr;
-}
-
-std::shared_ptr<ur::TextureSampler>
-Device::GetTextureSampler(TextureSamplerType type) const
-{
-    return nullptr;
 }
 
 std::shared_ptr<ur::UniformBuffer>
@@ -158,7 +162,7 @@ std::shared_ptr<ur::DescriptorSet>
 Device::CreateDescriptorSet(const ur::DescriptorPool& pool, const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts,
                             const std::vector<ur::Descriptor>& descriptors) const
 {
-    return std::make_shared<DescriptorSet>(m_logic_dev, pool, layouts, descriptors);
+    return std::make_shared<DescriptorSet>(*this, m_logic_dev, pool, layouts, descriptors);
 }
 
 std::shared_ptr<ur::VertexBuffer>

@@ -45,7 +45,6 @@
     <ClInclude Include="..\..\..\include\unirender\Pipeline.h" />
     <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\RenderPass.h" />
-    <ClInclude Include="..\..\..\include\unirender\Sampler.h" />
     <ClInclude Include="..\..\..\include\unirender\TextureUnit.h" />
     <ClInclude Include="..\..\..\include\unirender\typedef.h" />
     <ClInclude Include="..\..\..\include\unirender\UniformBuffer.h" />
@@ -109,7 +108,8 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h" />
-    <ClInclude Include="..\..\..\include\unirender\vulkan\Sampler.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Image.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\TextureSampler.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\ImageView.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Instance.h" />
@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\Adaptor.cpp" />
+    <ClCompile Include="..\..\..\source\Device.cpp" />
     <ClCompile Include="..\..\..\source\Factory.cpp" />
     <ClCompile Include="..\..\..\source\opengl\Buffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
@@ -255,7 +256,11 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\vulkan\Sampler.cpp">
+    <ClCompile Include="..\..\..\source\vulkan\Image.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\TextureSampler.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
     </ClCompile>

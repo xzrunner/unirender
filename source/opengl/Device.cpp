@@ -233,28 +233,10 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
 }
 
 std::shared_ptr<ur::TextureSampler>
-Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t) const
+Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, 
+                             TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy) const
 {
-    return std::make_shared<ur::opengl::TextureSampler>(min_filter, mag_filter, wrap_s, wrap_t, 1.0f);
-}
-
-std::shared_ptr<ur::TextureSampler>
-Device::GetTextureSampler(TextureSamplerType type) const
-{
-    switch (type)
-    {
-    case TextureSamplerType::NearestClamp:
-        return m_nearest_clamp;
-    case TextureSamplerType::LinearClamp:
-        return m_linear_clamp;
-    case TextureSamplerType::NearestRepeat:
-        return m_nearest_repeat;
-    case TextureSamplerType::LinearRepeat:
-        return m_linear_repeat;
-    default:
-        assert(0);
-        return nullptr;
-    }
+    return std::make_shared<ur::opengl::TextureSampler>(min_filter, mag_filter, wrap_s, wrap_t, max_anistropy);
 }
 
 void Device::DispatchCompute(int thread_group_count) const
@@ -286,35 +268,6 @@ void Device::Init()
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &m_max_num_vert_attrs);
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_max_num_tex_units);
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_max_num_color_attachments);
-
-    m_nearest_clamp = std::make_shared<ur::opengl::TextureSampler>(
-        TextureMinificationFilter::Nearest,
-        TextureMagnificationFilter::Nearest,
-        TextureWrap::ClampToEdge,
-        TextureWrap::ClampToEdge,
-        1.0f
-    );
-    m_linear_clamp = std::make_shared<ur::opengl::TextureSampler>(
-        TextureMinificationFilter::Linear,
-        TextureMagnificationFilter::Linear,
-        TextureWrap::ClampToEdge,
-        TextureWrap::ClampToEdge,
-        1.0f
-    );
-    m_nearest_repeat = std::make_shared<ur::opengl::TextureSampler>(
-        TextureMinificationFilter::Nearest,
-        TextureMagnificationFilter::Nearest,
-        TextureWrap::Repeat,
-        TextureWrap::Repeat,
-        1.0f
-    );
-    m_linear_repeat = std::make_shared<ur::opengl::TextureSampler>(
-        TextureMinificationFilter::Linear,
-        TextureMagnificationFilter::Linear,
-        TextureWrap::Repeat,
-        TextureWrap::Repeat,
-        1.0f
-    );
 }
 
 std::shared_ptr<ur::VertexArray>

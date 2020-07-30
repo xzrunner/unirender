@@ -64,18 +64,18 @@ public:
     static VkFormat To(TextureFormat fmt)
     {
         const VkFormat fmts[] = {
-            VK_FORMAT_R8G8B8A8_SRGB,
+            VK_FORMAT_R8G8B8A8_UNORM,
             VK_FORMAT_R4G4B4A4_UNORM_PACK16,
-            VK_FORMAT_R8G8B8_SRGB,
+            VK_FORMAT_R8G8B8_UNORM,
             VK_FORMAT_R5G6B5_UNORM_PACK16,
-            VK_FORMAT_B8G8R8A8_SRGB,
-            VK_FORMAT_B8G8R8_SRGB,
+            VK_FORMAT_B8G8R8A8_UNORM,
+            VK_FORMAT_B8G8R8_UNORM,
             VK_FORMAT_R16G16B16A16_USCALED,
             VK_FORMAT_R16G16B16_USCALED,
             VK_FORMAT_R32G32B32_SFLOAT,
             VK_FORMAT_R16G16_SFLOAT,
-            VK_FORMAT_R8_SRGB,          // A8
-            VK_FORMAT_R8_SRGB,
+            VK_FORMAT_R8_UNORM,          // A8
+            VK_FORMAT_R8_UNORM,
             VK_FORMAT_R16_UINT,
             VK_FORMAT_D16_UNORM,
             VK_FORMAT_PVRTC2_2BPP_UNORM_BLOCK_IMG,

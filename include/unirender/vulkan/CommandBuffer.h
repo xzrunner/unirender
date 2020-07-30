@@ -24,6 +24,10 @@ public:
 
     auto GetHandler() const { return m_handle; }
 
+    static VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool cmd_pool);
+    static void EndSingleTimeCommands(VkCommandBuffer cb, VkDevice device, 
+        VkCommandPool cmd_pool, VkQueue graphics_queue);
+
 private:
     std::shared_ptr<LogicalDevice> m_device = VK_NULL_HANDLE;
 

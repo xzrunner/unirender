@@ -31,5 +31,41 @@ CommandBuffer::~CommandBuffer()
     vkFreeCommandBuffers(m_device->GetHandler(), m_pool->GetHandler(), 1, &m_handle);
 }
 
+VkCommandBuffer CommandBuffer::BeginSingleTimeCommands(VkDevice device, VkCommandPool cmd_pool)
+{
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = cmd_pool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cb;
+    vkAllocateCommandBuffers(device, &allocInfo, &cb);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(cb, &beginInfo);
+
+    return cb;
+}
+
+void CommandBuffer::EndSingleTimeCommands(VkCommandBuffer cb, VkDevice device, 
+                                          VkCommandPool cmd_pool, VkQueue graphics_queue)
+{
+    vkEndCommandBuffer(cb);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cb;
+
+    vkQueueSubmit(graphics_queue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(graphics_queue);
+
+    vkFreeCommandBuffers(device, cmd_pool, 1, &cb);
+}
+
 }
 }

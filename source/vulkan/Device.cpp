@@ -109,9 +109,10 @@ Device::CreateComputeBuffer(const std::vector<float>& buf, size_t index) const
 std::shared_ptr<ur::Texture>
 Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 {
-	auto tex = std::make_shared<ur::vulkan::Texture>(m_logic_dev, m_phy_dev);
+    auto smaple = GetTextureSampler(Device::TextureSamplerType::NearestClamp);
+	auto tex = std::make_shared<ur::vulkan::Texture>(m_logic_dev, m_phy_dev, smaple);
     if (pixels) {
-        tex->ReadFromMemory(desc, pixels, 4);
+        tex->ReadFromMemory(desc, m_cmd_pool, pixels, 4);
     }
     return tex;
 }
@@ -169,7 +170,7 @@ std::shared_ptr<ur::VertexBuffer>
 Device::CreateVertexBuffer(const void* data, size_t size, size_t stride) const
 {
     auto vb = std::make_shared<VertexBuffer>(m_logic_dev);
-    vb->Create(*m_phy_dev, data, size, stride, false);
+    vb->Create(*m_phy_dev, data, size, stride);
     return vb;
 }
 

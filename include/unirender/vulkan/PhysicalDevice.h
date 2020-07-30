@@ -22,9 +22,6 @@ public:
 
 	auto GetHandler() const { return m_handle; }
 
-	static uint32_t FindMemoryType(VkPhysicalDevice phy_dev,
-		uint32_t type_filter, VkMemoryPropertyFlags properties);
-
 	static const std::vector<const char*>& GetDeviceExtensions();
 
 public:

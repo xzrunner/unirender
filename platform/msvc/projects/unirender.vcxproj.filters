@@ -515,6 +515,9 @@
       <Filter>api\vulkan\3.drawing\image</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\Device.cpp" />
+    <ClCompile Include="..\..\..\source\vulkan\Utility.cpp">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="api">

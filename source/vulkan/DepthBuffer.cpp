@@ -1,7 +1,7 @@
 #include "unirender/vulkan/DepthBuffer.h"
-#include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
+#include "unirender/vulkan/Utility.h"
 
 #include <iostream>
 
@@ -95,7 +95,7 @@ DepthBuffer::DepthBuffer(const std::shared_ptr<LogicalDevice>& device,
     vkGetImageMemoryRequirements(dev, m_image, &mem_reqs);
 
     mem_alloc.allocationSize = mem_reqs.size;
-    mem_alloc.memoryTypeIndex = PhysicalDevice::FindMemoryType(
+    mem_alloc.memoryTypeIndex = Utility::FindMemoryType(
         phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
     );
 

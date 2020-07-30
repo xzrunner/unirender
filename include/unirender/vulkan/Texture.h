@@ -18,12 +18,14 @@ class Image;
 class ImageView;
 class LogicalDevice;
 class PhysicalDevice;
+class CommandPool;
 
 class Texture : public ur::Texture
 {
 public:
     Texture(const std::shared_ptr<LogicalDevice>& device, 
-        const std::shared_ptr<PhysicalDevice>& phy_dev);
+        const std::shared_ptr<PhysicalDevice>& phy_dev,
+        const std::shared_ptr<ur::TextureSampler>& sampler);
     virtual ~Texture();
 
     virtual int GetTexID() const override { return 0; }
@@ -42,9 +44,10 @@ public:
 
     virtual void ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler) override;
 
-    void ReadFromMemory(const TextureDescription& desc, const void* pixels, int row_alignment, int mip_level = 0);
+    void ReadFromMemory(const TextureDescription& desc, const std::shared_ptr<CommandPool>& cmd_pool,
+        const void* pixels, int row_alignment, int mip_level = 0);
 
-    auto& GetImageView() const { return m_image_view; }
+    auto& GetDescInfo() const { return m_vk_desc; }
 
 private:
     std::shared_ptr<LogicalDevice>  m_device;
@@ -54,6 +57,10 @@ private:
 
     std::shared_ptr<Image>     m_image      = nullptr;
     std::shared_ptr<ImageView> m_image_view = nullptr;
+
+    std::shared_ptr<ur::TextureSampler> m_sampler = nullptr;
+
+    VkDescriptorImageInfo m_vk_desc;
 
 }; // Texture
 

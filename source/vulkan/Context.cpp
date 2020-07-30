@@ -1,5 +1,4 @@
 #include "unirender/vulkan/Context.h"
-#include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/Swapchain.h"
 #include "unirender/vulkan/DepthBuffer.h"
 #include "unirender/vulkan/CommandPool.h"
@@ -217,6 +216,9 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
     m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
 
     m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
+	if (!m_device.m_cmd_pool) {
+		const_cast<Device&>(m_device).m_cmd_pool = m_cmd_pool;
+	}
     m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
 
     m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
@@ -231,13 +233,14 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 	};
 	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_img", m_device.CreateDescriptorSetLayout(single_img_bindings));
 
-	const bool use_texture = false;
+	std::vector<std::pair<DescriptorType, ShaderType>> single_ubo_single_img_bindings = {
+		{ ur::DescriptorType::UniformBuffer, ur::ShaderType::VertexShader },
+		{ ur::DescriptorType::CombinedImageSampler, ur::ShaderType::FragmentShader }
+	};
+	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_ubo_single_img", m_device.CreateDescriptorSetLayout(single_ubo_single_img_bindings));
 
-	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = { m_device.GetDescriptorSetLayout("single_ubo") };
-	if (use_texture) {
-		layouts.push_back(m_device.GetDescriptorSetLayout("single_img"));
-	}
-	const_cast<Device&>(m_device).SetPipelineLayout("single_img", std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts));
+	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = { m_device.GetDescriptorSetLayout("single_ubo_single_img") };
+	const_cast<Device&>(m_device).SetPipelineLayout("single_ubo_single_img", std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts));
 
     m_renderpass = std::make_shared<RenderPass>(*this, m_include_depth);
 

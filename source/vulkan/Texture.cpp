@@ -4,6 +4,8 @@
 #include "unirender/vulkan/Image.h"
 #include "unirender/vulkan/ImageView.h"
 #include "unirender/vulkan/TypeConverter.h"
+#include "unirender/vulkan/TextureSampler.h"
+#include "unirender/TextureUtility.h"
 
 #include <algorithm>
 
@@ -13,9 +15,11 @@ namespace vulkan
 {
 
 Texture::Texture(const std::shared_ptr<LogicalDevice>& device, 
-	             const std::shared_ptr<PhysicalDevice>& phy_dev)
+	             const std::shared_ptr<PhysicalDevice>& phy_dev,
+	             const std::shared_ptr<ur::TextureSampler>& sampler)
 	: m_device(device)
 	, m_phy_dev(phy_dev)
+	, m_sampler(sampler)
 {
 }
 
@@ -44,7 +48,8 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
 
 }
 
-void Texture::ReadFromMemory(const TextureDescription& desc, const void* pixels, int row_alignment, int mip_level)
+void Texture::ReadFromMemory(const TextureDescription& desc, const std::shared_ptr<CommandPool>& cmd_pool,
+	                         const void* pixels, int row_alignment, int mip_level)
 {
 	VkExtent3D sz;
 	sz.width  = static_cast<uint32_t>(desc.width);
@@ -53,7 +58,10 @@ void Texture::ReadFromMemory(const TextureDescription& desc, const void* pixels,
 
 	auto vk_fmt = TypeConverter::To(desc.format);
 
-	m_image = std::make_shared<Image>(m_device, *m_phy_dev, TypeConverter::To(desc.target), vk_fmt, sz);
+	m_image = std::make_shared<Image>(m_device, *m_phy_dev, cmd_pool, TypeConverter::To(desc.target), vk_fmt, sz);
+
+	const auto size = TextureUtility::RequiredSizeInBytes(desc.width, desc.height, m_desc.format, row_alignment);
+	m_image->Upload(*m_phy_dev, pixels, size);
 
 	VkImageViewType view_type;
 	switch (desc.target)
@@ -73,6 +81,11 @@ void Texture::ReadFromMemory(const TextureDescription& desc, const void* pixels,
 
 	VkImageSubresourceRange range = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 	m_image_view = std::make_shared<ImageView>(m_device, view_type, vk_fmt, range, *m_image);
+
+	m_vk_desc.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	m_vk_desc.imageView = m_image_view->GetHandler();
+	m_vk_desc.sampler = std::static_pointer_cast<vulkan::TextureSampler>(m_sampler)->GetHandler();
+
 }
 
 }

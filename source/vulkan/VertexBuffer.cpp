@@ -1,9 +1,58 @@
 #include "unirender/vulkan/VertexBuffer.h"
-#include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
+#include "unirender/vulkan/Utility.h"
 
 #include <assert.h>
+
+namespace
+{
+
+VkFormat to_attr_format(ur::ComponentDataType type, size_t num)
+{
+    switch (type)
+    {
+    case ur::ComponentDataType::Float:
+    {
+        switch (num)
+        {
+        case 1:
+            return VK_FORMAT_R32_SFLOAT;
+        case 2:
+            return VK_FORMAT_R32G32_SFLOAT;
+        case 3:
+            return VK_FORMAT_R32G32B32_SFLOAT;
+        case 4:
+            return VK_FORMAT_R32G32B32A32_SFLOAT;
+        default:
+            assert(0);
+        }
+    }
+        break;
+    case ur::ComponentDataType::UnsignedByte:
+    {
+        switch (num)
+        {
+        case 1:
+            return VK_FORMAT_R8_UINT;
+        case 2:
+            return VK_FORMAT_R8G8_UINT;
+        case 3:
+            return VK_FORMAT_R8G8B8_UINT;
+        case 4:
+            return VK_FORMAT_R8G8B8A8_UINT;
+        default:
+            assert(0);
+        }
+    }
+        break;
+    default:
+        assert(0);
+    }
+    return VK_FORMAT_UNDEFINED;
+}
+
+}
 
 namespace ur
 {
@@ -52,68 +101,42 @@ void VertexBuffer::Reset(int size_in_bytes)
 {
 }
 
-void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data, 
-                          size_t size, size_t stride, bool use_texture)
+void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data, size_t size, size_t stride)
 {
-    VkResult res;
-
     auto vk_dev = m_device->GetHandler();
 
+    Utility::CreateBuffer(vk_dev, phy_dev.GetHandler(), size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_buffer, m_memory);
+
     m_vertex_count = size / stride;
+    
+    //m_info.range = mem_reqs.size;
+    //m_info.offset = 0;
 
-    VkBufferCreateInfo buf_info = {};
-    buf_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    buf_info.pNext = NULL;
-    buf_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    buf_info.size = size;
-    buf_info.queueFamilyIndexCount = 0;
-    buf_info.pQueueFamilyIndices = NULL;
-    buf_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    buf_info.flags = 0;
-    res = vkCreateBuffer(vk_dev, &buf_info, NULL, &m_buffer);
-    assert(res == VK_SUCCESS);
-
-    VkMemoryRequirements mem_reqs;
-    vkGetBufferMemoryRequirements(vk_dev, m_buffer, &mem_reqs);
-
-    VkMemoryAllocateInfo alloc_info = {};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.pNext = NULL;
-    alloc_info.memoryTypeIndex = 0;
-
-    alloc_info.allocationSize = mem_reqs.size;
-    alloc_info.memoryTypeIndex = PhysicalDevice::FindMemoryType(
-        phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    );
-
-    res = vkAllocateMemory(vk_dev, &alloc_info, NULL, &m_memory);
-    assert(res == VK_SUCCESS);
-    m_info.range = mem_reqs.size;
-    m_info.offset = 0;
-
-    uint8_t *pData;
-    res = vkMapMemory(vk_dev, m_memory, 0, mem_reqs.size, 0, (void **)&pData);
-    assert(res == VK_SUCCESS);
-
-    memcpy(pData, data, size);
-
+    uint8_t *buf;
+    if (vkMapMemory(vk_dev, m_memory, 0, size, 0, (void**)&buf) != VK_SUCCESS) {
+        throw std::runtime_error("failed to map memory!");
+    }
+    memcpy(buf, data, size);
     vkUnmapMemory(vk_dev, m_memory);
-
-    res = vkBindBufferMemory(vk_dev, m_buffer, m_memory, 0);
-    assert(res == VK_SUCCESS);
 
     m_vi_binding.binding = 0;
     m_vi_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
     m_vi_binding.stride = stride;
+}
 
-    m_vi_attribs[0].binding = 0;
-    m_vi_attribs[0].location = 0;
-    m_vi_attribs[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    m_vi_attribs[0].offset = 0;
-    m_vi_attribs[1].binding = 0;
-    m_vi_attribs[1].location = 1;
-    m_vi_attribs[1].format = use_texture ? VK_FORMAT_R32G32_SFLOAT : VK_FORMAT_R32G32B32A32_SFLOAT;
-    m_vi_attribs[1].offset = 16;
+void VertexBuffer::SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs)
+{
+    m_vi_attribs.resize(attrs.size());
+    for (size_t i = 0, n = attrs.size(); i < n; ++i)
+    {
+        auto& src = attrs[i];
+        auto& dst = m_vi_attribs[i];
+        dst.binding = 0;
+        dst.location = i;
+        dst.format = to_attr_format(src->GetCompDataType(), src->GetNumOfComps());
+        dst.offset = src->GetOffsetInBytes();
+    }
 }
 
 }

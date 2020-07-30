@@ -11,6 +11,7 @@ class Instance;
 class ValidationLayers;
 class PhysicalDevice;
 class LogicalDevice;
+class CommandPool;
 
 class Device : public ur::Device
 {
@@ -85,6 +86,8 @@ private:
     std::shared_ptr<PhysicalDevice> m_phy_dev = nullptr;
     std::shared_ptr<LogicalDevice>  m_logic_dev = nullptr;
     uint32_t m_present_family_id = 0;
+
+    std::shared_ptr<CommandPool> m_cmd_pool = nullptr;
 
     friend class Context;
 

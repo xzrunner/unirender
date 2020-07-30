@@ -26,15 +26,15 @@ DescriptorSet::DescriptorSet(const ur::Device& dev, const std::shared_ptr<Logica
         layouts[i] = std::static_pointer_cast<vulkan::DescriptorSetLayout>(_layouts[i])->GetHandler();
     }
 
-    VkDescriptorSetAllocateInfo alloc_info[1];
-    alloc_info[0].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    alloc_info[0].pNext = NULL;
-    alloc_info[0].descriptorPool = static_cast<const vulkan::DescriptorPool&>(pool).GetHandler();
-    alloc_info[0].descriptorSetCount = layouts.size();
-    alloc_info[0].pSetLayouts = layouts.data();
+    VkDescriptorSetAllocateInfo alloc_info = {};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = static_cast<const vulkan::DescriptorPool&>(pool).GetHandler();
+    alloc_info.descriptorSetCount = layouts.size();
+    alloc_info.pSetLayouts = layouts.data();
 
-    VkResult res = vkAllocateDescriptorSets(m_device->GetHandler(), alloc_info, &m_handle);
-    assert(res == VK_SUCCESS);
+    if (vkAllocateDescriptorSets(m_device->GetHandler(), &alloc_info, &m_handle) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor sets!");
+    }
 
     std::vector<VkWriteDescriptorSet> vk_descriptors;
     vk_descriptors.reserve(descriptors.size());
@@ -53,13 +53,8 @@ DescriptorSet::DescriptorSet(const ur::Device& dev, const std::shared_ptr<Logica
         } 
         else if (desc.texture) 
         {
-            VkDescriptorImageInfo image_info = {};
-            image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            image_info.imageView = std::static_pointer_cast<Texture>(desc.texture)->GetImageView()->GetHandler();
-            auto sampler = dev.GetTextureSampler(ur::Device::TextureSamplerType::LinearRepeat);
-            image_info.sampler = std::static_pointer_cast<vulkan::TextureSampler>(sampler)->GetHandler();
-
-            write_desc_set.pImageInfo = &image_info;
+            auto& img_info = std::static_pointer_cast<Texture>(desc.texture)->GetDescInfo();
+            write_desc_set.pImageInfo = &img_info;
         }
         write_desc_set.descriptorCount = 1;
 

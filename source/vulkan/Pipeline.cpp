@@ -1,5 +1,4 @@
 #include "unirender/vulkan/Pipeline.h"
-#include "unirender/vulkan/Utility.h"
 #include "unirender/vulkan/PipelineLayout.h"
 #include "unirender/vulkan/RenderPass.h"
 #include "unirender/vulkan/PipelineCache.h"
@@ -9,6 +8,16 @@
 #include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
+
+/* Number of samples needs to be the same at image creation,      */
+/* renderpass creation and pipeline creation.                     */
+#define NUM_SAMPLES VK_SAMPLE_COUNT_1_BIT
+
+/* Number of viewports and number of scissors have to be the same */
+/* at pipeline creation and in any call to set them dynamically   */
+/* They also have to be the same as each other                    */
+#define NUM_VIEWPORTS 1
+#define NUM_SCISSORS NUM_VIEWPORTS
 
 namespace ur
 {
@@ -41,8 +50,10 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
         vi.flags = 0;
         vi.vertexBindingDescriptionCount = 1;
         vi.pVertexBindingDescriptions = &vert_buf.GetVertInputBindDesc();
-        vi.vertexAttributeDescriptionCount = 2;
-        vi.pVertexAttributeDescriptions = vert_buf.GetVertInputAttrDesc();
+
+        auto& attrs = vert_buf.GetVertInputAttrDesc();
+        vi.vertexAttributeDescriptionCount = attrs.size();
+        vi.pVertexAttributeDescriptions = attrs.data();
     }
     VkPipelineInputAssemblyStateCreateInfo ia;
     ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

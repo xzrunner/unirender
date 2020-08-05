@@ -121,7 +121,7 @@ void VertexBuffer::Reset(int size_in_bytes)
 {
 }
 
-void VertexBuffer::SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs)
+void VertexBuffer::SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs)
 {
     if (!attrs.empty()) {
         m_vi_binding.stride = attrs.front()->GetStrideInBytes();

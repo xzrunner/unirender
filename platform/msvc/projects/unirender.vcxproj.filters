@@ -95,14 +95,8 @@
     <ClInclude Include="..\..\..\include\unirender\opengl\VertexArray.h">
       <Filter>api\opengl\vertex_array</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\VertexBufferAttribute.h">
-      <Filter>vertex_array</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\ComponentDataType.h">
       <Filter>vertex_array</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\opengl\VertexBufferAttributes.h">
-      <Filter>api\opengl\vertex_array</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\unirender\opengl\Buffer.h">
       <Filter>api\opengl\buffer</Filter>
@@ -355,18 +349,18 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\Buffer.h">
       <Filter>api\vulkan\9.utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexInputAttributes.h">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexInputAttribute.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
       <Filter>api\opengl\frame_buffer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\VertexArray.cpp">
-      <Filter>api\opengl\vertex_array</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\VertexBufferAttribute.cpp">
-      <Filter>vertex_array</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\opengl\VertexBufferAttributes.cpp">
       <Filter>api\opengl\vertex_array</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\Buffer.cpp">
@@ -523,6 +517,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\Buffer.cpp">
       <Filter>api\vulkan\9.utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexInputAttributes.cpp">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\VertexInputAttribute.cpp">
+      <Filter>vertex_array</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

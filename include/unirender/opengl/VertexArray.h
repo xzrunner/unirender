@@ -2,7 +2,7 @@
 
 #include "unirender/VertexArray.h"
 #include "unirender/opengl/opengl.h"
-#include "unirender/opengl/VertexBufferAttributes.h"
+#include "unirender/opengl/VertexInputAttributes.h"
 
 namespace ur
 {
@@ -18,7 +18,7 @@ public:
 
     virtual const std::shared_ptr<ur::VertexBuffer> GetVertexBuffer() const override { return m_vbuf; }
     virtual void SetVertexBuffer(const std::shared_ptr<ur::VertexBuffer>& buf) override;
-    virtual void SetVertexBufferAttrs(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs) override;
+    virtual void SetVertexBufferAttrs(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs) override;
 
     virtual const std::shared_ptr<ur::IndexBuffer> GetIndexBuffer() const override { return m_ibuf; }
     virtual void SetIndexBuffer(const std::shared_ptr<ur::IndexBuffer>& buf) override;
@@ -33,7 +33,7 @@ private:
     GLuint m_id = 0;
 
     std::shared_ptr<ur::VertexBuffer> m_vbuf = nullptr;
-    VertexBufferAttributes m_vbuf_attrs;
+    VertexInputAttributes m_vbuf_attrs;
     bool m_vbuf_dirty = true;
 
     std::shared_ptr<ur::IndexBuffer> m_ibuf = nullptr;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "unirender/VertexBuffer.h"
-#include "unirender/VertexBufferAttribute.h"
+#include "unirender/VertexInputAttribute.h"
 #include "unirender/vulkan/Buffer.h"
 
 #include <vulkan/vulkan.h>
@@ -42,7 +42,7 @@ public:
 
     auto& GetVertInputBindDesc() const { return m_vi_binding; }
 
-    void SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs);
+    void SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs);
     auto& GetVertInputAttrDesc() const { return m_vi_attribs; }
 
 private:

@@ -9,10 +9,10 @@ namespace ur
 
 class VertexBuffer;
 
-class VertexBufferAttribute
+class VertexInputAttribute
 {
 public:
-    VertexBufferAttribute(int loc, ComponentDataType comp_data_type, 
+    VertexInputAttribute(int loc, ComponentDataType comp_data_type, 
         int num_of_comps, int offset_in_bytes, int stride_in_bytes);
 
     auto GetLocation() const { return m_loc; }
@@ -36,6 +36,6 @@ private:
     int m_offset_in_bytes = 0;
     int m_stride_in_bytes = 0;
 
-}; // VertexBufferAttribute
+}; // VertexInputAttribute
 
 }

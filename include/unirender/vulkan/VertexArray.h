@@ -18,7 +18,7 @@ public:
 
 	virtual const std::shared_ptr<ur::VertexBuffer> GetVertexBuffer() const override { return m_vbuf; }
 	virtual void SetVertexBuffer(const std::shared_ptr<ur::VertexBuffer>& buf) override;
-	virtual void SetVertexBufferAttrs(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs) override;
+	virtual void SetVertexBufferAttrs(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs) override;
 
 	virtual const std::shared_ptr<ur::IndexBuffer> GetIndexBuffer() const override { return m_ibuf; }
 	virtual void SetIndexBuffer(const std::shared_ptr<ur::IndexBuffer>& buf) override;

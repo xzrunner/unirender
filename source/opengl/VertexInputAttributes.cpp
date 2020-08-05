@@ -1,8 +1,8 @@
-#include "unirender/opengl/VertexBufferAttributes.h"
+#include "unirender/opengl/VertexInputAttributes.h"
 #include "unirender/opengl/opengl.h"
 #include "unirender/opengl/VertexBuffer.h"
 #include "unirender/opengl/TypeConverter.h"
-#include "unirender/VertexBufferAttribute.h"
+#include "unirender/VertexInputAttribute.h"
 #include "unirender/Device.h"
 
 #include <algorithm>
@@ -14,12 +14,12 @@ namespace ur
 namespace opengl
 {
 
-VertexBufferAttributes::VertexBufferAttributes(const Device& device)
+VertexInputAttributes::VertexInputAttributes(const Device& device)
 {
     m_attrs.resize(device.GetMaxNumVertAttrs());
 }
 
-void VertexBufferAttributes::SetAttrs(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs)
+void VertexInputAttributes::SetAttrs(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs)
 {
     assert(attrs.size() <= m_attrs.size());
     for (size_t i = 0, n = attrs.size(); i < n; ++i) {
@@ -36,7 +36,7 @@ void VertexBufferAttributes::SetAttrs(const std::vector<std::shared_ptr<ur::Vert
     }
 }
 
-void VertexBufferAttributes::Clean()
+void VertexInputAttributes::Clean()
 {
     for (size_t i = 0, n = m_attrs.size(); i < n; ++i)
     {
@@ -57,7 +57,7 @@ void VertexBufferAttributes::Clean()
     }
 }
 
-void VertexBufferAttributes::Attach(int index)
+void VertexInputAttributes::Attach(int index)
 {
     if (!m_vbuf) {
         return;
@@ -80,7 +80,7 @@ void VertexBufferAttributes::Attach(int index)
     );
 }
 
-void VertexBufferAttributes::Detach(int index)
+void VertexInputAttributes::Detach(int index)
 {
     glDisableVertexAttribArray(index);
 }

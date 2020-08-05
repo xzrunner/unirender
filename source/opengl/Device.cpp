@@ -396,55 +396,55 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
     vbuf->ReadFromMemory(vertices.data(), vbuf_sz, 0);
     va->SetVertexBuffer(vbuf);
 
-    std::vector<std::shared_ptr<ur::VertexBufferAttribute>> vbuf_attrs;
+    std::vector<std::shared_ptr<ur::VertexInputAttribute>> vbuf_attrs;
     switch (layout)
     {
     case VertexLayoutType::Pos:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 12
         ));
         break;
     case VertexLayoutType::PosTex:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 20
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 2, 12, 20
         ));
         break;
     case VertexLayoutType::PosNorm:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 24
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 3, 12, 24
         ));
         break;
     case VertexLayoutType::PosNormTex:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 32
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 3, 12, 32
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             2, ur::ComponentDataType::Float, 2, 24, 32
         ));
         break;
     case VertexLayoutType::PosNormTexTB:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 3, 12, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             2, ur::ComponentDataType::Float, 2, 24, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             3, ur::ComponentDataType::Float, 3, 32, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             4, ur::ComponentDataType::Float, 3, 44, 56
         ));
         break;
@@ -657,55 +657,55 @@ Device::CreateCubeVertexArray(VertexLayoutType layout) const
     vbuf->ReadFromMemory(vertices.data(), vbuf_sz, 0);
     va->SetVertexBuffer(vbuf);
 
-    std::vector<std::shared_ptr<ur::VertexBufferAttribute>> vbuf_attrs;
+    std::vector<std::shared_ptr<ur::VertexInputAttribute>> vbuf_attrs;
     switch (layout)
     {
     case VertexLayoutType::Pos:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 12
         ));
         break;
     case VertexLayoutType::PosTex:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 20
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 2, 12, 20
         ));
         break;
     case VertexLayoutType::PosNorm:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 24
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 3, 12, 24
         ));
         break;
     case VertexLayoutType::PosNormTex:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 32
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 3, 12, 32
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             2, ur::ComponentDataType::Float, 2, 24, 32
         ));
         break;
     case VertexLayoutType::PosNormTexTB:
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             0, ur::ComponentDataType::Float, 3, 0, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             1, ur::ComponentDataType::Float, 3, 12, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             2, ur::ComponentDataType::Float, 2, 24, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             3, ur::ComponentDataType::Float, 3, 32, 56
         ));
-        vbuf_attrs.push_back(std::make_shared<ur::VertexBufferAttribute>(
+        vbuf_attrs.push_back(std::make_shared<ur::VertexInputAttribute>(
             4, ur::ComponentDataType::Float, 3, 44, 56
         ));
         break;

@@ -29,7 +29,7 @@ void VertexArray::SetVertexBuffer(const std::shared_ptr<ur::VertexBuffer>& buf)
     }
 }
 
-void VertexArray::SetVertexBufferAttrs(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs)
+void VertexArray::SetVertexBufferAttrs(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs)
 {
     m_vbuf_attrs.SetAttrs(attrs);
 }

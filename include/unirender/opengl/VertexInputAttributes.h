@@ -1,6 +1,6 @@
 #pragma once
 
-#include "unirender/VertexBufferAttribute.h"
+#include "unirender/VertexInputAttribute.h"
 
 #include <vector>
 
@@ -13,19 +13,19 @@ class VertexBuffer;
 namespace opengl
 {
 
-struct VertexBufferAttribute
+struct VertexInputAttribute
 {
-    std::shared_ptr<ur::VertexBufferAttribute> attr = nullptr;
+    std::shared_ptr<ur::VertexInputAttribute> attr = nullptr;
     bool dirty = false;
 };
 
-class VertexBufferAttributes
+class VertexInputAttributes
 {
 public:
-    VertexBufferAttributes(const Device& device);
+    VertexInputAttributes(const Device& device);
 
     auto& GetAttrs() const { return m_attrs; }
-    void SetAttrs(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs);
+    void SetAttrs(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs);
 
     void Clean();
 
@@ -40,11 +40,11 @@ private:
 private:
     std::shared_ptr<ur::VertexBuffer> m_vbuf = nullptr;
 
-    std::vector<VertexBufferAttribute> m_attrs;
+    std::vector<VertexInputAttribute> m_attrs;
 
     int m_max_array_index = 0;
 
-}; // VertexBufferAttributes
+}; // VertexInputAttributes
 
 }
 }

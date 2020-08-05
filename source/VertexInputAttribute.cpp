@@ -1,9 +1,9 @@
-#include "unirender/VertexBufferAttribute.h"
+#include "unirender/VertexInputAttribute.h"
 
 namespace ur
 {
 
-VertexBufferAttribute::VertexBufferAttribute(int loc, ComponentDataType comp_data_type,
+VertexInputAttribute::VertexInputAttribute(int loc, ComponentDataType comp_data_type,
                                              int num_of_comps, int offset_in_bytes, int stride_in_bytes)
     : m_loc(loc)
     , m_comp_data_type(comp_data_type)

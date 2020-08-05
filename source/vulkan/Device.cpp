@@ -79,13 +79,13 @@ Device::CreateShaderProgram(const std::vector<unsigned int>& cs) const
 std::shared_ptr<ur::VertexBuffer>
 Device::CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {
-	return std::make_shared<ur::vulkan::VertexBuffer>(m_logic_dev);
+	return std::make_shared<ur::vulkan::VertexBuffer>(m_logic_dev, m_phy_dev, m_cmd_pool);
 }
 
 std::shared_ptr<ur::IndexBuffer>
 Device::CreateIndexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {
-	return std::make_shared<ur::vulkan::IndexBuffer>(m_logic_dev);
+	return std::make_shared<ur::vulkan::IndexBuffer>(m_logic_dev, m_phy_dev, m_cmd_pool);
 }
 
 std::shared_ptr<ur::WritePixelBuffer>
@@ -167,10 +167,10 @@ Device::CreateDescriptorSet(const ur::DescriptorPool& pool, const std::vector<st
 }
 
 std::shared_ptr<ur::VertexBuffer>
-Device::CreateVertexBuffer(const void* data, size_t size, size_t stride) const
+Device::CreateVertexBuffer(const void* data, size_t size) const
 {
-    auto vb = std::make_shared<VertexBuffer>(m_logic_dev);
-    vb->Create(*m_phy_dev, data, size, stride);
+    auto vb = std::make_shared<VertexBuffer>(m_logic_dev, m_phy_dev, m_cmd_pool);
+    vb->ReadFromMemory(data, size, 0);
     return vb;
 }
 

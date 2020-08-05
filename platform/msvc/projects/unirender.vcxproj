@@ -99,6 +99,7 @@
     <ClInclude Include="..\..\..\include\unirender\VertexArray.h" />
     <ClInclude Include="..\..\..\include\unirender\VertexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\VertexLayoutType.h" />
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Buffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h" />
     <ClInclude Include="..\..\..\include\unirender\vulkan\Context.h" />
@@ -220,6 +221,10 @@
     <ClCompile Include="..\..\..\source\ShaderProgram.cpp" />
     <ClCompile Include="..\..\..\source\TextureUtility.cpp" />
     <ClCompile Include="..\..\..\source\VertexBufferAttribute.cpp" />
+    <ClCompile Include="..\..\..\source\vulkan\Buffer.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\vulkan\CommandBuffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/vulkan/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/vulkan/</ObjectFileName>

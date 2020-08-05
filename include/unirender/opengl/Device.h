@@ -61,7 +61,7 @@ public:
     virtual std::shared_ptr<TextureSampler> CreateTextureSampler(TextureMinificationFilter min_filter, 
         TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const override;
     virtual std::shared_ptr<VertexBuffer>
-        CreateVertexBuffer(const void* data, size_t size, size_t stride) const override { return nullptr; }
+        CreateVertexBuffer(const void* data, size_t size) const override { return nullptr; }
 
     virtual std::shared_ptr<UniformBuffer>
         CreateUniformBuffer(const void* data, size_t size) const { return nullptr; }

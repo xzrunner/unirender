@@ -1,7 +1,7 @@
 #include "unirender/vulkan/VertexBuffer.h"
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
-#include "unirender/vulkan/Utility.h"
+#include "unirender/vulkan/CommandPool.h"
 
 #include <assert.h>
 
@@ -59,15 +59,16 @@ namespace ur
 namespace vulkan
 {
 
-VertexBuffer::VertexBuffer(const std::shared_ptr<LogicalDevice>& device)
+VertexBuffer::VertexBuffer(const std::shared_ptr<LogicalDevice>& device,
+                           const std::shared_ptr<PhysicalDevice>& phy_dev,
+                           const std::shared_ptr<CommandPool>& cmd_pool)
     : m_device(device)
+    , m_phy_dev(phy_dev)
+    , m_cmd_pool(cmd_pool)
+    , m_buffer(device)
 {
-}
-
-VertexBuffer::~VertexBuffer()
-{
-    vkDestroyBuffer(m_device->GetHandler(), m_buffer, NULL);
-    vkFreeMemory(m_device->GetHandler(), m_memory, NULL);
+    m_vi_binding.binding = 0;
+    m_vi_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 }
 
 int VertexBuffer::GetSizeInBytes() const
@@ -82,6 +83,25 @@ BufferUsageHint VertexBuffer::GetUsageHint() const
 
 void VertexBuffer::ReadFromMemory(const void* data, int size, int offset)
 {
+    Buffer staging(m_device);
+    staging.Create(m_phy_dev->GetHandler(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    staging.Upload(data, size);
+    m_buffer.Create(m_phy_dev->GetHandler(), size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    m_buffer.CopyFrom(staging, size, m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
+
+    //m_buffer.Create(m_phy_dev->GetHandler(), size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    //    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    //m_buffer.Upload(data, size);
+    
+    if (m_vi_binding.stride == 0) {
+        int zz = 0;
+    }
+
+    assert(m_vi_binding.stride != 0);
+    m_vertex_count = size / m_vi_binding.stride;
+    
+    //m_info.range = mem_reqs.size;
+    //m_info.offset = 0;
 }
 
 void* VertexBuffer::WriteToMemory(int size, int offset)
@@ -101,32 +121,12 @@ void VertexBuffer::Reset(int size_in_bytes)
 {
 }
 
-void VertexBuffer::Create(const PhysicalDevice& phy_dev, const void* data, size_t size, size_t stride)
-{
-    auto vk_dev = m_device->GetHandler();
-
-    Utility::CreateBuffer(vk_dev, phy_dev.GetHandler(), size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_buffer, m_memory);
-
-    m_vertex_count = size / stride;
-    
-    //m_info.range = mem_reqs.size;
-    //m_info.offset = 0;
-
-    uint8_t *buf;
-    if (vkMapMemory(vk_dev, m_memory, 0, size, 0, (void**)&buf) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map memory!");
-    }
-    memcpy(buf, data, size);
-    vkUnmapMemory(vk_dev, m_memory);
-
-    m_vi_binding.binding = 0;
-    m_vi_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    m_vi_binding.stride = stride;
-}
-
 void VertexBuffer::SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexBufferAttribute>>& attrs)
 {
+    if (!attrs.empty()) {
+        m_vi_binding.stride = attrs.front()->GetStrideInBytes();
+    }
+
     m_vi_attribs.resize(attrs.size());
     for (size_t i = 0, n = attrs.size(); i < n; ++i)
     {

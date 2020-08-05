@@ -97,7 +97,7 @@ public:
         const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts, 
         const std::vector<ur::Descriptor>& descriptors) const = 0;
     virtual std::shared_ptr<VertexBuffer>
-        CreateVertexBuffer(const void* data, size_t size, size_t stride) const = 0;
+        CreateVertexBuffer(const void* data, size_t size) const = 0;
 
     virtual void DispatchCompute(int thread_group_count) const = 0;
 

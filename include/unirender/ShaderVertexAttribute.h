@@ -17,7 +17,11 @@ enum class ShaderVertexAttributeType
     Int,
     IntVector2,
     IntVector3,
-    IntVector4
+    IntVector4,
+    UInt,
+    UIntVector2,
+    UIntVector3,
+    UIntVector4
 };
 
 struct ShaderVertexAttribute

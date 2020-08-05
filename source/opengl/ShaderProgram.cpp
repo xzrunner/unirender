@@ -191,6 +191,18 @@ void ShaderProgram::InitVertexAttributes()
         case GL_INT_VEC4:
             dst.type = ShaderVertexAttributeType::IntVector4;
             break;
+        case GL_UNSIGNED_INT:
+            dst.type = ShaderVertexAttributeType::UInt;
+            break;
+        case GL_UNSIGNED_INT_VEC2:
+            dst.type = ShaderVertexAttributeType::UIntVector2;
+            break;
+        case GL_UNSIGNED_INT_VEC3:
+            dst.type = ShaderVertexAttributeType::UIntVector3;
+            break;
+        case GL_UNSIGNED_INT_VEC4:
+            dst.type = ShaderVertexAttributeType::UIntVector4;
+            break;
         default:
             assert(0);
         }

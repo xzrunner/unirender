@@ -64,7 +64,7 @@ public:
         const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts,
         const std::vector<ur::Descriptor>& descriptors) const override;
     virtual std::shared_ptr<ur::VertexBuffer>
-        CreateVertexBuffer(const void* data, size_t size, size_t stride) const override;
+        CreateVertexBuffer(const void* data, size_t size) const override;
 
     virtual void DispatchCompute(int thread_group_count) const override;
 

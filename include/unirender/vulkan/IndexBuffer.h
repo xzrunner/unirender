@@ -1,6 +1,7 @@
 #pragma once
 
 #include "unirender/IndexBuffer.h"
+#include "unirender/vulkan/Buffer.h"
 
 #include <vulkan/vulkan.h>
 
@@ -13,12 +14,14 @@ namespace vulkan
 
 class LogicalDevice;
 class PhysicalDevice;
+class CommandPool;
 
 class IndexBuffer : public ur::IndexBuffer
 {
 public:
-    IndexBuffer(const std::shared_ptr<LogicalDevice>& device);
-    virtual ~IndexBuffer();
+    IndexBuffer(const std::shared_ptr<LogicalDevice>& device,
+        const std::shared_ptr<PhysicalDevice>& phy_dev,
+        const std::shared_ptr<CommandPool>& cmd_pool);
 
     virtual int GetSizeInBytes() const override;
     virtual BufferUsageHint GetUsageHint() const override;
@@ -36,15 +39,17 @@ public:
 
     void Create(const PhysicalDevice& phy_dev, const void* data, size_t size);
 
-    auto& GetBuffer() const { return m_buffer; }
+    auto GetBuffer() const { return m_buffer.GetHandler(); }
     auto GetCount() const { return m_count; }
 
 private:
-    std::shared_ptr<LogicalDevice> m_device = nullptr;
+    std::shared_ptr<LogicalDevice>  m_device   = nullptr;
+    std::shared_ptr<PhysicalDevice> m_phy_dev  = nullptr;
+    std::shared_ptr<CommandPool>    m_cmd_pool = nullptr;
 
-    VkDeviceMemory m_memory = VK_NULL_HANDLE;
-    VkBuffer       m_buffer = VK_NULL_HANDLE;
-    uint32_t       m_count  = 0;
+    Buffer m_buffer;
+
+    uint32_t m_count  = 0;
 
 }; // IndexBuffer
 

@@ -8,6 +8,8 @@ std::vector<const char*> GetRequiredExtensions(bool enable_validation_layers)
 {
     std::vector<const char*> instance_extension_names;
     instance_extension_names.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+    //// Extension VK_KHR_maintenance1 not found in list of known instance extensions.
+    //instance_extension_names.push_back(VK_KHR_MAINTENANCE1_EXTENSION_NAME);
 #ifdef __ANDROID__
     instance_extension_names.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
 #elif defined(_WIN32)

@@ -352,6 +352,9 @@
     <ClInclude Include="..\..\..\include\unirender\vulkan\TextureSampler.h">
       <Filter>api\vulkan\3.drawing\image</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Buffer.h">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -516,6 +519,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\Device.cpp" />
     <ClCompile Include="..\..\..\source\vulkan\Utility.cpp">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Buffer.cpp">
       <Filter>api\vulkan\9.utility</Filter>
     </ClCompile>
   </ItemGroup>

@@ -24,6 +24,7 @@
 #include "unirender/Adaptor.h"
 #include "unirender/DrawState.h"
 #include "unirender/VertexArray.h"
+#include "unirender/VertexArraySizes.h"
 
 #include <vulkan/vulkan.h>
 
@@ -368,6 +369,11 @@ void Context::BuildCommandBuffers(const DrawState& ds)
 
 	// Update dynamic viewport state
 	VkViewport viewport = {};
+	// fixme: Extension VK_KHR_maintenance1 not found in list of known instance extensions.
+	//viewport.x = 0;
+	//viewport.y = m_viewport.h;
+	//viewport.width = (float)m_viewport.w;
+	//viewport.height = -(float)m_viewport.h;
 	viewport.width = (float)m_viewport.w;
 	viewport.height = (float)m_viewport.h;
 	viewport.minDepth = (float) 0.0f;
@@ -394,20 +400,20 @@ void Context::BuildCommandBuffers(const DrawState& ds)
 		std::static_pointer_cast<vulkan::Pipeline>(ds.pipeline)->GetHandler());
 
 	// Bind triangle vertex buffer (contains position and colors)
-	VkDeviceSize offsets[1] = { 0 };
-	vkCmdBindVertexBuffers(cmd_buf, 0, 1, &std::static_pointer_cast<vulkan::VertexBuffer>(ds.vertex_array->GetVertexBuffer())->GetBuffer(), offsets);
-
-	//// Bind triangle index buffer
-	//vkCmdBindIndexBuffer(cmd_buf, m_info.idx_buf->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-	//// Draw indexed triangle
-	//vkCmdDrawIndexed(cmd_buf, m_info.idx_buf->GetCount(), 1, 0, 0, 1);
-
 	auto ib = ds.vertex_array->GetIndexBuffer();
 	auto vb = ds.vertex_array->GetVertexBuffer();
+	VkDeviceSize offsets[1] = { 0 };
+	auto vk_vb = std::static_pointer_cast<vulkan::VertexBuffer>(vb)->GetBuffer();
+	if (vk_vb != VK_NULL_HANDLE) {
+		vkCmdBindVertexBuffers(cmd_buf, 0, 1, &vk_vb, offsets);
+	}
 	if (ib)
 	{
+		auto vk_ib = std::static_pointer_cast<vulkan::IndexBuffer>(ib)->GetBuffer();
+		vkCmdBindIndexBuffer(cmd_buf, vk_ib, 0, VK_INDEX_TYPE_UINT16);
 
+		size_t count = ib->GetSizeInBytes() / VertexArraySizes::SizeOf(ib->GetDataType());
+		vkCmdDrawIndexed(cmd_buf, count, 1, 0, 0, 0);
 	}
 	else
 	{

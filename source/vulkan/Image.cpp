@@ -4,6 +4,7 @@
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/CommandBuffer.h"
 #include "unirender/vulkan/CommandPool.h"
+#include "unirender/vulkan/Buffer.h"
 #include "unirender/vulkan/Utility.h"
 
 #include <stdexcept>
@@ -59,21 +60,14 @@ Image::~Image()
 
 void Image::Upload(const PhysicalDevice& phy_dev, const void* data, size_t size)
 {
-	auto vk_dev = m_device->GetHandler();
-
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	Utility::CreateBuffer(vk_dev, phy_dev.GetHandler(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-	void* buf;
-	vkMapMemory(vk_dev, stagingBufferMemory, 0, size, 0, &buf);
-	memcpy(buf, data, size);
-	vkUnmapMemory(vk_dev, stagingBufferMemory);
+	Buffer buffer(m_device);
+	buffer.Create(phy_dev.GetHandler(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	buffer.Upload(data, size);
 
     TransitionImageLayout(m_handle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
         m_device->GetHandler(), m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
-    CopyBufferToImage(stagingBuffer, m_handle, static_cast<uint32_t>(2), static_cast<uint32_t>(2), 
+    CopyBufferToImage(buffer.GetHandler(), m_handle, static_cast<uint32_t>(2), static_cast<uint32_t>(2),
 		m_device->GetHandler(), m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
     TransitionImageLayout(m_handle, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         m_device->GetHandler(), m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());

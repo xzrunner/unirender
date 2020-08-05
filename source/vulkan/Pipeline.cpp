@@ -67,7 +67,7 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
     rs.pNext = NULL;
     rs.flags = 0;
     rs.polygonMode = VK_POLYGON_MODE_FILL;
-    rs.cullMode = VK_CULL_MODE_BACK_BIT;
+    rs.cullMode = /*VK_CULL_MODE_BACK_BIT*/VK_CULL_MODE_NONE;
     rs.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rs.depthClampEnable = VK_FALSE;
     rs.rasterizerDiscardEnable = VK_FALSE;

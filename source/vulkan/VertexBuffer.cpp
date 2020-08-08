@@ -34,13 +34,13 @@ VkFormat to_attr_format(ur::ComponentDataType type, size_t num)
         switch (num)
         {
         case 1:
-            return VK_FORMAT_R8_UINT;
+            return VK_FORMAT_R8_UNORM;
         case 2:
-            return VK_FORMAT_R8G8_UINT;
+            return VK_FORMAT_R8G8_UNORM;
         case 3:
-            return VK_FORMAT_R8G8B8_UINT;
+            return VK_FORMAT_R8G8B8_UNORM;
         case 4:
-            return VK_FORMAT_R8G8B8A8_UINT;
+            return VK_FORMAT_R8G8B8A8_UNORM;
         default:
             assert(0);
         }

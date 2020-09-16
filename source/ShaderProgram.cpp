@@ -14,7 +14,21 @@ std::shared_ptr<Uniform>
 ShaderProgram::QueryUniform(const std::string& name) const
 {
     auto itr = m_uniforms.find(name);
-    return itr == m_uniforms.end() ? nullptr : itr->second;
+    if (itr != m_uniforms.end()) {
+        return itr->second;
+    }
+
+    // for ubo, auto gen
+    std::string str = "." + name;
+    for (auto& unif : m_uniforms) 
+    {
+        if (unif.first.find(str) != std::string::npos &&
+            !unif.first.empty() && unif.first[0] == '_') {
+            return unif.second;
+        }
+    }
+
+    return nullptr;
 }
 
 void ShaderProgram::AddUniformUpdater(const std::shared_ptr<UniformUpdater>& updater)

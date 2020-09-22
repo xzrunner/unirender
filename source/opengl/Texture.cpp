@@ -31,7 +31,7 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
             desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
     }
 
-    ApplySampler(device.GetTextureSampler(Device::TextureSamplerType::LinearClamp));
+    ApplySampler(device.GetTextureSampler(desc.sampler_type));
 }
 
 Texture::~Texture()

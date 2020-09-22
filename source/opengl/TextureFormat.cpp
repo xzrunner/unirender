@@ -43,6 +43,11 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt)
         pixel_format = GL_RGBA;
         pixel_type = GL_FLOAT;
         break;
+	case ur::TextureFormat::RGBA32F:
+		internal_format = GL_RGBA32F;
+		pixel_format = GL_RGBA;
+		pixel_type = GL_FLOAT;
+		break;
     case ur::TextureFormat::RGB16F:
         internal_format = GL_RGB16F;
         pixel_format = GL_RGB;
@@ -80,6 +85,11 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt)
 		internal_format = pixel_format = GL_ALPHA;
 	#endif
 		pixel_type = GL_FLOAT;
+		break;
+	case ur::TextureFormat::RGB32I:
+		internal_format = GL_RGB32I;
+		pixel_format = GL_RGB_INTEGER;
+		pixel_type = GL_INT;
 		break;
 #ifdef GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG
 	case ur::TextureFormat::PVR2 :

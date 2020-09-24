@@ -113,7 +113,7 @@ Device::CreateComputeBuffer(const std::vector<float>& buf, size_t index) const
 std::shared_ptr<ur::Texture>
 Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 {
-    auto smaple = GetTextureSampler(Device::TextureSamplerType::NearestClamp);
+    auto smaple = GetTextureSampler(desc.sampler_type);
 	auto tex = std::make_shared<ur::vulkan::Texture>(m_logic_dev, m_phy_dev, smaple);
     if (pixels) {
         tex->ReadFromMemory(desc, m_cmd_pool, pixels, 4);

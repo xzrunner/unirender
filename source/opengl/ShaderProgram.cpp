@@ -314,6 +314,11 @@ void ShaderProgram::InitUniforms()
         case GL_SAMPLER_1D:
         case GL_SAMPLER_2D:
         case GL_SAMPLER_3D:
+        case GL_INT_SAMPLER_1D:
+        case GL_INT_SAMPLER_2D:
+        case GL_INT_SAMPLER_3D:
+        case GL_SAMPLER_1D_ARRAY_EXT:
+        case GL_SAMPLER_2D_ARRAY_EXT:
         case GL_SAMPLER_CUBE:
             uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
             m_tex_uniforms.push_back(uniform);

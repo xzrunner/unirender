@@ -615,11 +615,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\include\unirender\opengl\Uniform.inl">
-      <Filter>shader</Filter>
-    </None>
     <None Include="..\..\..\include\unirender\Bitmap.inl">
       <Filter>utility</Filter>
+    </None>
+    <None Include="..\..\..\include\unirender\opengl\Uniform.inl">
+      <Filter>api\opengl\shader</Filter>
     </None>
   </ItemGroup>
 </Project>

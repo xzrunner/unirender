@@ -150,7 +150,7 @@ Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 {
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
     if (pixels) {
-        tex->ReadFromMemory(pixels, desc.format, desc.width, desc.height, desc.depth, 4);
+        tex->ReadFromMemory(pixels, desc.format, desc.width, desc.height, desc.depth, 1);
     }
     return tex;
 }
@@ -168,7 +168,7 @@ Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, con
     desc.format = format;
 
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
-    tex->ReadFromMemory(*pbuf, 0, 0, width, height, 4);
+    tex->ReadFromMemory(*pbuf, 0, 0, width, height, 1);
 
     return tex;
 }

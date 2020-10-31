@@ -17,7 +17,7 @@ public:
     {
         glGenBuffers(1, &m_id);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, m_id);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(buf), &buf.front(), GL_STREAM_COPY);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(T) * buf.size(), buf.data(), GL_STREAM_COPY);
     }
     virtual ~ComputeBuffer();
 

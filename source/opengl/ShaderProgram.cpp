@@ -51,6 +51,8 @@ ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
 
     glLinkProgram(m_id);
     CheckLinkStatus();
+
+    InitUniforms();
 }
 
 ShaderProgram::~ShaderProgram()

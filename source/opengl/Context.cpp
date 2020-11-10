@@ -23,7 +23,8 @@ namespace opengl
 {
 
 Context::Context(const ur::Device& device)
-    : m_texture_units(device)
+    : m_dev(device)
+    , m_texture_units(device)
 {
     Init();
 }
@@ -119,6 +120,13 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
             glDrawArrays(TypeConverter::To(prim_type), draw.offset, draw.offset + draw.count);
         }
     }
+}
+
+void Context::Compute(const DrawState& draw, int thread_group_count)
+{
+    ApplyShaderProgram(draw, nullptr);
+
+    m_dev.DispatchCompute(thread_group_count);
 }
 
 void Context::SetViewport(int x, int y, int w, int h)

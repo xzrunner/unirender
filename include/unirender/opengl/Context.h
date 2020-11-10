@@ -31,6 +31,7 @@ public:
         const DrawState& draw, const void* scene) override;
     virtual void Draw(PrimitiveType prim_type, const DrawState& draw,
         const void* scene) override;
+    virtual void Compute(const DrawState& draw, int thread_group_count) override;
 
     virtual void SetViewport(int x, int y, int w, int h) override;
     virtual void GetViewport(int& x, int& y, int& w, int& h) const override;
@@ -88,6 +89,8 @@ private:
         const StencilTestFace& set);
 
 private:
+    const ur::Device& m_dev;
+
     Color  m_clear_color   = Color(0, 0, 0, 0);
     double m_clear_depth   = 0;
     int    m_clear_stencil = 0;

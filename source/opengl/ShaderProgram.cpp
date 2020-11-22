@@ -25,15 +25,31 @@ namespace opengl
 {
 
 ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs, 
-                                            const std::vector<unsigned int>& fs)
+                                            const std::vector<unsigned int>& fs,
+                                            const std::vector<unsigned int>& tcs,
+                                            const std::vector<unsigned int>& tes)
 {
     m_id = glCreateProgram();
 
-    m_vs = std::make_shared<ShaderObject>(ShaderType::VertexShader, vs);
-    m_vs->Attach(m_id);
+    if (!vs.empty()) {
+        m_vs = std::make_shared<ShaderObject>(ShaderType::VertexShader, vs);
+        m_vs->Attach(m_id);
+    }
 
-    m_fs = std::make_shared<ShaderObject>(ShaderType::FragmentShader, fs);
-    m_fs->Attach(m_id);
+    if (!fs.empty()) {
+        m_fs = std::make_shared<ShaderObject>(ShaderType::FragmentShader, fs);
+        m_fs->Attach(m_id);
+    }
+
+    if (!tcs.empty()) {
+        m_tcs = std::make_shared<ShaderObject>(ShaderType::TessCtrlShader, tcs);
+        m_tcs->Attach(m_id);
+    }
+
+    if (!tes.empty()) {
+        m_tes = std::make_shared<ShaderObject>(ShaderType::TessEvalShader, tes);
+        m_tes->Attach(m_id);
+    }
 
     glLinkProgram(m_id);
     CheckLinkStatus();

@@ -62,8 +62,12 @@ public:
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(
         int width, int height, InternalFormat format, AttachmentType attach) const = 0;
 
-    virtual std::shared_ptr<ShaderProgram> 
-        CreateShaderProgram(const std::vector<unsigned int>& vs, const std::vector<unsigned int>& fs) const = 0;
+    virtual std::shared_ptr<ShaderProgram> CreateShaderProgram(
+        const std::vector<unsigned int>& vs, 
+        const std::vector<unsigned int>& fs,
+        const std::vector<unsigned int>& tcs = std::vector<unsigned int>(),
+        const std::vector<unsigned int>& tes = std::vector<unsigned int>()
+    ) const = 0;
     virtual std::shared_ptr<ShaderProgram>
         CreateShaderProgram(const std::vector<unsigned int>& cs) const = 0;
 

@@ -20,8 +20,12 @@ class ShaderObject;
 class ShaderProgram : public ur::ShaderProgram
 {
 public:
-    ShaderProgram(const std::vector<unsigned int>& vs, 
-        const std::vector<unsigned int>& fs);
+    ShaderProgram(
+        const std::vector<unsigned int>& vs,
+        const std::vector<unsigned int>& fs,
+        const std::vector<unsigned int>& tcs,
+        const std::vector<unsigned int>& tes
+    );
     ShaderProgram(const std::vector<unsigned int>& cs);
     virtual ~ShaderProgram();
 
@@ -44,9 +48,11 @@ private:
 private:
     GLuint m_id = 0;
 
-    std::shared_ptr<ShaderObject> m_vs = nullptr;
-    std::shared_ptr<ShaderObject> m_gs = nullptr;
-    std::shared_ptr<ShaderObject> m_fs = nullptr;
+    std::shared_ptr<ShaderObject> m_vs  = nullptr;
+    std::shared_ptr<ShaderObject> m_tcs = nullptr;
+    std::shared_ptr<ShaderObject> m_tes = nullptr;
+    std::shared_ptr<ShaderObject> m_gs  = nullptr;
+    std::shared_ptr<ShaderObject> m_fs  = nullptr;
 
     std::shared_ptr<ShaderObject> m_cs = nullptr;
 

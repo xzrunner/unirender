@@ -12,6 +12,10 @@ Adaptor::ToShaderTransStage(ShaderType type)
 	{
 	case ShaderType::VertexShader:
 		return shadertrans::ShaderStage::VertexShader;
+	case ShaderType::TessCtrlShader:
+		return shadertrans::ShaderStage::TessCtrlShader;
+	case ShaderType::TessEvalShader:
+		return shadertrans::ShaderStage::TessEvalShader;
 	case ShaderType::GeometryShader:
 		return shadertrans::ShaderStage::GeometryShader;
 	case ShaderType::FragmentShader:

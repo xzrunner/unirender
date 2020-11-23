@@ -329,7 +329,8 @@ public:
             GL_LINES_ADJACENCY,
             GL_LINE_STRIP_ADJACENCY,
             GL_TRIANGLES_ADJACENCY,
-            GL_TRIANGLE_STRIP_ADJACENCY
+            GL_TRIANGLE_STRIP_ADJACENCY,
+            GL_PATCHES
         };
         return types[static_cast<int>(type)];
     }

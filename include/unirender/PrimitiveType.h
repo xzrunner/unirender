@@ -15,7 +15,8 @@ enum class PrimitiveType
     LinesAdjacency,
     LineStripAdjacency,
     TrianglesAdjacency,
-    TriangleStripAdjacency
+    TriangleStripAdjacency,
+    Patches,
 };
 
 }

@@ -169,7 +169,9 @@ bool ShaderProgram::CheckStatus() const
         GLint len;
         glGetProgramInfoLog(m_id, 1024, &len, buf);
 
-        printf("shader error:%s\n", buf);
+        if (len > 0) {
+            printf("shader error:%s\n", buf);
+        }
 
         return false;
     }

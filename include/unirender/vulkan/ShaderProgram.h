@@ -31,6 +31,8 @@ public:
     virtual int QueryTexSlot(const std::string& name) const override;
     virtual int QueryAttrLoc(const std::string& name) const override;
 
+    virtual bool HasStage(ShaderType stage) const { return false; }
+
     auto& GetShaderStages() const { return m_shader_stages; }
 
 private:

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "unirender/ShaderType.h"
+
 #include <string>
 #include <unordered_map>
 
@@ -23,6 +25,8 @@ public:
 
     virtual int QueryTexSlot(const std::string& name) const = 0;
     virtual int QueryAttrLoc(const std::string& name) const = 0;
+
+    virtual bool HasStage(ShaderType stage) const = 0;
 
     void AddUniform(const std::string& name,
         const std::shared_ptr<Uniform>& uniform);

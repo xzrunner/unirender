@@ -128,6 +128,35 @@ int ShaderProgram::QueryAttrLoc(const std::string& name) const
     return -1;
 }
 
+bool ShaderProgram::HasStage(ShaderType stage) const
+{
+    bool ret = false;
+    switch (stage)
+    {
+    case ShaderType::VertexShader:
+        ret = m_vs != nullptr;
+        break;
+    case ShaderType::TessCtrlShader:
+        ret = m_tcs != nullptr;
+        break;
+    case ShaderType::TessEvalShader:
+        ret = m_tes != nullptr;
+        break;
+    case ShaderType::GeometryShader:
+        ret = m_gs != nullptr;
+        break;
+    case ShaderType::FragmentShader:
+        ret = m_fs != nullptr;
+        break;
+    case ShaderType::ComputeShader:
+        ret = m_cs != nullptr;
+        break;
+    default:
+        assert(0);
+    }
+    return ret;
+}
+
 bool ShaderProgram::CheckStatus() const
 {
     glValidateProgram(m_id);

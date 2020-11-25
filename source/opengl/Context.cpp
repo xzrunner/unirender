@@ -274,6 +274,11 @@ void Context::ForceApplyRenderState(const RenderState& rs)
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, m_unpack_row_length);
     glPixelStorei(GL_PACK_ROW_LENGTH, m_pack_row_length);
+
+    glPatchParameteri(GL_PATCH_VERTICES, rs.tess_params.vert_num);
+    glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, rs.tess_params.outer_level);
+    glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, rs.tess_params.inner_level);
+
 }
 
 void Context::ForceApplyRenderStateStencil(GLenum face, const StencilTestFace& test)
@@ -303,6 +308,7 @@ void Context::ApplyRenderState(const RenderState& rs)
     ApplyColorMask(rs.color_mask);
     ApplyDepthMask(rs.depth_mask);
     ApplyAlphaTest(rs.alpha_test);
+    ApplyTessParams(rs.tess_params);
 }
 
 void Context::ApplyFramebuffer()
@@ -525,6 +531,21 @@ void Context::ApplyAlphaTest(const AlphaTest& alpha)
         glAlphaFunc(TypeConverter::To(alpha.function), alpha.ref);
         m_render_state.alpha_test.function = alpha.function;
         m_render_state.alpha_test.ref      = alpha.ref;
+    }
+
+void Context::ApplyTessParams(const TessPatchParams& tess_params)
+{
+    if (m_render_state.tess_params.vert_num != tess_params.vert_num) {
+        glPatchParameteri(GL_PATCH_VERTICES, tess_params.vert_num);
+        m_render_state.tess_params.vert_num = tess_params.vert_num;
+    }
+    if (m_render_state.tess_params.outer_level != tess_params.outer_level) {
+        glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, tess_params.outer_level);
+        m_render_state.tess_params.outer_level = tess_params.outer_level;
+    }
+    if (m_render_state.tess_params.inner_level != tess_params.inner_level) {
+        glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, tess_params.inner_level);
+        m_render_state.tess_params.inner_level = tess_params.inner_level;
     }
 }
 

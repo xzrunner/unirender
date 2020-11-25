@@ -26,6 +26,19 @@ enum class RasterizationMode
     Fill
 };
 
+struct TessPatchParams
+{
+    bool operator == (const TessPatchParams& p) const {
+        return vert_num    == p.vert_num
+            && outer_level == p.outer_level
+            && inner_level == p.inner_level;
+    }
+
+    int vert_num    = 3;
+    int outer_level = 1;
+    int inner_level = 1;
+};
+
 struct RenderState
 {
     PrimitiveRestart  prim_restart;
@@ -40,6 +53,7 @@ struct RenderState
     ColorMask         color_mask = ColorMask(true, true, true, true);
     bool              depth_mask = true;
     AlphaTest         alpha_test;
+    TessPatchParams   tess_params;
 
     bool operator == (const RenderState& rs) const {
         return prim_restart == rs.prim_restart
@@ -53,7 +67,8 @@ struct RenderState
             && blending == rs.blending
             && color_mask == rs.color_mask
             && depth_mask == rs.depth_mask
-            && alpha_test == rs.alpha_test;
+            && alpha_test == rs.alpha_test
+            && tess_params == rs.tess_params;
     }
 
     bool operator != (const RenderState& rs) const {

@@ -77,6 +77,7 @@ private:
     void ApplyDepthRange(const DepthRange& range);
     void ApplyBlending(const Blending& blending);
     void ApplyAlphaTest(const AlphaTest& alpha);
+    void ApplyTessParams(const TessPatchParams& tess_params);
 
     void ApplyBeforeDraw(const DrawState& draw, const void* scene);
 

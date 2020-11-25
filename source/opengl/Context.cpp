@@ -17,6 +17,19 @@
 
 #include <assert.h>
 
+namespace
+{
+
+void check_error()
+{
+#ifdef _DEBUG
+    auto err = glGetError();
+    assert(err != GL_NO_ERROR);
+#endif // _DEBUG
+}
+
+}
+
 namespace ur
 {
 namespace opengl
@@ -27,6 +40,8 @@ Context::Context(const ur::Device& device)
     , m_texture_units(device)
 {
     Init();
+
+    check_error();
 }
 
 void Context::Clear(const ClearState& clear_state)
@@ -61,6 +76,8 @@ void Context::Clear(const ClearState& clear_state)
     }
 
     glClear(TypeConverter::To(clear_state.buffers));
+
+    check_error();
 }
 
 void Context::Draw(PrimitiveType prim_type, int offset, int count,
@@ -84,6 +101,8 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
     {
         glDrawArrays(TypeConverter::To(prim_type), offset, count);
     }
+
+    check_error();
 }
 
 void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
@@ -97,7 +116,6 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
 
     auto va = std::static_pointer_cast<VertexArray>(draw.vertex_array);
     auto ibuf = draw.vertex_array->GetIndexBuffer();
-
     if (ibuf)
     {
         if (draw.count == 0)
@@ -120,6 +138,8 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
             glDrawArrays(TypeConverter::To(prim_type), draw.offset, draw.offset + draw.count);
         }
     }
+
+    check_error();
 }
 
 void Context::Compute(const DrawState& draw, int thread_group_count)
@@ -127,6 +147,8 @@ void Context::Compute(const DrawState& draw, int thread_group_count)
     ApplyShaderProgram(draw, nullptr);
 
     m_dev.DispatchCompute(thread_group_count);
+
+    check_error();
 }
 
 void Context::SetViewport(int x, int y, int w, int h)
@@ -137,6 +159,8 @@ void Context::SetViewport(int x, int y, int w, int h)
         glViewport(x, y, w, h);
         m_viewport = vp;
     }
+
+    check_error();
 }
 
 void Context::GetViewport(int& x, int& y, int& w, int& h) const
@@ -145,6 +169,8 @@ void Context::GetViewport(int& x, int& y, int& w, int& h) const
     y = m_viewport.y;
     w = m_viewport.w;
     h = m_viewport.h;
+
+    check_error();
 }
 
 void Context::SetTexture(size_t slot, const ur::TexturePtr& tex)
@@ -153,6 +179,8 @@ void Context::SetTexture(size_t slot, const ur::TexturePtr& tex)
     if (unit) {
         unit->SetTexture(tex);
     }
+
+    check_error();
 }
 
 void Context::SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler)
@@ -161,6 +189,8 @@ void Context::SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSa
     if (unit) {
         unit->SetSampler(sampler);
     }
+
+    check_error();
 }
 
 void Context::SetUnpackRowLength(int len)
@@ -169,6 +199,8 @@ void Context::SetUnpackRowLength(int len)
         m_unpack_row_length = len;
         glPixelStorei(GL_UNPACK_ROW_LENGTH, m_unpack_row_length);
     }
+
+    check_error();
 }
 
 void Context::SetPackRowLength(int len)
@@ -177,6 +209,8 @@ void Context::SetPackRowLength(int len)
         m_pack_row_length = len;
         glPixelStorei(GL_PACK_ROW_LENGTH, m_pack_row_length);
     }
+
+    check_error();
 }
 
 bool Context::CheckRenderTargetStatus()
@@ -204,11 +238,15 @@ bool Context::CheckRenderTargetStatus()
         printf("%s", "Unknow error.\n");
 		return false;
 	}
+
+    check_error();
 }
 
 void Context::Flush()
 {
     //glFlush();
+
+    check_error();
 }
 
 void Context::Init()
@@ -229,6 +267,8 @@ void Context::Init()
     m_clear_stencil = stencil;
 
     ForceApplyRenderState(m_render_state);
+
+    check_error();
 }
 
 void Context::ForceApplyRenderState(const RenderState& rs)
@@ -279,6 +319,7 @@ void Context::ForceApplyRenderState(const RenderState& rs)
     glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, rs.tess_params.outer_level);
     glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, rs.tess_params.inner_level);
 
+    check_error();
 }
 
 void Context::ForceApplyRenderStateStencil(GLenum face, const StencilTestFace& test)
@@ -292,6 +333,8 @@ void Context::ForceApplyRenderStateStencil(GLenum face, const StencilTestFace& t
         TypeConverter::To(test.function),
         test.reference_value,
         test.mask);
+
+    check_error();
 }
 
 void Context::ApplyRenderState(const RenderState& rs)
@@ -309,6 +352,8 @@ void Context::ApplyRenderState(const RenderState& rs)
     ApplyDepthMask(rs.depth_mask);
     ApplyAlphaTest(rs.alpha_test);
     ApplyTessParams(rs.tess_params);
+
+    check_error();
 }
 
 void Context::ApplyFramebuffer()
@@ -329,6 +374,8 @@ void Context::ApplyFramebuffer()
         std::static_pointer_cast<opengl::Framebuffer>(m_set_framebuffer)->Clean();
         /*assert*/(CheckRenderTargetStatus());
     }
+
+    check_error();
 }
 
 void Context::ApplyScissorTest(const ScissorTest& scissor)
@@ -348,6 +395,8 @@ void Context::ApplyScissorTest(const ScissorTest& scissor)
             m_render_state.scissor_test.rect = scissor.rect;
         }
     }
+
+    check_error();
 }
 
 void Context::ApplyColorMask(const ColorMask& color_mask)
@@ -358,6 +407,8 @@ void Context::ApplyColorMask(const ColorMask& color_mask)
         glColorMask(m.r, m.g, m.b, m.a);
         m_render_state.color_mask = color_mask;
     }
+
+    check_error();
 }
 
 void Context::ApplyDepthMask(bool depth_mask)
@@ -367,6 +418,8 @@ void Context::ApplyDepthMask(bool depth_mask)
         glDepthMask(depth_mask);
         m_render_state.depth_mask = depth_mask;
     }
+
+    check_error();
 }
 
 void Context::ApplyPrimitiveRestart(const PrimitiveRestart& prim_restart)
@@ -380,6 +433,8 @@ void Context::ApplyPrimitiveRestart(const PrimitiveRestart& prim_restart)
         glPrimitiveRestartIndex(prim_restart.index);
         m_render_state.prim_restart.index = prim_restart.index;
     }
+
+    check_error();
 }
 
 void Context::ApplyFacetCulling(const FacetCulling& culling)
@@ -400,6 +455,8 @@ void Context::ApplyFacetCulling(const FacetCulling& culling)
             m_render_state.facet_culling.front_face_winding_order = culling.front_face_winding_order;
         }
     }
+
+    check_error();
 }
 
 void Context::ApplyProgramPointSize(const ProgramPointSize& pt_sz)
@@ -408,6 +465,8 @@ void Context::ApplyProgramPointSize(const ProgramPointSize& pt_sz)
         Enable(GL_PROGRAM_POINT_SIZE, pt_sz == ProgramPointSize::Enabled);
         m_render_state.prog_point_size = pt_sz;
     }
+
+    check_error();
 }
 
 void Context::ApplyRasterizationMode(const RasterizationMode& mode)
@@ -416,6 +475,8 @@ void Context::ApplyRasterizationMode(const RasterizationMode& mode)
         glPolygonMode(GL_FRONT_AND_BACK, TypeConverter::To(mode));
         m_render_state.rasterization_mode = mode;
     }
+
+    check_error();
 }
 
 void Context::ApplyStencilTest(const StencilTest& stencil)
@@ -428,6 +489,8 @@ void Context::ApplyStencilTest(const StencilTest& stencil)
         ApplyStencil(GL_FRONT, m_render_state.stencil_test.front_face, stencil.front_face);
         ApplyStencil(GL_BACK, m_render_state.stencil_test.back_face, stencil.back_face);
     }
+
+    check_error();
 }
 
 void Context::ApplyDepthTest(const DepthTest& depth)
@@ -440,6 +503,8 @@ void Context::ApplyDepthTest(const DepthTest& depth)
         glDepthFunc(TypeConverter::To(depth.function));
         m_render_state.depth_test.function = depth.function;
     }
+
+    check_error();
 }
 
 void Context::ApplyDepthRange(const DepthRange& range)
@@ -452,6 +517,8 @@ void Context::ApplyDepthRange(const DepthRange& range)
         m_render_state.depth_range.d_near = range.d_near;
         m_render_state.depth_range.d_far = range.d_far;
     }
+
+    check_error();
 }
 
 void Context::ApplyBlending(const Blending& blending)
@@ -518,6 +585,8 @@ void Context::ApplyBlending(const Blending& blending)
         }
         m_render_state.blending.separately = blending.separately;
     }
+
+    check_error();
 }
 
 void Context::ApplyAlphaTest(const AlphaTest& alpha)
@@ -533,6 +602,9 @@ void Context::ApplyAlphaTest(const AlphaTest& alpha)
         m_render_state.alpha_test.ref      = alpha.ref;
     }
 
+    check_error();
+}
+
 void Context::ApplyTessParams(const TessPatchParams& tess_params)
 {
     if (m_render_state.tess_params.vert_num != tess_params.vert_num) {
@@ -547,6 +619,8 @@ void Context::ApplyTessParams(const TessPatchParams& tess_params)
         glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, tess_params.inner_level);
         m_render_state.tess_params.inner_level = tess_params.inner_level;
     }
+
+    check_error();
 }
 
 void Context::ApplyBeforeDraw(const DrawState& draw, const void* scene)
@@ -557,6 +631,8 @@ void Context::ApplyBeforeDraw(const DrawState& draw, const void* scene)
 
     m_texture_units.Clean();
     ApplyFramebuffer();
+
+    check_error();
 }
 
 void Context::ApplyVertexArray(const std::shared_ptr<ur::VertexArray>& va)
@@ -564,6 +640,8 @@ void Context::ApplyVertexArray(const std::shared_ptr<ur::VertexArray>& va)
     auto gl_va = std::static_pointer_cast<opengl::VertexArray>(va);
     gl_va->Bind();
     gl_va->Clean();
+
+    check_error();
 }
 
 void Context::ApplyShaderProgram(const DrawState& draw, const void* scene)
@@ -580,6 +658,8 @@ void Context::ApplyShaderProgram(const DrawState& draw, const void* scene)
     if (m_binded_program) {
         m_binded_program->Clean(*this, draw, scene);
     }
+
+    check_error();
 }
 
 void Context::Enable(GLenum cap, bool enable)
@@ -589,6 +669,8 @@ void Context::Enable(GLenum cap, bool enable)
     } else {
         glDisable(cap);
     }
+
+    check_error();
 }
 
 void Context::ApplyStencil(GLenum face, StencilTestFace& curr,
@@ -618,6 +700,8 @@ void Context::ApplyStencil(GLenum face, StencilTestFace& curr,
         curr.reference_value = set.reference_value;
         curr.mask = set.mask;
     }
+
+    check_error();
 }
 
 }

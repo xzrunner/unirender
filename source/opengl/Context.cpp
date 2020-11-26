@@ -24,7 +24,7 @@ void check_error()
 {
 #ifdef _DEBUG
     auto err = glGetError();
-    assert(err != GL_NO_ERROR);
+    assert(err == GL_NO_ERROR);
 #endif // _DEBUG
 }
 
@@ -273,6 +273,8 @@ void Context::Init()
 
 void Context::ForceApplyRenderState(const RenderState& rs)
 {
+    check_error();
+
     Enable(GL_PRIMITIVE_RESTART, rs.prim_restart.enabled);
     glPrimitiveRestartIndex(rs.prim_restart.index);
 
@@ -316,8 +318,9 @@ void Context::ForceApplyRenderState(const RenderState& rs)
     glPixelStorei(GL_PACK_ROW_LENGTH, m_pack_row_length);
 
     glPatchParameteri(GL_PATCH_VERTICES, rs.tess_params.vert_num);
-    glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, rs.tess_params.outer_level);
-    glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, rs.tess_params.inner_level);
+    // todo GL_INVALID_ENUM 
+    //glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, rs.tess_params.outer_level);
+    //glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, rs.tess_params.inner_level);
 
     check_error();
 }
@@ -611,14 +614,15 @@ void Context::ApplyTessParams(const TessPatchParams& tess_params)
         glPatchParameteri(GL_PATCH_VERTICES, tess_params.vert_num);
         m_render_state.tess_params.vert_num = tess_params.vert_num;
     }
-    if (m_render_state.tess_params.outer_level != tess_params.outer_level) {
-        glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, tess_params.outer_level);
-        m_render_state.tess_params.outer_level = tess_params.outer_level;
-    }
-    if (m_render_state.tess_params.inner_level != tess_params.inner_level) {
-        glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, tess_params.inner_level);
-        m_render_state.tess_params.inner_level = tess_params.inner_level;
-    }
+    // todo GL_INVALID_ENUM 
+    //if (m_render_state.tess_params.outer_level != tess_params.outer_level) {
+    //    glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, tess_params.outer_level);
+    //    m_render_state.tess_params.outer_level = tess_params.outer_level;
+    //}
+    //if (m_render_state.tess_params.inner_level != tess_params.inner_level) {
+    //    glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, tess_params.inner_level);
+    //    m_render_state.tess_params.inner_level = tess_params.inner_level;
+    //}
 
     check_error();
 }

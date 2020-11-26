@@ -27,7 +27,8 @@ namespace opengl
 ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs, 
                                             const std::vector<unsigned int>& fs,
                                             const std::vector<unsigned int>& tcs,
-                                            const std::vector<unsigned int>& tes)
+                                            const std::vector<unsigned int>& tes,
+                                            std::ostream& out)
 {
     m_id = glCreateProgram();
 
@@ -52,7 +53,7 @@ ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
     }
 
     glLinkProgram(m_id);
-    CheckLinkStatus();
+    CheckLinkStatus(out);
 
     InitVertexAttributes();
     InitUniforms();
@@ -81,7 +82,7 @@ void ShaderProgram::Bind() const
     glUseProgram(m_id);
 }
 
-bool ShaderProgram::CheckLinkStatus()
+bool ShaderProgram::CheckLinkStatus(std::ostream& out)
 {
     GLint status;
     glGetProgramiv(m_id, GL_LINK_STATUS, &status);
@@ -91,7 +92,7 @@ bool ShaderProgram::CheckLinkStatus()
         GLint len;
         glGetProgramInfoLog(m_id, 1024, &len, buf);
 
-        printf("link failed:%s\n", buf);
+        out << "link failed:\n" << buf << "\n";
 
         return false;
     }

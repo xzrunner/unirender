@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 
 namespace ur
 {
@@ -43,6 +44,7 @@ struct Descriptor;
 class Device
 {
 public:
+    Device(std::ostream& logger = std::cerr);
     virtual ~Device() {}
 
     virtual int GetMaxNumVertAttrs() const = 0;
@@ -159,6 +161,8 @@ public:
     }
     auto GetDescriptorPool() const { return m_desc_pool; }
 
+    auto& GetLogger() const { return m_logger; }
+
 private:
     std::unordered_map<std::string, std::shared_ptr<PipelineLayout>>      m_pipeline_layouts;
     std::unordered_map<std::string, std::shared_ptr<RenderPass>>          m_render_passes;
@@ -171,6 +175,8 @@ private:
     std::shared_ptr<TextureSampler> m_linear_clamp   = nullptr;
     std::shared_ptr<TextureSampler> m_nearest_repeat = nullptr;
     std::shared_ptr<TextureSampler> m_linear_repeat  = nullptr;
+
+    std::ostream& m_logger;
 
 }; // Device
 

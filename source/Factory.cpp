@@ -7,13 +7,13 @@
 namespace ur
 {
 
-std::shared_ptr<Device> CreateDevice(APIType type)
+std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
 {
     std::shared_ptr<Device> ret = nullptr;
     switch (type)
     {
     case APIType::OpenGL:
-        ret = std::make_shared<opengl::Device>();
+        ret = std::make_shared<opengl::Device>(logger);
         break;
     case APIType::Vulkan:
     {

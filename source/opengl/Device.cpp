@@ -43,7 +43,8 @@ namespace ur
 namespace opengl
 {
 
-Device::Device()
+Device::Device(std::ostream& logger)
+    : ur::Device(logger)
 {
     Init();
 }
@@ -108,7 +109,7 @@ Device::CreateShaderProgram(const std::vector<unsigned int>& vs,
     if (vs.empty() || fs.empty()) {
         return nullptr;
     } else {
-        return std::make_shared<ur::opengl::ShaderProgram>(vs, fs, tcs, tes);
+        return std::make_shared<ur::opengl::ShaderProgram>(vs, fs, tcs, tes, GetLogger());
     }
 }
 

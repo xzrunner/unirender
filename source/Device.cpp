@@ -5,6 +5,11 @@
 namespace ur
 {
 
+Device::Device(std::ostream& logger) 
+    : m_logger(logger) 
+{
+}
+
 void Device::Init()
 {
     m_nearest_clamp = CreateTextureSampler(

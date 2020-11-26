@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace ur
 {
@@ -24,7 +25,8 @@ public:
         const std::vector<unsigned int>& vs,
         const std::vector<unsigned int>& fs,
         const std::vector<unsigned int>& tcs,
-        const std::vector<unsigned int>& tes
+        const std::vector<unsigned int>& tes,
+        std::ostream& out = std::cerr
     );
     ShaderProgram(const std::vector<unsigned int>& cs);
     virtual ~ShaderProgram();
@@ -40,7 +42,7 @@ public:
     virtual bool HasStage(ShaderType stage) const;
 
 private:
-    bool CheckLinkStatus();
+    bool CheckLinkStatus(std::ostream& out = std::cerr);
 
     void InitVertexAttributes();
     void InitUniforms();

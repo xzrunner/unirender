@@ -4,6 +4,7 @@
 #include "unirender/opengl/WritePixelBuffer.h"
 #include "unirender/opengl/ReadPixelBuffer.h"
 #include "unirender/opengl/TextureFormat.h"
+#include "unirender/opengl/ImageFormat.h"
 #include "unirender/TextureSampler.h"
 #include "unirender/TextureUtility.h"
 
@@ -73,6 +74,12 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
+}
+
+void Texture::BindToImage(uint32_t unit, AccessType access) const
+{
+    ImageFormat fmt(m_desc.format);
+    glBindImageTexture(unit, m_id, 0, GL_FALSE, 0, TypeConverter::To(access), fmt.format);
 }
 
 bool Texture::ReadFromMemory(const ur::WritePixelBuffer& buf, int x, int y,

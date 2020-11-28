@@ -40,6 +40,8 @@ public:
 
     virtual void ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler) override;
 
+    virtual void BindToImage(uint32_t unit, AccessType access) const override;
+
     bool ReadFromMemory(const WritePixelBuffer& buf, int x, int y,
         int w, int h, int row_alignment);
     void ReadFromMemory(const void* pixels, ur::TextureFormat fmt,

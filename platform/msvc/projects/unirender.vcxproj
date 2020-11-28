@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\include\unirender\AccessType.h" />
     <ClInclude Include="..\..\..\include\unirender\Adaptor.h" />
     <ClInclude Include="..\..\..\include\unirender\AlphaTest.h" />
     <ClInclude Include="..\..\..\include\unirender\AttachmentType.h" />
@@ -41,6 +42,7 @@
     <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\InternalFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\ImageFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\Pipeline.h" />
     <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h" />
@@ -158,6 +160,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ImageFormat.cpp" />
     <ClCompile Include="..\..\..\source\opengl\IndexBuffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>

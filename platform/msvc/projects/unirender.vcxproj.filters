@@ -355,6 +355,12 @@
     <ClInclude Include="..\..\..\include\unirender\VertexInputAttribute.h">
       <Filter>vertex_array</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\AccessType.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ImageFormat.h">
+      <Filter>api\opengl\utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -523,6 +529,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\VertexInputAttribute.cpp">
       <Filter>vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ImageFormat.cpp">
+      <Filter>api\opengl\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

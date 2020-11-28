@@ -70,7 +70,7 @@ public:
     virtual std::shared_ptr<ur::VertexBuffer>
         CreateVertexBuffer(const void* data, size_t size) const override;
 
-    virtual void DispatchCompute(int thread_group_count) const override;
+    virtual void DispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) const override;
 
     virtual void ReadPixels(const unsigned char* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const override;

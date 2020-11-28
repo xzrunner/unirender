@@ -181,7 +181,7 @@ Device::CreateVertexBuffer(const void* data, size_t size) const
     return vb;
 }
 
-void Device::DispatchCompute(int thread_group_count) const
+void Device::DispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) const
 {
 }
 

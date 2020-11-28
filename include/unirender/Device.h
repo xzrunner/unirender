@@ -105,7 +105,7 @@ public:
     virtual std::shared_ptr<VertexBuffer>
         CreateVertexBuffer(const void* data, size_t size) const = 0;
 
-    virtual void DispatchCompute(int thread_group_count) const = 0;
+    virtual void DispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) const = 0;
 
     virtual void ReadPixels(const unsigned char* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const = 0;

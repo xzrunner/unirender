@@ -1,6 +1,7 @@
 #pragma once
 
 #include "unirender/TextureFormat.h"
+#include "unirender/AccessType.h"
 
 #include <memory>
 
@@ -28,6 +29,8 @@ public:
         int miplevel = 0, int row_alignment = 4) = 0;
 
     virtual void ApplySampler(const std::shared_ptr<TextureSampler>& sampler) = 0;
+
+    virtual void BindToImage(uint32_t unit, AccessType access) const = 0;
 
 }; // Texture
 

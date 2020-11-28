@@ -37,7 +37,8 @@ public:
         const DrawState& draw, const void* scene) = 0;
     virtual void Draw(PrimitiveType prim_type, const DrawState& draw,
         const void* scene) = 0;
-    virtual void Compute(const DrawState& draw, int thread_group_count) = 0;
+    virtual void Compute(const DrawState& draw, int num_groups_x, 
+        int num_groups_y, int num_groups_z) = 0;
 
     virtual void SetViewport(int x, int y, int w, int h) = 0;
     virtual void GetViewport(int& x, int& y, int& w, int& h) const = 0;

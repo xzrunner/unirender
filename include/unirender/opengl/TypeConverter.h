@@ -15,6 +15,7 @@
 #include "unirender/InternalFormat.h"
 #include "unirender/PrimitiveType.h"
 #include "unirender/IndexBuffer.h"
+#include "unirender/AccessType.h"
 #include "unirender/opengl/opengl.h"
 
 namespace ur
@@ -340,6 +341,16 @@ public:
         const GLenum types[] = {
             GL_UNSIGNED_SHORT,
             GL_UNSIGNED_INT,
+        };
+        return types[static_cast<int>(type)];
+    }
+
+    static GLenum To(AccessType type)
+    {
+        const GLenum types[] = {
+            GL_READ_ONLY, 
+            GL_WRITE_ONLY, 
+            GL_READ_WRITE
         };
         return types[static_cast<int>(type)];
     }

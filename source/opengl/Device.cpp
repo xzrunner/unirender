@@ -247,9 +247,9 @@ Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnif
     return std::make_shared<ur::opengl::TextureSampler>(min_filter, mag_filter, wrap_s, wrap_t, max_anistropy);
 }
 
-void Device::DispatchCompute(int thread_group_count) const
+void Device::DispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) const
 {
-    glDispatchCompute(thread_group_count, 1, 1);
+    glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 

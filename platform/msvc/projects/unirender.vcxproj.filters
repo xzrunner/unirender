@@ -358,8 +358,8 @@
     <ClInclude Include="..\..\..\include\unirender\AccessType.h">
       <Filter>utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\unirender\opengl\ImageFormat.h">
-      <Filter>api\opengl\utility</Filter>
+    <ClInclude Include="..\..\..\include\unirender\ImageFormat.h">
+      <Filter>image</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -529,9 +529,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\VertexInputAttribute.cpp">
       <Filter>vertex_array</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\opengl\ImageFormat.cpp">
-      <Filter>api\opengl\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

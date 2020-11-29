@@ -4,11 +4,44 @@
 #include "unirender/opengl/WritePixelBuffer.h"
 #include "unirender/opengl/ReadPixelBuffer.h"
 #include "unirender/opengl/TextureFormat.h"
-#include "unirender/opengl/ImageFormat.h"
 #include "unirender/TextureSampler.h"
 #include "unirender/TextureUtility.h"
 
 #include <assert.h>
+
+namespace
+{
+
+GLenum tex_fmt_to_img_fmt(ur::TextureFormat fmt)
+{
+    GLenum ret = 0;
+	switch(fmt)
+    {
+	case ur::TextureFormat::RGBA8:
+		ret = GL_RGBA8;		// rgba8
+		break;
+	case ur::TextureFormat::RGBA16F:
+		ret = GL_RGBA16F;	// rgba16f
+		break;
+	case ur::TextureFormat::RGBA32F:
+		ret = GL_RGBA32F;	// rgba32f
+		break;
+	case ur::TextureFormat::RG16F:
+		ret = GL_RG16F;		// rg16f
+		break;
+	case ur::TextureFormat::RED:
+		ret = GL_R8;		// r8
+		break;
+	case ur::TextureFormat::R16:
+		ret = GL_R16;		// r16
+		break;
+	default:
+		assert(0);
+	}
+    return ret;
+}
+
+}
 
 namespace ur
 {
@@ -78,8 +111,8 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
 
 void Texture::BindToImage(uint32_t unit, AccessType access) const
 {
-    ImageFormat fmt(m_desc.format);
-    glBindImageTexture(unit, m_id, 0, GL_FALSE, 0, TypeConverter::To(access), fmt.format);
+    glBindImageTexture(unit, m_id, 0, GL_FALSE, 0, TypeConverter::To(access), 
+        tex_fmt_to_img_fmt(m_desc.format));
 }
 
 bool Texture::ReadFromMemory(const ur::WritePixelBuffer& buf, int x, int y,

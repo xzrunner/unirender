@@ -37,12 +37,12 @@
     <ClInclude Include="..\..\..\include\unirender\FacetCulling.h" />
     <ClInclude Include="..\..\..\include\unirender\Factory.h" />
     <ClInclude Include="..\..\..\include\unirender\Framebuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\ImageFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\ImageLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\ImageView.h" />
     <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\InternalFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h" />
-    <ClInclude Include="..\..\..\include\unirender\opengl\ImageFormat.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\Pipeline.h" />
     <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h" />
@@ -160,7 +160,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\opengl\ImageFormat.cpp" />
     <ClCompile Include="..\..\..\source\opengl\IndexBuffer.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>

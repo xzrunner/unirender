@@ -16,6 +16,7 @@
 #include "unirender/PrimitiveType.h"
 #include "unirender/IndexBuffer.h"
 #include "unirender/AccessType.h"
+#include "unirender/BarrierType.h"
 #include "unirender/opengl/opengl.h"
 
 namespace ur
@@ -351,6 +352,26 @@ public:
             GL_READ_ONLY, 
             GL_WRITE_ONLY, 
             GL_READ_WRITE
+        };
+        return types[static_cast<int>(type)];
+    }
+
+    static GLenum To(BarrierType type)
+    {
+        const GLenum types[] = {
+            GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT, 
+            GL_ELEMENT_ARRAY_BARRIER_BIT, 
+            GL_UNIFORM_BARRIER_BIT, 
+            GL_TEXTURE_FETCH_BARRIER_BIT, 
+            GL_SHADER_IMAGE_ACCESS_BARRIER_BIT, 
+            GL_COMMAND_BARRIER_BIT, 
+            GL_PIXEL_BUFFER_BARRIER_BIT, 
+            GL_TEXTURE_UPDATE_BARRIER_BIT, 
+            GL_BUFFER_UPDATE_BARRIER_BIT, 
+            GL_FRAMEBUFFER_BARRIER_BIT, 
+            GL_TRANSFORM_FEEDBACK_BARRIER_BIT, 
+            GL_ATOMIC_COUNTER_BARRIER_BIT, 
+            GL_SHADER_STORAGE_BARRIER_BIT
         };
         return types[static_cast<int>(type)];
     }

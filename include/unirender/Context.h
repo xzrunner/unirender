@@ -3,9 +3,11 @@
 #include "unirender/PrimitiveType.h"
 #include "unirender/typedef.h"
 #include "unirender/TextureTarget.h"
+#include "unirender/BarrierType.h"
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <boost/noncopyable.hpp>
 
@@ -58,6 +60,8 @@ public:
 
     virtual std::shared_ptr<Pipeline> CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
         const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const = 0;
+
+    virtual void MemoryBarrier(const std::vector<BarrierType>& types) = 0;
 
 }; // Context
 

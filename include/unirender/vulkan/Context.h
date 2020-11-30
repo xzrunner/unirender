@@ -75,6 +75,8 @@ public:
     virtual std::shared_ptr<ur::Pipeline> CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
         const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const override;
 
+    virtual void MemoryBarrier(const std::vector<BarrierType>& types) override {}
+
     void Init(void* hwnd, uint32_t width, uint32_t height);
 
     int GetWidth() const { return m_width; }

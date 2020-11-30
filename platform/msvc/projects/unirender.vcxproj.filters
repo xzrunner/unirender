@@ -361,6 +361,9 @@
     <ClInclude Include="..\..\..\include\unirender\ImageFormat.h">
       <Filter>image</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\BarrierType.h">
+      <Filter>utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">

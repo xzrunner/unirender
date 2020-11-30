@@ -249,6 +249,17 @@ void Context::Flush()
     check_error();
 }
 
+void Context::MemoryBarrier(const std::vector<BarrierType>& types)
+{
+    GLbitfield barriers = 0;
+    for (auto& type : types) {
+        barriers |= TypeConverter::To(type);
+    }
+    glMemoryBarrier(barriers);
+
+    check_error();
+}
+
 void Context::Init()
 {
     GLfloat col[4];

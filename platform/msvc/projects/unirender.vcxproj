@@ -15,6 +15,7 @@
     <ClInclude Include="..\..\..\include\unirender\Adaptor.h" />
     <ClInclude Include="..\..\..\include\unirender\AlphaTest.h" />
     <ClInclude Include="..\..\..\include\unirender\AttachmentType.h" />
+    <ClInclude Include="..\..\..\include\unirender\BarrierType.h" />
     <ClInclude Include="..\..\..\include\unirender\Bitmap.h" />
     <ClInclude Include="..\..\..\include\unirender\Blending.h" />
     <ClInclude Include="..\..\..\include\unirender\BufferUsageHint.h" />

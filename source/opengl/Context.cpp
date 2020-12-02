@@ -146,6 +146,8 @@ void Context::Compute(const DrawState& draw, int num_groups_x, int num_groups_y,
 {
     ApplyShaderProgram(draw, nullptr);
 
+    m_texture_units.Clean();
+
     m_dev.DispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 
     check_error();

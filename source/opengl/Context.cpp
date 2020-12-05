@@ -13,8 +13,6 @@
 #include "unirender/Device.h"
 #include "unirender/VertexBuffer.h"
 
-#include <SM_Vector.h>
-
 #include <assert.h>
 
 namespace

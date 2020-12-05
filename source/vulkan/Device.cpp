@@ -16,8 +16,6 @@
 #include "unirender/vulkan/Pipeline.h"
 #include "unirender/vulkan/TextureSampler.h"
 
-#include <SM_Vector.h>
-
 #include <iostream>
 
 #include <assert.h>

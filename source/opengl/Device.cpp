@@ -12,12 +12,53 @@
 #include "unirender/opengl/ComputeBuffer.h"
 #include "unirender/opengl/TextureFormat.h"
 
-#include <SM_Vector.h>
-
 #include <array>
 #include <vector>
 
 #include <assert.h>
+
+namespace
+{
+
+struct vec2
+{
+    vec2() {}
+    vec2(float x, float y) : x(x), y(y) {}
+
+    vec2 operator - (const vec2& v) const {
+        return vec2(x - v.x, y - v.y);
+    }
+
+    float x = 0, y = 0;
+
+}; // vec2
+
+struct vec3
+{
+    vec3() {}
+    vec3(float x, float y, float z) : x(x), y(y), z(z) {}
+
+    vec3 operator - (const vec3& v) const {
+        return vec3(x - v.x, y - v.y, z - v.z);
+    }
+
+    void Normalize() 
+    {
+        const float l = x * x + y * y + z * z;
+        if (l > 0) 
+        {
+            const float s = 1.0f / sqrt(l);
+            x *= s;
+            y *= s;
+            z *= s;
+        }
+    }
+
+    float x = 0, y = 0, z = 0;
+
+}; // vec3
+
+}
 
 namespace
 {
@@ -326,27 +367,27 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
     case VertexLayoutType::PosNormTexTB:
     {
         // positions
-        sm::vec3 pos1(p_min,  1.0f, 0.0f);
-        sm::vec3 pos2(p_min, p_min, 0.0f);
-        sm::vec3 pos3( 1.0f, p_min, 0.0f);
-        sm::vec3 pos4( 1.0f,  1.0f, 0.0f);
+        vec3 pos1(p_min,  1.0f, 0.0f);
+        vec3 pos2(p_min, p_min, 0.0f);
+        vec3 pos3( 1.0f, p_min, 0.0f);
+        vec3 pos4( 1.0f,  1.0f, 0.0f);
         // texture coordinates
-        sm::vec2 uv1(0.0f, 1.0f);
-        sm::vec2 uv2(0.0f, 0.0f);
-        sm::vec2 uv3(1.0f, 0.0f);
-        sm::vec2 uv4(1.0f, 1.0f);
+        vec2 uv1(0.0f, 1.0f);
+        vec2 uv2(0.0f, 0.0f);
+        vec2 uv3(1.0f, 0.0f);
+        vec2 uv4(1.0f, 1.0f);
         // normal vector
-        sm::vec3 nm(0.0f, 0.0f, 1.0f);
+        vec3 nm(0.0f, 0.0f, 1.0f);
 
         // calculate tangent/bitangent vectors of both triangles
-        sm::vec3 tangent1, bitangent1;
-        sm::vec3 tangent2, bitangent2;
+        vec3 tangent1, bitangent1;
+        vec3 tangent2, bitangent2;
         // triangle 1
         // ----------
-        sm::vec3 edge1 = pos2 - pos1;
-        sm::vec3 edge2 = pos3 - pos1;
-        sm::vec2 deltaUV1 = uv2 - uv1;
-        sm::vec2 deltaUV2 = uv3 - uv1;
+        vec3 edge1 = pos2 - pos1;
+        vec3 edge2 = pos3 - pos1;
+        vec2 deltaUV1 = uv2 - uv1;
+        vec2 deltaUV2 = uv3 - uv1;
 
         GLfloat f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
 

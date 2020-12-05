@@ -102,11 +102,13 @@ bool ShaderProgram::CheckLinkStatus(std::ostream& out)
     }
 }
 
-int ShaderProgram::GetComputeWorkGroupSize() const
+void ShaderProgram::GetComputeWorkGroupSize(int& x, int& y, int& z) const
 {
     GLint threads[3];
     glGetProgramiv(m_id, GL_COMPUTE_WORK_GROUP_SIZE, threads);
-    return threads[0];
+    x = threads[0];
+    y = threads[1];
+    z = threads[2];
 }
 
 int ShaderProgram::QueryTexSlot(const std::string& name) const

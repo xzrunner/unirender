@@ -37,9 +37,8 @@ bool ShaderProgram::CheckStatus() const
 	return true;
 }
 
-int ShaderProgram::GetComputeWorkGroupSize() const
+void ShaderProgram::GetComputeWorkGroupSize(int& x, int& y, int& z) const
 {
-	return 0;
 }
 
 int ShaderProgram::QueryTexSlot(const std::string& name) const

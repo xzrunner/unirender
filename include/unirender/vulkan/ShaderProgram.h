@@ -26,7 +26,7 @@ public:
     virtual void Bind() const override;
     virtual bool CheckStatus() const override;
 
-    virtual int GetComputeWorkGroupSize() const override;
+    virtual void GetComputeWorkGroupSize(int& x, int& y, int& z) const override;
 
     virtual int QueryTexSlot(const std::string& name) const override;
     virtual int QueryAttrLoc(const std::string& name) const override;

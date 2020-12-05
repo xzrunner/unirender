@@ -21,7 +21,7 @@ public:
     virtual void Bind() const = 0;
     virtual bool CheckStatus() const = 0;
 
-    virtual int GetComputeWorkGroupSize() const = 0;
+    virtual void GetComputeWorkGroupSize(int& x, int& y, int& z) const = 0;
 
     virtual int QueryTexSlot(const std::string& name) const = 0;
     virtual int QueryAttrLoc(const std::string& name) const = 0;

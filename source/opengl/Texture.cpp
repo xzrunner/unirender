@@ -26,6 +26,9 @@ GLenum tex_fmt_to_img_fmt(ur::TextureFormat fmt)
 	case ur::TextureFormat::RGBA32F:
 		ret = GL_RGBA32F;	// rgba32f
 		break;
+    case ur::TextureFormat::RGB16F:
+        ret = GL_RGB16F;	// rgb16f
+        break;
 	case ur::TextureFormat::RG16F:
 		ret = GL_RG16F;		// rg16f
 		break;

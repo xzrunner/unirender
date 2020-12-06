@@ -50,6 +50,7 @@ public:
     virtual int GetMaxNumVertAttrs() const = 0;
     virtual int GetMaxNumTexUnits() const = 0;
     virtual int GetMaxNumColorAttachments() const = 0;
+    virtual int GetMaxNumImgUnits() const = 0;
 
     enum class PrimitiveType
     {

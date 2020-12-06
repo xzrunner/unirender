@@ -21,6 +21,7 @@ public:
     virtual int GetMaxNumVertAttrs() const override { return m_max_num_vert_attrs; }
     virtual int GetMaxNumTexUnits() const override { return m_max_num_tex_units; }
     virtual int GetMaxNumColorAttachments() const override { return m_max_num_color_attachments; }
+    virtual int GetMaxNumImgUnits() const override { return m_max_num_img_units; }
 
     virtual std::shared_ptr<VertexArray>
         GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const override;
@@ -81,6 +82,7 @@ private:
     int m_max_num_vert_attrs = 0;
     int m_max_num_tex_units = 0;
     int m_max_num_color_attachments = 0;
+    int m_max_num_img_units = 0;
 
     bool m_enable_validation_layers = false;
 

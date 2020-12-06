@@ -5,6 +5,7 @@
 #include "unirender/PrimitiveType.h"
 #include "unirender/opengl/opengl.h"
 #include "unirender/opengl/TextureUnits.h"
+#include "unirender/opengl/ImageUnits.h"
 
 #include <memory>
 
@@ -39,6 +40,8 @@ public:
 
     virtual void SetTexture(size_t slot, const ur::TexturePtr& tex) override;
     virtual void SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler) override;
+    virtual void SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access) override;
+
     virtual void SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb) override {
         m_set_framebuffer = fb;
     }
@@ -111,6 +114,7 @@ private:
     std::shared_ptr<Framebuffer> m_set_framebuffer    = nullptr;
 
     TextureUnits m_texture_units;
+    ImageUnits m_image_units;
 
 }; // Context
 

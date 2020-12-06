@@ -5,6 +5,7 @@
 #include "unirender/opengl/RenderBuffer.h"
 #include "unirender/opengl/VertexArray.h"
 #include "unirender/opengl/TextureUnit.h"
+#include "unirender/opengl/ImageUnit.h"
 #include "unirender/ClearState.h"
 #include "unirender/DrawState.h"
 #include "unirender/ShaderProgram.h"
@@ -36,6 +37,7 @@ namespace opengl
 Context::Context(const ur::Device& device)
     : m_dev(device)
     , m_texture_units(device)
+    , m_image_units(device)
 {
     Init();
 
@@ -145,6 +147,7 @@ void Context::Compute(const DrawState& draw, int num_groups_x, int num_groups_y,
     ApplyShaderProgram(draw, nullptr);
 
     m_texture_units.Clean();
+    m_image_units.Clean();
 
     m_dev.DispatchCompute(num_groups_x, num_groups_y, num_groups_z);
 
@@ -188,6 +191,17 @@ void Context::SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSa
     auto unit = m_texture_units.GetUnit(slot);
     if (unit) {
         unit->SetSampler(sampler);
+    }
+
+    check_error();
+}
+
+void Context::SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access)
+{
+    auto unit = m_image_units.GetUnit(slot);
+    if (unit) {
+        unit->SetTexture(tex);
+        unit->SetAccess(access);
     }
 
     check_error();

@@ -147,12 +147,14 @@ void Context::GetViewport(int& x, int& y, int& w, int& h) const
 
 void Context::SetTexture(size_t slot, const ur::TexturePtr& tex)
 {
-
 }
 
 void Context::SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler)
 {
+}
 
+void Context::SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access)
+{
 }
 
 void Context::SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb) 

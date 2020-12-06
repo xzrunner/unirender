@@ -317,6 +317,7 @@ void Device::Init()
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &m_max_num_vert_attrs);
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_max_num_tex_units);
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_max_num_color_attachments);
+    glGetIntegerv(GL_MAX_IMAGE_UNITS, &m_max_num_img_units);
 }
 
 std::shared_ptr<ur::VertexArray>

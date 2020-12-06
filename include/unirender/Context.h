@@ -4,6 +4,7 @@
 #include "unirender/typedef.h"
 #include "unirender/TextureTarget.h"
 #include "unirender/BarrierType.h"
+#include "unirender/AccessType.h"
 
 #include <memory>
 #include <string>
@@ -47,6 +48,7 @@ public:
 
     virtual void SetTexture(size_t slot, const ur::TexturePtr& tex) = 0;
     virtual void SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler) = 0;
+    virtual void SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access) = 0;
 
     virtual void SetFramebuffer(const std::shared_ptr<Framebuffer>& fbo) = 0;
     virtual std::shared_ptr<Framebuffer> GetFramebuffer() const = 0;

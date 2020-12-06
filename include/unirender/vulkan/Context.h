@@ -62,6 +62,8 @@ public:
 
     virtual void SetTexture(size_t slot, const ur::TexturePtr& tex) override;
     virtual void SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler) override;
+    virtual void SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access) override;
+
 	virtual void SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb) override;
 	virtual std::shared_ptr<ur::Framebuffer> GetFramebuffer() const override;
 

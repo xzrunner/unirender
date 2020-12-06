@@ -364,6 +364,15 @@
     <ClInclude Include="..\..\..\include\unirender\BarrierType.h">
       <Filter>utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageUnit.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ImageUnit.h">
+      <Filter>api\opengl\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ImageUnits.h">
+      <Filter>api\opengl\image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -533,6 +542,12 @@
     <ClCompile Include="..\..\..\source\VertexInputAttribute.cpp">
       <Filter>vertex_array</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ImageUnit.cpp">
+      <Filter>api\opengl\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ImageUnits.cpp">
+      <Filter>api\opengl\image</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="api">
@@ -621,6 +636,9 @@
     </Filter>
     <Filter Include="pipeline">
       <UniqueIdentifier>{ba4349c8-f541-4821-81ee-318e6f56a1b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\image">
+      <UniqueIdentifier>{471df61a-3ae4-4514-8f78-7da1d4284833}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

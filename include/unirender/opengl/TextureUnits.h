@@ -28,8 +28,6 @@ public:
 private:
     std::vector<std::shared_ptr<TextureUnit>> m_texture_units;
 
-    std::vector<std::string> m_texture_names;
-
 }; // TextureUnits
 
 }

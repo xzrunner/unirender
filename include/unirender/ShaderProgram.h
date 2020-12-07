@@ -25,6 +25,7 @@ public:
 
     virtual int QueryTexSlot(const std::string& name) const = 0;
     virtual int QueryAttrLoc(const std::string& name) const = 0;
+    virtual int QueryImgSlot(const std::string& name) const = 0;
 
     virtual bool HasStage(ShaderType stage) const = 0;
 

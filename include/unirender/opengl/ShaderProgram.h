@@ -38,6 +38,7 @@ public:
 
     virtual int QueryTexSlot(const std::string& name) const override;
     virtual int QueryAttrLoc(const std::string& name) const override;
+    virtual int QueryImgSlot(const std::string& name) const override;
 
     virtual bool HasStage(ShaderType stage) const;
 
@@ -63,6 +64,7 @@ private:
     std::vector<ShaderVertexAttribute> m_vertex_attributes;
 
     std::vector<std::shared_ptr<ur::Uniform>> m_tex_uniforms;
+    std::vector<std::shared_ptr<ur::Uniform>> m_img_uniforms;
 
 }; // ShaderProgram
 

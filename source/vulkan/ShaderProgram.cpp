@@ -51,5 +51,10 @@ int ShaderProgram::QueryAttrLoc(const std::string& name) const
     return -1;
 }
 
+int ShaderProgram::QueryImgSlot(const std::string& name) const
+{
+    return -1;
+}
+
 }
 }

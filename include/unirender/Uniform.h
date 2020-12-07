@@ -26,12 +26,17 @@ public:
     auto& GetName() const { return m_name; }
     auto GetType() const { return m_type; }
 
+    void SetUnit(int unit) { m_unit = unit; }
+    int GetUnit() const { return m_unit; }
+
 protected:
     std::string m_name;
     UniformType m_type;
 
     int m_num      = 0;
     int m_location = 0;
+
+    int m_unit = -1;
 
 }; // Uniform
 

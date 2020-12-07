@@ -113,9 +113,9 @@ void ShaderProgram::GetComputeWorkGroupSize(int& x, int& y, int& z) const
 
 int ShaderProgram::QueryTexSlot(const std::string& name) const
 {
-    for (int i = 0, n = m_tex_uniforms.size(); i < n; ++i) {
-        if (m_tex_uniforms[i]->GetName() == name) {
-            return i;
+    for (auto& unif : m_tex_uniforms) {
+        if (unif->GetName() == name) {
+            return unif->GetUnit();
         }
     }
     return -1;
@@ -126,6 +126,16 @@ int ShaderProgram::QueryAttrLoc(const std::string& name) const
     for (auto& va : m_vertex_attributes) {
         if (va.name == name) {
             return va.location;
+        }
+    }
+    return -1;
+}
+
+int ShaderProgram::QueryImgSlot(const std::string& name) const
+{
+    for (auto& unif : m_img_uniforms) {
+        if (unif->GetName() == name) {
+            return unif->GetUnit();
         }
     }
     return -1;
@@ -375,12 +385,33 @@ void ShaderProgram::InitUniforms()
         case GL_SAMPLER_1D_ARRAY_EXT:
         case GL_SAMPLER_2D_ARRAY_EXT:
         case GL_SAMPLER_CUBE:
-        case GL_IMAGE_2D:
+        {
             uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
+
+            GLint unit = -1;
+            glGetUniformiv(m_id, location, &unit);
+            uniform->SetUnit(unit);
+
             m_tex_uniforms.push_back(uniform);
+        }
+            break;
+        case GL_IMAGE_2D:
+        {
+            uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
+
+            GLint unit = -1;
+            glGetUniformiv(m_id, location, &unit);
+            uniform->SetUnit(unit);
+
+            m_img_uniforms.push_back(uniform);
+        }
             break;
         default:
             assert(0);
+        }
+
+        if (!uniform) {
+            continue;
         }
 
         AddUniform(name, uniform);
@@ -393,8 +424,11 @@ void ShaderProgram::InitUniforms()
 
 void ShaderProgram::BindTextures() const
 {
-    for (int i = 0, n = m_tex_uniforms.size(); i < n; ++i) {
-        m_tex_uniforms[i]->SetValue(&i, 1);
+    for (auto& unif : m_tex_uniforms) 
+    {
+        const int unit = unif->GetUnit();
+        assert(unit >= 0);
+        unif->SetValue(&unit, 1);
     }
 }
 

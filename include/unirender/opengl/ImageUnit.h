@@ -15,7 +15,7 @@ public:
 
 	virtual void SetTexture(const std::shared_ptr<Texture>& texture) override;
 
-    void SetAccess(ur::AccessType access) { m_access = access; }
+    void SetAccess(ur::AccessType access);
 
     void Clean();
 

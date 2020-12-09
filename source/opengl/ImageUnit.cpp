@@ -20,6 +20,15 @@ void ImageUnit::SetTexture(const std::shared_ptr<Texture>& texture)
     m_texture_dirty = true;
 }
 
+void ImageUnit::SetAccess(ur::AccessType access) 
+{
+    if (m_access == access) {
+        return;
+    }
+    m_access = access; 
+    m_texture_dirty = true;
+}
+
 void ImageUnit::Clean()
 {
     if (m_texture_dirty)

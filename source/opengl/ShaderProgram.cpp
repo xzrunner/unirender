@@ -390,7 +390,7 @@ void ShaderProgram::InitUniforms()
 
             GLint unit = -1;
             glGetUniformiv(m_id, location, &unit);
-            uniform->SetUnit(unit);
+            uniform->SetUnit(GetUnitAvaliable(m_tex_uniforms, unit));
 
             m_tex_uniforms.push_back(uniform);
         }
@@ -401,7 +401,7 @@ void ShaderProgram::InitUniforms()
 
             GLint unit = -1;
             glGetUniformiv(m_id, location, &unit);
-            uniform->SetUnit(unit);
+            uniform->SetUnit(GetUnitAvaliable(m_img_uniforms, unit));
 
             m_img_uniforms.push_back(uniform);
         }
@@ -430,6 +430,34 @@ void ShaderProgram::BindTextures() const
         assert(unit >= 0);
         unif->SetValue(&unit, 1);
     }
+}
+
+int ShaderProgram::GetUnitAvaliable(const std::vector<std::shared_ptr<ur::Uniform>>& unifs, int unit)
+{
+    auto is_exist = [&] (int i) {
+        for (auto& u : unifs) {
+            if (u->GetUnit() == i) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    if (!is_exist(unit)) {
+        return unit;
+    }
+
+    int i = 0;
+    while (true)
+    {
+        if (!is_exist(i)) {
+            return i;
+        }
+        ++i;
+    }
+
+    assert(0);
+    return 0;
 }
 
 //void ShaderProgram::SetUniformValue(const std::string& name, UniformType type, const float* v, int n)

@@ -50,6 +50,8 @@ private:
 
     void BindTextures() const;
 
+    static int GetUnitAvaliable(const std::vector<std::shared_ptr<ur::Uniform>>& unifs, int unit);
+
 private:
     GLuint m_id = 0;
 

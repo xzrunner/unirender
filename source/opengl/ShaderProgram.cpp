@@ -183,7 +183,7 @@ bool ShaderProgram::CheckStatus() const
         glGetProgramInfoLog(m_id, 1024, &len, buf);
 
         // Intel HD/Iris Graphics GPU's bug
-        if (strcmp(buf, "Validation Error: A sampler points to a texture unit used by fixed function with an incompatible target.\n") == 0) {
+        if (std::string(buf).find("Validation Error: A sampler points to a texture unit used by fixed function with an incompatible target.") != std::string::npos) {
             return true;
         }
 

@@ -42,14 +42,17 @@ public:
 
     virtual void BindToImage(uint32_t unit, AccessType access) const override;
 
+    virtual void* WriteToMemory(int size) const override;
+
     bool ReadFromMemory(const WritePixelBuffer& buf, int x, int y,
         int w, int h, int row_alignment);
     void ReadFromMemory(const void* pixels, ur::TextureFormat fmt,
         int width, int height, int depth, int row_alignment, int mip_level = 0);
-    std::shared_ptr<ReadPixelBuffer> WriteToMemory(int row_alignment);
+
+    std::shared_ptr<ur::ReadPixelBuffer> Texture::WriteToMemory(int row_alignment);
 
 private:
-    void BindToLastTextureUnit();
+    void BindToLastTextureUnit() const;
 
     static void VerifyRowAlignment(int row_alignment);
 

@@ -46,6 +46,8 @@ public:
 
     virtual void BindToImage(uint32_t unit, AccessType access) const override {}
 
+    virtual void* WriteToMemory(int size) const override { return nullptr; }
+
     void ReadFromMemory(const TextureDescription& desc, const std::shared_ptr<CommandPool>& cmd_pool,
         const void* pixels, int row_alignment, int mip_level = 0);
 

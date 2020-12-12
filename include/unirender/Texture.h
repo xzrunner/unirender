@@ -32,6 +32,8 @@ public:
 
     virtual void BindToImage(uint32_t unit, AccessType access) const = 0;
 
+    virtual void* WriteToMemory(int size) const = 0;
+
 }; // Texture
 
 }

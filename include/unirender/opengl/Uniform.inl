@@ -87,7 +87,23 @@ void Uniform<Type>::SetValue(const int* value, int n)               \
 template <>                                                         \
 void Uniform<Type>::SetValue(const float* value, int n)             \
 {                                                                   \
-    assert(0);                                                      \
+    assert(value && n > 0);                                         \
+    if (IsValSame(value, n)) {                                      \
+        return;                                                     \
+    }                                                               \
+                                                                    \
+    const size_t size = Size;                                       \
+    const size_t num = n / size;                                    \
+    if (num != m_vals.size()) {                                     \
+        m_vals.resize(num);                                         \
+        m_num = num;                                                \
+    }                                                               \
+    for (size_t i = 0; i < num; ++i) {                              \
+        for (size_t j = 0; j < size; ++j) {                         \
+            m_vals[i].v[j] = static_cast<int>(value[i * size + j] + 0.5f); \
+        }                                                           \
+    }                                                               \
+    m_dirty = true;                                                 \
 }                                                                   \
                                                                     \
 template <>                                                         \
@@ -119,7 +135,27 @@ bool Uniform<Type>::IsValSame(const int* value, int n) const        \
 template <>                                                         \
 bool Uniform<Type>::IsValSame(const float* value, int n) const      \
 {                                                                   \
-    return false;                                                   \
+    assert(value || n > 0);                                         \
+    if (m_vals.empty()) {                                           \
+        return false;                                               \
+    }                                                               \
+                                                                    \
+    const size_t size = Size;                                       \
+    const size_t num = n / size;                                    \
+    if (num != m_num) {                                             \
+        return false;                                               \
+    }                                                               \
+                                                                    \
+    assert(num == m_num);                                           \
+    for (size_t i = 0; i < num; ++i) {                              \
+        for (size_t j = 0; j < size; ++j) {                         \
+            if (m_vals[i].v[j] != static_cast<float>(value[i * size + j] + 0.5f)) { \
+                return false;                                       \
+            }                                                       \
+        }                                                           \
+    }                                                               \
+                                                                    \
+    return true;                                                    \
 }
 
 namespace ur

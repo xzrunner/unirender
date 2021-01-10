@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <set>
+#include <stdexcept>
 
 namespace
 {
@@ -46,13 +47,13 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, const Surface* surface)
     }
 }
 
-const std::vector<const char*>& 
+const std::vector<const char*>&
 PhysicalDevice::GetDeviceExtensions()
 {
     return DeviceExtensions;
 }
 
-PhysicalDevice::QueueFamilyIndices 
+PhysicalDevice::QueueFamilyIndices
 PhysicalDevice::FindQueueFamilies(VkPhysicalDevice device, const Surface* surface)
 {
     QueueFamilyIndices indices;
@@ -64,7 +65,7 @@ PhysicalDevice::FindQueueFamilies(VkPhysicalDevice device, const Surface* surfac
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
 
     int i = 0;
-    for (const auto& queue_family : queue_families) 
+    for (const auto& queue_family : queue_families)
     {
         if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphics_family = i;

@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <set>
+#include <stdexcept>
 
 namespace ur
 {
@@ -23,7 +24,7 @@ LogicalDevice::LogicalDevice(bool enable_validation_layers, const PhysicalDevice
     }
 
     float queuePriority = 1.0f;
-    for (uint32_t queueFamily : unique_queue_families) 
+    for (uint32_t queueFamily : unique_queue_families)
     {
         VkDeviceQueueCreateInfo queue_ci{};
         queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -52,8 +53,8 @@ LogicalDevice::LogicalDevice(bool enable_validation_layers, const PhysicalDevice
         auto& validation_layers = ValidationLayers::GetValidationLayers();
         device_ci.enabledLayerCount = static_cast<uint32_t>(validation_layers.size());
         device_ci.ppEnabledLayerNames = validation_layers.data();
-    } 
-    else 
+    }
+    else
     {
         device_ci.enabledLayerCount = 0;
     }

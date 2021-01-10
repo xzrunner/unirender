@@ -42,10 +42,10 @@ struct vec3
         return vec3(x - v.x, y - v.y, z - v.z);
     }
 
-    void Normalize() 
+    void Normalize()
     {
         const float l = x * x + y * y + z * z;
-        if (l > 0) 
+        if (l > 0)
         {
             const float s = 1.0f / sqrt(l);
             x *= s;
@@ -142,7 +142,7 @@ Device::CreateRenderBuffer(int width, int height, InternalFormat format, Attachm
 }
 
 std::shared_ptr<ur::ShaderProgram>
-Device::CreateShaderProgram(const std::vector<unsigned int>& vs, 
+Device::CreateShaderProgram(const std::vector<unsigned int>& vs,
                             const std::vector<unsigned int>& fs,
                             const std::vector<unsigned int>& tcs,
                             const std::vector<unsigned int>& tes) const
@@ -282,7 +282,7 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
 }
 
 std::shared_ptr<ur::TextureSampler>
-Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter, 
+Device::CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter,
                              TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy) const
 {
     return std::make_shared<ur::opengl::TextureSampler>(min_filter, mag_filter, wrap_s, wrap_t, max_anistropy);

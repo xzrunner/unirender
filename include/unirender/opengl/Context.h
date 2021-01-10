@@ -12,6 +12,9 @@
 namespace ur
 {
 
+#ifdef DrawState
+#undef DrawState
+
 struct ClearState;
 struct DrawState;
 class ShaderProgram;
@@ -32,7 +35,7 @@ public:
         const DrawState& draw, const void* scene) override;
     virtual void Draw(PrimitiveType prim_type, const DrawState& draw,
         const void* scene) override;
-    virtual void Compute(const DrawState& draw, int num_groups_x, 
+    virtual void Compute(const DrawState& draw, int num_groups_x,
         int num_groups_y, int num_groups_z) override;
 
     virtual void SetViewport(int x, int y, int w, int h) override;
@@ -119,4 +122,7 @@ private:
 }; // Context
 
 }
+
+#endif // DrawState
+
 }

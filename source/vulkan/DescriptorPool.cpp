@@ -2,6 +2,8 @@
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/TypeConverter.h"
 
+#include <stdexcept>
+
 #include <assert.h>
 
 namespace ur
@@ -9,12 +11,12 @@ namespace ur
 namespace vulkan
 {
 
-DescriptorPool::DescriptorPool(const std::shared_ptr<LogicalDevice>& device, size_t max_sets, 
+DescriptorPool::DescriptorPool(const std::shared_ptr<LogicalDevice>& device, size_t max_sets,
                                const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes)
 	: m_device(device)
 {
     std::vector<VkDescriptorPoolSize> vk_pool_sizes(pool_sizes.size());
-    for (int i = 0, n = pool_sizes.size(); i < n; ++i) 
+    for (int i = 0, n = pool_sizes.size(); i < n; ++i)
     {
         auto& src = pool_sizes[i];
         auto& dst = vk_pool_sizes[i];

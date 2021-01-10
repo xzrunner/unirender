@@ -1,6 +1,8 @@
 #include "unirender/vulkan/Instance.h"
 #include "unirender/vulkan/ValidationLayers.h"
 
+#include <stdexcept>
+
 namespace
 {
 
@@ -67,8 +69,8 @@ Instance::Instance(bool enable_validation_layers)
 
         ValidationLayers::PopulateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
-    } 
-    else 
+    }
+    else
     {
         createInfo.enabledLayerCount = 0;
 

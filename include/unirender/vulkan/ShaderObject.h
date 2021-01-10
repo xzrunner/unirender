@@ -7,7 +7,7 @@
 
 #include <string>
 #include <vector>
-
+#include <memory>
 
 namespace ur
 {
@@ -19,7 +19,7 @@ class LogicalDevice;
 class ShaderObject : noncopyable
 {
 public:
-	ShaderObject(const std::shared_ptr<LogicalDevice>& device, 
+	ShaderObject(const std::shared_ptr<LogicalDevice>& device,
 		ShaderType type, const std::vector<unsigned int>& spirv);
 	~ShaderObject();
 

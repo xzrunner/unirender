@@ -2,6 +2,8 @@
 #include "unirender/vulkan/CommandPool.h"
 #include "unirender/vulkan/LogicalDevice.h"
 
+#include <stdexcept>
+
 #include <assert.h>
 
 namespace ur
@@ -51,7 +53,7 @@ VkCommandBuffer CommandBuffer::BeginSingleTimeCommands(VkDevice device, VkComman
     return cb;
 }
 
-void CommandBuffer::EndSingleTimeCommands(VkCommandBuffer cb, VkDevice device, 
+void CommandBuffer::EndSingleTimeCommands(VkCommandBuffer cb, VkDevice device,
                                           VkCommandPool cmd_pool, VkQueue graphics_queue)
 {
     vkEndCommandBuffer(cb);

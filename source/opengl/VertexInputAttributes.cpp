@@ -52,7 +52,7 @@ void VertexInputAttributes::Clean()
 
         if (attr.attr && m_vbuf) {
             auto num = m_vbuf->GetSizeInBytes() / attr.attr->GetStrideInBytes();
-            m_max_array_index = std::max(num - 1, m_max_array_index);
+            m_max_array_index = (std::max)(num - 1, m_max_array_index);
         }
     }
 }

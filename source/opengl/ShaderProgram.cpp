@@ -24,7 +24,7 @@ namespace ur
 namespace opengl
 {
 
-ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs, 
+ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
                                             const std::vector<unsigned int>& fs,
                                             const std::vector<unsigned int>& tcs,
                                             const std::vector<unsigned int>& tes,
@@ -382,8 +382,8 @@ void ShaderProgram::InitUniforms()
         case GL_INT_SAMPLER_1D:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
-        case GL_SAMPLER_1D_ARRAY_EXT:
-        case GL_SAMPLER_2D_ARRAY_EXT:
+        case GL_SAMPLER_1D_ARRAY:
+        case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_CUBE:
         {
             uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
@@ -424,7 +424,7 @@ void ShaderProgram::InitUniforms()
 
 void ShaderProgram::BindTextures() const
 {
-    for (auto& unif : m_tex_uniforms) 
+    for (auto& unif : m_tex_uniforms)
     {
         const int unit = unif->GetUnit();
         assert(unit >= 0);

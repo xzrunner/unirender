@@ -255,12 +255,12 @@ public:
             GL_TEXTURE_2D,
             GL_TEXTURE_3D,
             GL_TEXTURE_CUBE_MAP,
-            GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB,
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB,
-            GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB,
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB,
-            GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB,
-            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB,
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+            GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+            GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
         };
         return targets[static_cast<int>(target)];
     }
@@ -349,8 +349,8 @@ public:
     static GLenum To(AccessType type)
     {
         const GLenum types[] = {
-            GL_READ_ONLY, 
-            GL_WRITE_ONLY, 
+            GL_READ_ONLY,
+            GL_WRITE_ONLY,
             GL_READ_WRITE
         };
         return types[static_cast<int>(type)];
@@ -359,18 +359,18 @@ public:
     static GLenum To(BarrierType type)
     {
         const GLenum types[] = {
-            GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT, 
-            GL_ELEMENT_ARRAY_BARRIER_BIT, 
-            GL_UNIFORM_BARRIER_BIT, 
-            GL_TEXTURE_FETCH_BARRIER_BIT, 
-            GL_SHADER_IMAGE_ACCESS_BARRIER_BIT, 
-            GL_COMMAND_BARRIER_BIT, 
-            GL_PIXEL_BUFFER_BARRIER_BIT, 
-            GL_TEXTURE_UPDATE_BARRIER_BIT, 
-            GL_BUFFER_UPDATE_BARRIER_BIT, 
-            GL_FRAMEBUFFER_BARRIER_BIT, 
-            GL_TRANSFORM_FEEDBACK_BARRIER_BIT, 
-            GL_ATOMIC_COUNTER_BARRIER_BIT, 
+            GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT,
+            GL_ELEMENT_ARRAY_BARRIER_BIT,
+            GL_UNIFORM_BARRIER_BIT,
+            GL_TEXTURE_FETCH_BARRIER_BIT,
+            GL_SHADER_IMAGE_ACCESS_BARRIER_BIT,
+            GL_COMMAND_BARRIER_BIT,
+            GL_PIXEL_BUFFER_BARRIER_BIT,
+            GL_TEXTURE_UPDATE_BARRIER_BIT,
+            GL_BUFFER_UPDATE_BARRIER_BIT,
+            GL_FRAMEBUFFER_BARRIER_BIT,
+            GL_TRANSFORM_FEEDBACK_BARRIER_BIT,
+            GL_ATOMIC_COUNTER_BARRIER_BIT,
             GL_SHADER_STORAGE_BARRIER_BIT
         };
         return types[static_cast<int>(type)];

@@ -19,5 +19,7 @@
     #include <GLES2/gl2ext.h>
 #else
     #define OPENGLES 0
-    #include <GL/glew.h>
+
+    //#include <GL/glew.h>
+    #include <GL/gl3w.h>
 #endif

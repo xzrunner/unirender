@@ -30,12 +30,12 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt)
 		break;
 	case ur::TextureFormat::BGRA_EXT:
 		internal_format = GL_RGBA;
-		pixel_format = GL_BGRA_EXT;
+		pixel_format = GL_BGRA;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
 	case ur::TextureFormat::BGR_EXT:
 		internal_format = GL_RGB;
-		pixel_format = GL_BGR_EXT;
+		pixel_format = GL_BGR;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
     case ur::TextureFormat::RGBA16F:

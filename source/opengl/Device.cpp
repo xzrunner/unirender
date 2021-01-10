@@ -309,9 +309,9 @@ void Device::ReadPixels(const short* pixels, ur::TextureFormat format,
 
 void Device::Init()
 {
-#if OPENGLES < 2
-    glewInit();
-#endif
+//#if OPENGLES < 2
+//    glewInit();
+//#endif
 
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &m_max_num_vert_attrs);
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_max_num_tex_units);

@@ -337,13 +337,15 @@ void Context::ForceApplyRenderState(const RenderState& rs)
     glDepthMask(rs.depth_mask);
     glColorMask(rs.color_mask.r, rs.color_mask.g, rs.color_mask.b, rs.color_mask.a);
 
-    Enable(GL_ALPHA_TEST, rs.alpha_test.enabled);
+    // deprecated
+    //Enable(GL_ALPHA_TEST, rs.alpha_test.enabled);
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, m_unpack_row_length);
     glPixelStorei(GL_PACK_ROW_LENGTH, m_pack_row_length);
 
     glPatchParameteri(GL_PATCH_VERTICES, rs.tess_params.vert_num);
-    // todo GL_INVALID_ENUM 
+
+    // todo GL_INVALID_ENUM
     //glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, rs.tess_params.outer_level);
     //glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, rs.tess_params.inner_level);
 
@@ -619,18 +621,19 @@ void Context::ApplyBlending(const Blending& blending)
 
 void Context::ApplyAlphaTest(const AlphaTest& alpha)
 {
-    if (m_render_state.alpha_test.enabled != alpha.enabled) {
-        Enable(GL_ALPHA_TEST, alpha.enabled);
-        m_render_state.alpha_test.enabled = alpha.enabled;
-    }
-    if (alpha.enabled && (m_render_state.alpha_test.function != alpha.function
-        || m_render_state.alpha_test.ref != alpha.ref)) {
-        glAlphaFunc(TypeConverter::To(alpha.function), alpha.ref);
-        m_render_state.alpha_test.function = alpha.function;
-        m_render_state.alpha_test.ref      = alpha.ref;
-    }
+    // deprecated
+    //if (m_render_state.alpha_test.enabled != alpha.enabled) {
+    //    Enable(GL_ALPHA_TEST, alpha.enabled);
+    //    m_render_state.alpha_test.enabled = alpha.enabled;
+    //}
+    //if (alpha.enabled && (m_render_state.alpha_test.function != alpha.function
+    //    || m_render_state.alpha_test.ref != alpha.ref)) {
+    //    glAlphaFunc(TypeConverter::To(alpha.function), alpha.ref);
+    //    m_render_state.alpha_test.function = alpha.function;
+    //    m_render_state.alpha_test.ref      = alpha.ref;
+    //}
 
-    check_error();
+    //check_error();
 }
 
 void Context::ApplyTessParams(const TessPatchParams& tess_params)
@@ -639,7 +642,8 @@ void Context::ApplyTessParams(const TessPatchParams& tess_params)
         glPatchParameteri(GL_PATCH_VERTICES, tess_params.vert_num);
         m_render_state.tess_params.vert_num = tess_params.vert_num;
     }
-    // todo GL_INVALID_ENUM 
+
+    // todo GL_INVALID_ENUM
     //if (m_render_state.tess_params.outer_level != tess_params.outer_level) {
     //    glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, tess_params.outer_level);
     //    m_render_state.tess_params.outer_level = tess_params.outer_level;

@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -14,7 +15,7 @@ namespace vulkan
 class PhysicalDevice;
 class Surface;
 
-class LogicalDevice : boost::noncopyable
+class LogicalDevice : noncopyable
 {
 public:
 	LogicalDevice(bool enable_validation_layers, 

@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -14,7 +15,7 @@ namespace vulkan
 class LogicalDevice;
 class Image;
 
-class ImageView : boost::noncopyable
+class ImageView : noncopyable
 {
 public:
 	ImageView(const std::shared_ptr<LogicalDevice>& device, VkImageViewType type, 

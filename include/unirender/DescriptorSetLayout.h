@@ -1,11 +1,11 @@
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include "unirender/noncopyable.h"
 
 namespace ur
 {
 
-class DescriptorSetLayout : boost::noncopyable
+class DescriptorSetLayout : noncopyable
 {
 public:
 	virtual ~DescriptorSetLayout() {}

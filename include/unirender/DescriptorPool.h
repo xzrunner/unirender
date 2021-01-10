@@ -1,11 +1,11 @@
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include "unirender/noncopyable.h"
 
 namespace ur
 {
 
-class DescriptorPool : boost::noncopyable
+class DescriptorPool : noncopyable
 {
 public:
 	virtual ~DescriptorPool() {}

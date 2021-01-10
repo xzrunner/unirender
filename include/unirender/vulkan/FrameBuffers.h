@@ -1,11 +1,12 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <vector>
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -15,7 +16,7 @@ namespace vulkan
 class Context;
 class LogicalDevice;
 
-class FrameBuffers : boost::noncopyable
+class FrameBuffers : noncopyable
 {
 public:
 	FrameBuffers(const Context& ctx, bool include_depth);

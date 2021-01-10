@@ -5,12 +5,12 @@
 #include "unirender/TextureTarget.h"
 #include "unirender/BarrierType.h"
 #include "unirender/AccessType.h"
+#include "unirender/noncopyable.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -28,7 +28,7 @@ class Pipeline;
 class PipelineLayout;
 class VertexBuffer;
 
-class Context : boost::noncopyable
+class Context : noncopyable
 {
 public:
     virtual ~Context() {}

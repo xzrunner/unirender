@@ -3,13 +3,13 @@
 #include "unirender/DescriptorSet.h"
 #include "unirender/DescriptorType.h"
 #include "unirender/Descriptor.h"
+#include "unirender/noncopyable.h"
 
 #include <vulkan/vulkan.h>
 
 #include <vector>
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {

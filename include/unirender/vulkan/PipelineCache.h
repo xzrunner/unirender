@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -13,7 +14,7 @@ namespace vulkan
 
 class LogicalDevice;
 
-class PipelineCache : boost::noncopyable
+class PipelineCache : noncopyable
 {
 public:
 	PipelineCache(const std::shared_ptr<LogicalDevice>& device);

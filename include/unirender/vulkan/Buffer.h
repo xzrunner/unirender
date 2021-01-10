@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include "unirender/noncopyable.h"
 
-#include <boost/noncopyable.hpp>
+#include <vulkan/vulkan.h>
 
 #include <memory>
 
@@ -13,7 +13,7 @@ namespace vulkan
 
 class LogicalDevice;
 
-class Buffer : boost::noncopyable
+class Buffer : noncopyable
 {
 public:
 	Buffer(const std::shared_ptr<LogicalDevice>& device);

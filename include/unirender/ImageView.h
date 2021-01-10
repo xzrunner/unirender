@@ -1,11 +1,11 @@
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include "unirender/noncopyable.h"
 
 namespace ur
 {
 
-class ImageView : boost::noncopyable
+class ImageView : noncopyable
 {
 public:
 	virtual ~ImageView() {}

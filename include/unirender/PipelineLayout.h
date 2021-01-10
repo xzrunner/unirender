@@ -1,15 +1,12 @@
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include "unirender/noncopyable.h"
 
 namespace ur
 {
-
-class PipelineLayout : boost::noncopyable
+class PipelineLayout : noncopyable
 {
 public:
 	virtual ~PipelineLayout() {}
-
 }; // PipelineLayout
-
 }

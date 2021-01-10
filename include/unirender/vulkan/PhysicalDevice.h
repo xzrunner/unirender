@@ -1,11 +1,12 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <optional>
 #include <vector>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -15,7 +16,7 @@ namespace vulkan
 class Instance;
 class Surface;
 
-class PhysicalDevice : boost::noncopyable
+class PhysicalDevice : noncopyable
 {
 public:
 	PhysicalDevice(const Instance& instance, const Surface* surface = nullptr);

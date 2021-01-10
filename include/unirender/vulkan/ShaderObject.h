@@ -1,13 +1,13 @@
 #pragma once
 
 #include "unirender/ShaderType.h"
+#include "unirender/noncopyable.h"
 
 #include <vulkan/vulkan.h>
 
 #include <string>
 #include <vector>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -16,7 +16,7 @@ namespace vulkan
 
 class LogicalDevice;
 
-class ShaderObject : boost::noncopyable
+class ShaderObject : noncopyable
 {
 public:
 	ShaderObject(const std::shared_ptr<LogicalDevice>& device, 

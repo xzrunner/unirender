@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -14,7 +15,7 @@ namespace vulkan
 class Context;
 class LogicalDevice;
 
-class RenderPass : boost::noncopyable
+class RenderPass : noncopyable
 {
 public:
     RenderPass(const Context& ctx, bool include_depth, bool clear = true,

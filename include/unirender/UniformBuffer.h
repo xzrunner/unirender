@@ -1,13 +1,13 @@
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include "unirender/noncopyable.h"
 
 #include <vector>
 
 namespace ur
 {
 
-class UniformBuffer : boost::noncopyable
+class UniformBuffer : noncopyable
 {
 public:
 	virtual ~UniformBuffer() {}

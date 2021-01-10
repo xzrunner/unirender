@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -13,7 +14,7 @@ namespace vulkan
 
 class Instance;
 
-class Surface : boost::noncopyable
+class Surface : noncopyable
 {
 public:
 	Surface(const std::shared_ptr<Instance>& instance, void* hwnd);

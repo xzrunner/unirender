@@ -1,11 +1,12 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 #include <vector>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -15,7 +16,7 @@ namespace vulkan
 class LogicalDevice;
 class CommandPool;
 
-class CommandBuffer : boost::noncopyable
+class CommandBuffer : noncopyable
 {
 public:
     CommandBuffer(const std::shared_ptr<LogicalDevice>& device, 

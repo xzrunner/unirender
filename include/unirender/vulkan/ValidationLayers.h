@@ -1,11 +1,12 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <vector>
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -14,7 +15,7 @@ namespace vulkan
 
 class Instance;
 
-class ValidationLayers : boost::noncopyable
+class ValidationLayers : noncopyable
 {
 public:
 	ValidationLayers(const std::shared_ptr<Instance>& instance);

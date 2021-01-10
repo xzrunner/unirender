@@ -1,10 +1,11 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -14,7 +15,7 @@ namespace vulkan
 class LogicalDevice;
 class PhysicalDevice;
 
-class DepthBuffer : boost::noncopyable
+class DepthBuffer : noncopyable
 {
 public:
     DepthBuffer(const std::shared_ptr<LogicalDevice>& device, 

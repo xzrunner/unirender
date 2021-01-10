@@ -1,11 +1,12 @@
 #pragma once
 
+#include "unirender/noncopyable.h"
+
 #include <vulkan/vulkan.h>
 
 #include <vector>
 #include <memory>
 
-#include <boost/noncopyable.hpp>
 
 namespace ur
 {
@@ -16,7 +17,7 @@ class LogicalDevice;
 class PhysicalDevice;
 class Surface;
 
-class Swapchain : boost::noncopyable
+class Swapchain : noncopyable
 {
 public:
     Swapchain(const std::shared_ptr<LogicalDevice>& device, const PhysicalDevice& phy_dev,

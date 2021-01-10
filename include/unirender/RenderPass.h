@@ -1,11 +1,11 @@
 #pragma once
 
-#include <boost/noncopyable.hpp>
+#include "unirender/noncopyable.h"
 
 namespace ur
 {
 
-class RenderPass : boost::noncopyable
+class RenderPass : noncopyable
 {
 public:
 	virtual ~RenderPass() {}

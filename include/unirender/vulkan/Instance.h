@@ -1,15 +1,15 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include "unirender/noncopyable.h"
 
-#include <boost/noncopyable.hpp>
+#include <vulkan/vulkan.h>
 
 namespace ur
 {
 namespace vulkan
 {
 
-class Instance : boost::noncopyable
+class Instance : noncopyable
 {
 public:
 	Instance(bool enable_validation_layers);

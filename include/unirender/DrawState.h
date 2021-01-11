@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef DrawState
+#undef DrawState
+#endif
+
 #include "unirender/RenderState.h"
 
 #include <memory>

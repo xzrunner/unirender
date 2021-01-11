@@ -24,6 +24,10 @@ inline UpdaterID GetUpdaterTypeID() noexcept
 	return type_id;
 }
 
+#ifdef DrawState
+#undef DrawState
+#endif
+
 class Context;
 struct DrawState;
 

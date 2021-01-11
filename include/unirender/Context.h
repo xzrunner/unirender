@@ -11,6 +11,9 @@
 #include <string>
 #include <vector>
 
+#ifdef DrawState
+#undef DrawState
+#endif
 
 namespace ur
 {
@@ -63,7 +66,7 @@ public:
     virtual std::shared_ptr<Pipeline> CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
         const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const = 0;
 
-    virtual void MemoryBarrier(const std::vector<BarrierType>& types) = 0;
+    virtual void SetMemoryBarrier(const std::vector<BarrierType>& types) = 0;
 
 }; // Context
 

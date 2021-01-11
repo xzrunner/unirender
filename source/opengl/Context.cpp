@@ -263,7 +263,7 @@ void Context::Flush()
     check_error();
 }
 
-void Context::MemoryBarrier(const std::vector<BarrierType>& types)
+void Context::SetMemoryBarrier(const std::vector<BarrierType>& types)
 {
     GLbitfield barriers = 0;
     for (auto& type : types) {

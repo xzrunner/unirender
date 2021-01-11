@@ -6,6 +6,10 @@
 #include <unordered_map>
 #include <memory>
 
+#ifdef DrawState
+#undef DrawState
+#endif
+
 namespace ur
 {
 

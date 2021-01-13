@@ -1,0 +1,655 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\unirender\IndexBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Context.h" />
+    <ClInclude Include="..\..\..\include\unirender\Device.h" />
+    <ClInclude Include="..\..\..\include\unirender\ClearState.h" />
+    <ClInclude Include="..\..\..\include\unirender\DrawState.h" />
+    <ClInclude Include="..\..\..\include\unirender\Blending.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\PrimitiveType.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Color.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ColorMask.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DepthRange.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DepthTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\FacetCulling.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\WindingOrder.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\PrimitiveRestart.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ScissorTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\StencilTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\StencilTestFace.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\RenderState.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ShaderProgram.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexArray.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Uniform.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureFormat.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureMagnificationFilter.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureMinificationFilter.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureWrap.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureSampler.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureTarget.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Context.h">
+      <Filter>api\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Framebuffer.h">
+      <Filter>frame_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Framebuffer.h">
+      <Filter>api\opengl\frame_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\opengl.h">
+      <Filter>api\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Rectangle.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TypeConverter.h">
+      <Filter>api\opengl\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexArray.h">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ComponentDataType.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Buffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\BufferTarget.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\BufferUsageHint.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\IndexBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ShaderProgram.h">
+      <Filter>api\opengl\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ShaderObject.h">
+      <Filter>api\opengl\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ShaderType.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ShaderVertexAttribute.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureSampler.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureUnit.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Device.h">
+      <Filter>api\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureUnits.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\AlphaTest.h">
+      <Filter>render_state</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Texture.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Texture.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ReadPixelBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\WritePixelBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ReadPixelBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\WritePixelBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureFormat.h">
+      <Filter>api\opengl\texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureUtility.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\AttachmentType.h">
+      <Filter>frame_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\RenderBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\InternalFormat.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\RenderBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexArraySizes.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\Uniform.h">
+      <Filter>api\opengl\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformType.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformValue.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureUnit.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\typedef.h" />
+    <ClInclude Include="..\..\..\include\unirender\Bitmap.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureDescription.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformUpdater.h">
+      <Filter>shader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Factory.h" />
+    <ClInclude Include="..\..\..\include\unirender\ComputeBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ComputeBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexLayoutType.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Device.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Context.h">
+      <Filter>api\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Utility.h">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\TypeConverter.h">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Adaptor.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Instance.h">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\LogicalDevice.h">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PhysicalDevice.h">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ValidationLayers.h">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Surface.h">
+      <Filter>api\vulkan\1.presentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Swapchain.h">
+      <Filter>api\vulkan\1.presentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Pipeline.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineCache.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\PipelineLayout.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\RenderPass.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderObject.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ShaderProgram.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VertexArray.h">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorSet.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorPool.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorType.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\DescriptorSetLayout.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageLayout.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageView.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorPool.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSet.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DescriptorSetLayout.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandPool.h">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\UniformBuffer.h">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\IndexBuffer.h">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\VertexBuffer.h">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\DepthBuffer.h">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\FrameBuffers.h">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\ImageView.h">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\UniformBuffer.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h">
+      <Filter>pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\RenderPass.h">
+      <Filter>pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Pipeline.h">
+      <Filter>pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\Descriptor.h">
+      <Filter>uniform_buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\CommandBuffer.h">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Texture.h">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Image.h">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\TextureSampler.h">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\vulkan\Buffer.h">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\VertexInputAttributes.h">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\VertexInputAttribute.h">
+      <Filter>vertex_array</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\AccessType.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageFormat.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\BarrierType.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\ImageUnit.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ImageUnit.h">
+      <Filter>api\opengl\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\ImageUnits.h">
+      <Filter>api\opengl\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\noncopyable.h">
+      <Filter>utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
+      <Filter>api\opengl\frame_buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexArray.cpp">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Buffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\IndexBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ShaderProgram.cpp">
+      <Filter>api\opengl\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ShaderObject.cpp">
+      <Filter>api\opengl\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureSampler.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureUnit.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Device.cpp">
+      <Filter>api\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureUnits.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Texture.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ReadPixelBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\WritePixelBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureFormat.cpp">
+      <Filter>api\opengl\texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\TextureUtility.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\RenderBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\PixelBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ShaderProgram.cpp">
+      <Filter>shader</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Factory.cpp" />
+    <ClCompile Include="..\..\..\source\opengl\ComputeBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\Context.cpp">
+      <Filter>api\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Device.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Context.cpp">
+      <Filter>api\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Adaptor.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Instance.cpp">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\LogicalDevice.cpp">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PhysicalDevice.cpp">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ValidationLayers.cpp">
+      <Filter>api\vulkan\0.setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Surface.cpp">
+      <Filter>api\vulkan\1.presentation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Swapchain.cpp">
+      <Filter>api\vulkan\1.presentation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Pipeline.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PipelineCache.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\PipelineLayout.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\RenderPass.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ShaderObject.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ShaderProgram.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VertexArray.cpp">
+      <Filter>api\vulkan\2.pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorPool.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorSet.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DescriptorSetLayout.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandPool.cpp">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\UniformBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\uniform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\IndexBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\VertexBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\DepthBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\FrameBuffers.cpp">
+      <Filter>api\vulkan\3.drawing\pixels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\ImageView.cpp">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\CommandBuffer.cpp">
+      <Filter>api\vulkan\3.drawing\command</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Texture.cpp">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Image.cpp">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\TextureSampler.cpp">
+      <Filter>api\vulkan\3.drawing\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\Device.cpp" />
+    <ClCompile Include="..\..\..\source\vulkan\Utility.cpp">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\vulkan\Buffer.cpp">
+      <Filter>api\vulkan\9.utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\VertexInputAttributes.cpp">
+      <Filter>api\opengl\vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\VertexInputAttribute.cpp">
+      <Filter>vertex_array</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ImageUnit.cpp">
+      <Filter>api\opengl\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\ImageUnits.cpp">
+      <Filter>api\opengl\image</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="api">
+      <UniqueIdentifier>{79bd7e02-69e7-4c7b-aeb6-99cdd07c363c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl">
+      <UniqueIdentifier>{c1f5e5b0-066a-4614-aab2-212e4cc2a2f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="buffer">
+      <UniqueIdentifier>{34089f1d-61f9-42c1-b9f0-8d887185f009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{52f61eff-1d8c-4a00-b901-944ae06b2a1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="texture">
+      <UniqueIdentifier>{eddd6496-dd38-40a7-8435-089968172a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{6a6bbf7c-4c52-4fe4-9d22-a54043026d21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="render_state">
+      <UniqueIdentifier>{210c1170-fec1-462c-9a46-1f8bcfba9386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vertex_array">
+      <UniqueIdentifier>{9408de89-7420-4dcc-a754-795c964154d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\shader">
+      <UniqueIdentifier>{9b041cac-3fd5-4953-80fc-7f2b76f1f375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\texture">
+      <UniqueIdentifier>{fe1b889d-8213-4079-95ef-3ff93e4500d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="frame_buffer">
+      <UniqueIdentifier>{a3b08419-dc8f-4d66-9796-e5042c7f9f9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\buffer">
+      <UniqueIdentifier>{97d8e9a8-3e43-4d96-a219-ed32fbdf6d74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\frame_buffer">
+      <UniqueIdentifier>{517d6010-52d8-4ed5-b65d-ff2133af5209}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\utility">
+      <UniqueIdentifier>{080f556a-9398-4d99-bfba-fd6afbca53b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\vertex_array">
+      <UniqueIdentifier>{4ee0991e-a202-4568-b909-e9a0e6d30d4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan">
+      <UniqueIdentifier>{151f897a-1e40-451f-a519-042eebf6e722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\0.setup">
+      <UniqueIdentifier>{c5a138ed-7377-43da-bf72-f0b8f39ca8e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\1.presentation">
+      <UniqueIdentifier>{d3601085-5562-42ec-bdfe-dbeaaef24510}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\2.pipeline">
+      <UniqueIdentifier>{b9f2a3e9-d9a2-43ca-9c29-de5eab4c38aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing">
+      <UniqueIdentifier>{15daccb8-3643-4481-9f5c-9d4d36a20e92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\9.utility">
+      <UniqueIdentifier>{6deb3e8b-5c15-4c78-9b31-f54414c3586e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uniform_buffer">
+      <UniqueIdentifier>{e670a6b2-3daa-4a0c-8d6c-9aa8eac3eabf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="image">
+      <UniqueIdentifier>{665f8d31-ba17-4288-b8e8-ff6a3090d5a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\uniform">
+      <UniqueIdentifier>{5a639f33-4cda-4e14-89b3-09ddc39faf29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\image">
+      <UniqueIdentifier>{2c6d8ec1-5df2-4c1f-b4b6-531136d51b3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\command">
+      <UniqueIdentifier>{13ad40e2-de41-4497-84a1-37d4600c51f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\vertex">
+      <UniqueIdentifier>{99c15570-d8dd-462b-8e58-9beaee02d162}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\vulkan\3.drawing\pixels">
+      <UniqueIdentifier>{0b12d6c1-2ed3-481c-ab7d-f6b4066fb8ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline">
+      <UniqueIdentifier>{ba4349c8-f541-4821-81ee-318e6f56a1b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\opengl\image">
+      <UniqueIdentifier>{471df61a-3ae4-4514-8f78-7da1d4284833}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\include\unirender\Bitmap.inl">
+      <Filter>utility</Filter>
+    </None>
+    <None Include="..\..\..\include\unirender\opengl\Uniform.inl">
+      <Filter>api\opengl\shader</Filter>
+    </None>
+  </ItemGroup>
+</Project>

@@ -33,23 +33,19 @@ ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
     m_id = glCreateProgram();
 
     if (!vs.empty()) {
-        m_vs = std::make_shared<ShaderObject>(ShaderType::VertexShader, vs);
-        m_vs->Attach(m_id);
+        m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::VertexShader, vs));
     }
-
     if (!fs.empty()) {
-        m_fs = std::make_shared<ShaderObject>(ShaderType::FragmentShader, fs);
-        m_fs->Attach(m_id);
+        m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::FragmentShader, fs));
     }
-
     if (!tcs.empty()) {
-        m_tcs = std::make_shared<ShaderObject>(ShaderType::TessCtrlShader, tcs);
-        m_tcs->Attach(m_id);
+        m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::TessCtrlShader, tcs));
     }
-
     if (!tes.empty()) {
-        m_tes = std::make_shared<ShaderObject>(ShaderType::TessEvalShader, tes);
-        m_tes->Attach(m_id);
+        m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::TessEvalShader, tes));
+    }
+    for (auto& shader : m_shaders) {
+        shader->Attach(m_id);
     }
 
     glLinkProgram(m_id);
@@ -63,8 +59,10 @@ ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
 {
     m_id = glCreateProgram();
 
-    m_cs = std::make_shared<ShaderObject>(ShaderType::ComputeShader, cs);
-    m_cs->Attach(m_id);
+    m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::ComputeShader, cs));
+    for (auto& shader : m_shaders) {
+        shader->Attach(m_id);
+    }
 
     glLinkProgram(m_id);
     CheckLinkStatus();
@@ -74,6 +72,10 @@ ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
 
 ShaderProgram::~ShaderProgram()
 {
+    for (auto& shader : m_shaders) {
+        shader->Detach(m_id);
+    }
+
     glDeleteProgram(m_id);
 }
 
@@ -143,31 +145,12 @@ int ShaderProgram::QueryImgSlot(const std::string& name) const
 
 bool ShaderProgram::HasStage(ShaderType stage) const
 {
-    bool ret = false;
-    switch (stage)
-    {
-    case ShaderType::VertexShader:
-        ret = m_vs != nullptr;
-        break;
-    case ShaderType::TessCtrlShader:
-        ret = m_tcs != nullptr;
-        break;
-    case ShaderType::TessEvalShader:
-        ret = m_tes != nullptr;
-        break;
-    case ShaderType::GeometryShader:
-        ret = m_gs != nullptr;
-        break;
-    case ShaderType::FragmentShader:
-        ret = m_fs != nullptr;
-        break;
-    case ShaderType::ComputeShader:
-        ret = m_cs != nullptr;
-        break;
-    default:
-        assert(0);
+    for (auto& shader : m_shaders) {
+        if (shader->GetShaderType() == stage) {
+            return true;
+        }
     }
-    return ret;
+    return false;
 }
 
 bool ShaderProgram::CheckStatus() const

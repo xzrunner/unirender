@@ -10,6 +10,7 @@ namespace opengl
 {
 
 ShaderObject::ShaderObject(ShaderType type, const std::vector<unsigned int>& spirv)
+    : m_type(type)
 {
     std::string glsl;
     auto stage = Adaptor::ToShaderTransStage(type);
@@ -34,6 +35,13 @@ void ShaderObject::Attach(GLuint prograpm)
 {
     if (m_id > 0) {
         glAttachShader(prograpm, m_id);
+    }
+}
+
+void ShaderObject::Detach(GLuint prograpm)
+{
+    if (m_id > 0) {
+        glDetachShader(prograpm, m_id);
     }
 }
 

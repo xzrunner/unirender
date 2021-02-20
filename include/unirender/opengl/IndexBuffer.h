@@ -13,7 +13,6 @@ class IndexBuffer : public ur::IndexBuffer
 public:
     IndexBuffer(BufferUsageHint usage_hint, int size_in_bytes);
 
-    virtual int GetSizeInBytes() const override;
     virtual BufferUsageHint GetUsageHint() const override;
     virtual IndexBufferDataType GetDataType() const override;
 
@@ -23,7 +22,7 @@ public:
     virtual void Bind() const override;
     static void UnBind();
 
-    virtual void Reset(int size_in_bytes) override;
+    virtual void Reserve(int size_in_bytes) override;
 
     virtual void SetDataType(IndexBufferDataType data_type) override {
         m_data_type = data_type;

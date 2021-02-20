@@ -42,9 +42,12 @@ void VertexBuffer::UnBind()
     glBindBuffer(target, 0);
 }
 
-void VertexBuffer::Reset(int size_in_bytes)
+void VertexBuffer::Reserve(int size_in_bytes)
 {
-    m_buf.Reset(size_in_bytes);
+    const int old_size = m_buf.GetSizeInBytes();
+    if (size_in_bytes > old_size) {
+        m_buf.Reset(size_in_bytes);
+    }
 }
 
 }

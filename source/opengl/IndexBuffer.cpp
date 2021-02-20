@@ -11,11 +11,6 @@ IndexBuffer::IndexBuffer(BufferUsageHint usage_hint, int size_in_bytes)
 {
 }
 
-int IndexBuffer::GetSizeInBytes() const
-{
-    return m_buf.GetSizeInBytes();
-}
-
 BufferUsageHint IndexBuffer::GetUsageHint() const
 {
     return m_buf.GetUsageHint();
@@ -47,9 +42,12 @@ void IndexBuffer::UnBind()
     glBindBuffer(target, 0);
 }
 
-void IndexBuffer::Reset(int size_in_bytes)
+void IndexBuffer::Reserve(int size_in_bytes)
 {
-    m_buf.Reset(size_in_bytes);
+    const int old_size = m_buf.GetSizeInBytes();
+    if (size_in_bytes > old_size) {
+        m_buf.Reset(size_in_bytes);
+    }
 }
 
 }

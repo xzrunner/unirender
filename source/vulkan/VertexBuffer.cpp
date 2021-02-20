@@ -117,7 +117,7 @@ void VertexBuffer::UnBind()
 {
 }
 
-void VertexBuffer::Reset(int size_in_bytes)
+void VertexBuffer::Reserve(int size_in_bytes)
 {
 }
 

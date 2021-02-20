@@ -20,11 +20,6 @@ IndexBuffer::IndexBuffer(const std::shared_ptr<LogicalDevice>& device,
 {
 }
 
-int IndexBuffer::GetSizeInBytes() const
-{
-	return m_buffer.GetBufferSize();
-}
-
 BufferUsageHint IndexBuffer::GetUsageHint() const
 {
     return BufferUsageHint::StreamDraw;
@@ -61,7 +56,7 @@ void IndexBuffer::UnBind()
 {
 }
 
-void IndexBuffer::Reset(int size_in_bytes)
+void IndexBuffer::Reserve(int size_in_bytes)
 {
 }
 

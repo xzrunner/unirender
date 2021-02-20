@@ -120,7 +120,7 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
     {
         if (draw.count == 0)
         {
-            GLsizei count = ibuf->GetSizeInBytes() / VertexArraySizes::SizeOf(ibuf->GetDataType());
+            GLsizei count = ibuf->GetCount();
             glDrawRangeElements(TypeConverter::To(prim_type), 0, va->GetMaxArrayIndex(),
                 count, TypeConverter::To(ibuf->GetDataType()), 0);
         }

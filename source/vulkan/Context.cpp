@@ -414,7 +414,7 @@ void Context::BuildCommandBuffers(const DrawState& ds)
 		auto vk_ib = std::static_pointer_cast<vulkan::IndexBuffer>(ib)->GetBuffer();
 		vkCmdBindIndexBuffer(cmd_buf, vk_ib, 0, VK_INDEX_TYPE_UINT16);
 
-		size_t count = ib->GetSizeInBytes() / VertexArraySizes::SizeOf(ib->GetDataType());
+		size_t count = ib->GetCount();
 		vkCmdDrawIndexed(cmd_buf, count, 1, 0, 0, 0);
 	}
 	else

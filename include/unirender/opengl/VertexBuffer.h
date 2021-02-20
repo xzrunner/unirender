@@ -22,7 +22,7 @@ public:
     virtual void Bind() const override;
     static void UnBind();
 
-    virtual void Reset(int size_in_bytes) override;
+    virtual void Reserve(int size_in_bytes) override;
 
     virtual size_t GetVertexCount() const override { return 0; }
 

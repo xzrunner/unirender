@@ -23,7 +23,6 @@ public:
         const std::shared_ptr<PhysicalDevice>& phy_dev,
         const std::shared_ptr<CommandPool>& cmd_pool);
 
-    virtual int GetSizeInBytes() const override;
     virtual BufferUsageHint GetUsageHint() const override;
     virtual IndexBufferDataType GetDataType() const override;
 
@@ -33,7 +32,7 @@ public:
     virtual void Bind() const override;
     static void UnBind();
 
-    virtual void Reset(int size_in_bytes) override;
+    virtual void Reserve(int size_in_bytes) override;
 
     virtual void SetDataType(IndexBufferDataType data_type) override {}
 

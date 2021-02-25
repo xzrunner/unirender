@@ -18,12 +18,19 @@ ShaderProgram::QueryUniform(const std::string& name) const
         return itr->second;
     }
 
-    // for ubo, auto gen
+    // for anonymity struct
     std::string str = "." + name;
     for (auto& unif : m_uniforms) 
     {
-        if (unif.first.find(str) != std::string::npos &&
-            !unif.first.empty() && unif.first[0] == '_') {
+        if (unif.first.empty() || unif.first[0] != '_') {
+            continue;
+        }
+        auto pos = unif.first.find_first_of(".");
+        if (pos == std::string::npos) {
+            continue;
+        }
+        auto unif_name = unif.first.substr(pos + 1);
+        if (unif_name == name) {
             return unif.second;
         }
     }

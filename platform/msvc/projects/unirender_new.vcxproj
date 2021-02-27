@@ -558,7 +558,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\..\shadertrans\include;..\..\..\..\gl\include;..\..\..\..\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NO_BOOST;VK_USE_PLATFORM_WIN32_KHR</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;NO_BOOST;VK_USE_PLATFORM_WIN32_KHR</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
@@ -568,7 +568,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\..\shadertrans\include;..\..\..\..\gl\include;..\..\..\..\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NO_BOOST;VK_USE_PLATFORM_WIN32_KHR</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;NO_BOOST;VK_USE_PLATFORM_WIN32_KHR</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>

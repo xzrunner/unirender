@@ -31,6 +31,7 @@ ShaderProgram::QueryUniform(const std::string& name) const
         }
         auto unif_name = unif.first.substr(pos + 1);
         if (unif_name == name) {
+            m_uniforms.insert({ name, unif.second });   // cache this name
             return unif.second;
         }
     }

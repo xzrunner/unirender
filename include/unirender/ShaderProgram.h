@@ -46,7 +46,7 @@ public:
     void Clean(const Context& ctx, const DrawState& draw, const void* scene);
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<ur::Uniform>> m_uniforms;
+    mutable std::unordered_map<std::string, std::shared_ptr<ur::Uniform>> m_uniforms;
 
     std::unordered_map<size_t, std::shared_ptr<UniformUpdater>> m_updaters;
 

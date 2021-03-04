@@ -7,20 +7,26 @@ namespace ur
 namespace opengl
 {
 
-TextureFormat::TextureFormat(ur::TextureFormat fmt)
+TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
 {
+	if (gamma_correction) {
+		int zz = 0;
+	}
+
     compressed = false;
 	switch(fmt)
     {
-	case ur::TextureFormat::RGBA8 :
-		internal_format = pixel_format = GL_RGBA;
+	case ur::TextureFormat::RGBA8:
+		internal_format = gamma_correction ? GL_SRGB8_ALPHA8 : GL_RGBA;
+		pixel_format = GL_RGBA;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
-	case ur::TextureFormat::RGB :
-		internal_format = pixel_format = GL_RGB;
+	case ur::TextureFormat::RGB:
+		internal_format = gamma_correction ? GL_SRGB8 : GL_RGB;
+		pixel_format = GL_RGB;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
-	case ur::TextureFormat::RGBA4 :
+	case ur::TextureFormat::RGBA4:
 		internal_format = pixel_format = GL_RGBA;
 		pixel_type = GL_UNSIGNED_SHORT_4_4_4_4;
 		break;
@@ -110,7 +116,8 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt)
 		break;
 #endif // GL_ETC1_RGB8_OES
 	case ur::TextureFormat::ETC2:
-		internal_format = pixel_format = GL_COMPRESSED_RGBA8_ETC2_EAC;
+		internal_format = gamma_correction ? GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC : GL_COMPRESSED_RGBA8_ETC2_EAC;
+		pixel_format = GL_COMPRESSED_RGBA8_ETC2_EAC;
 		compressed = true;
 		break;
 	case ur::TextureFormat::COMPRESSED_RGBA_S3TC_DXT1_EXT:

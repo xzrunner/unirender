@@ -21,6 +21,8 @@ struct TextureDescription
 
     bool gen_mipmaps = false;
 
+    bool gamma_correction = false;
+
 }; // TextureDescription
 
 }

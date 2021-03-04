@@ -201,13 +201,14 @@ Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 }
 
 std::shared_ptr<ur::Texture>
-Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, const void* buf, size_t buf_sz) const
+Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction) const
 {
     TextureDescription desc;
     desc.target = ur::TextureTarget::Texture2D;
     desc.width  = width;
     desc.height = height;
     desc.format = format;
+    desc.gamma_correction = gamma_correction;
 
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
     if (buf_sz > 0) 

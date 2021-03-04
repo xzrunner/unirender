@@ -10,7 +10,7 @@ namespace opengl
 
 struct TextureFormat
 {
-    TextureFormat(ur::TextureFormat fmt);
+    TextureFormat(ur::TextureFormat fmt, bool gamma_correction = false);
 
     GLint  internal_format;
     GLenum pixel_format;

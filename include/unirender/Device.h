@@ -88,7 +88,7 @@ public:
     virtual std::shared_ptr<Texture>
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const = 0;
     virtual std::shared_ptr<Texture>
-        CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz) const = 0;
+        CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction = false) const = 0;
 	virtual std::shared_ptr<Texture>
 		CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const = 0;
     virtual std::shared_ptr<TextureSampler>

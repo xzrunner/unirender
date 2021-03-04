@@ -203,9 +203,6 @@ Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
 std::shared_ptr<ur::Texture>
 Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, const void* buf, size_t buf_sz) const
 {
-    auto pbuf = CreateWritePixelBuffer(ur::BufferUsageHint::StreamDraw, buf_sz);
-    pbuf->ReadFromMemory(buf, buf_sz, 0);
-
     TextureDescription desc;
     desc.target = ur::TextureTarget::Texture2D;
     desc.width  = width;
@@ -213,7 +210,12 @@ Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, con
     desc.format = format;
 
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
-    tex->ReadFromMemory(*pbuf, 0, 0, width, height, 1);
+    if (buf_sz > 0) 
+    {
+        auto pbuf = CreateWritePixelBuffer(ur::BufferUsageHint::StreamDraw, buf_sz);
+        pbuf->ReadFromMemory(buf, buf_sz, 0);
+        tex->ReadFromMemory(*pbuf, 0, 0, width, height, 1);
+    }
 
     return tex;
 }

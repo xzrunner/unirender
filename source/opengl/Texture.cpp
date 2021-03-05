@@ -64,8 +64,16 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
     if (desc.width != 0 && desc.height != 0)
     {
         TextureFormat fmt(desc.format, desc.gamma_correction);
-        glTexImage2D(TypeConverter::To(desc.target), 0, fmt.internal_format,
-            desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+        if (desc.target == TextureTarget::TextureCubeMap) {
+            for (int i = 0; i < 6; ++i) {
+                glTexImage2D(TypeConverter::To((TextureTarget)((int)TextureTarget::TextureCubeMap0 + i)), 0, 
+                    fmt.internal_format, desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+            }
+        }
+        else {
+            glTexImage2D(TypeConverter::To(desc.target), 0, fmt.internal_format,
+                desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+        }
     }
 
     ApplySampler(device.GetTextureSampler(desc.sampler_type));

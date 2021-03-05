@@ -27,19 +27,19 @@ int TextureUtility::RequiredSizeInBytes(int width, int height, TextureFormat fmt
         pixel_size = 3;
         break;
     case TextureFormat::RGBA16F:
-        pixel_size = 8;
+        pixel_size = 16;
         break;
     case TextureFormat::RGBA32F:
         pixel_size = 16;
         break;
     case TextureFormat::RGB16F:
-        pixel_size = 6;
+        pixel_size = 12;
         break;
     case TextureFormat::RGB32F:
         pixel_size = 12;
         break;
     case TextureFormat::RG16F:
-        pixel_size = 4;
+        pixel_size = 8;
         break;
     case TextureFormat::A8:
         pixel_size = 1;

@@ -69,10 +69,7 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
         pixel_format = GL_RG;
         pixel_type = GL_FLOAT;
         break;
-	case ur::TextureFormat::A8 :
-        internal_format = pixel_format = GL_ALPHA;
-        pixel_type = GL_UNSIGNED_BYTE;
-        break;
+	case ur::TextureFormat::A8:
     case ur::TextureFormat::RED:
         internal_format = GL_R8;
         pixel_format = GL_RED;
@@ -83,7 +80,7 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
         pixel_format = GL_RED;
         pixel_type = GL_SHORT;
         break;
-	case ur::TextureFormat::DEPTH :
+	case ur::TextureFormat::DEPTH:
 	#if OPENGLES == 3 || OPENGLES == 0
 		internal_format = GL_DEPTH_COMPONENT;
 		pixel_format = GL_DEPTH_COMPONENT;

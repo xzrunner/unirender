@@ -286,118 +286,14 @@ void ShaderProgram::InitUniforms()
 		{
 			assert(str_has_ending(name, "[0]"));
 			name = name.substr(0, name.size() - 3);
+            for (int i = 0; i < uniform_size; ++i) {
+                AddUniform(name + "[" + std::to_string(i) + "]", uniform_type, 1);
+            }
 		}
-
-        auto location = glGetUniformLocation(m_id, name.c_str());
-
-        std::shared_ptr<ur::Uniform> uniform = nullptr;
-        switch (uniform_type)
+        else
         {
-        case GL_FLOAT:
-            uniform = std::make_shared<Uniform<Float1>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_VEC2:
-            uniform = std::make_shared<Uniform<Float2>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_VEC3:
-            uniform = std::make_shared<Uniform<Float3>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_VEC4:
-            uniform = std::make_shared<Uniform<Float4>>(name, uniform_size, location);
-            break;
-        case GL_BOOL:
-            uniform = std::make_shared<Uniform<UInt1>>(name, uniform_size, location);
-            break;
-        case GL_INT:
-            uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
-            break;
-        case GL_INT_VEC2:
-            uniform = std::make_shared<Uniform<Int2>>(name, uniform_size, location);
-            break;
-        case GL_INT_VEC3:
-            uniform = std::make_shared<Uniform<Int3>>(name, uniform_size, location);
-            break;
-        case GL_INT_VEC4:
-            uniform = std::make_shared<Uniform<Int4>>(name, uniform_size, location);
-            break;
-        case GL_UNSIGNED_INT:
-            uniform = std::make_shared<Uniform<UInt1>>(name, uniform_size, location);
-            break;
-        case GL_UNSIGNED_INT_VEC2:
-            uniform = std::make_shared<Uniform<UInt2>>(name, uniform_size, location);
-            break;
-        case GL_UNSIGNED_INT_VEC3:
-            uniform = std::make_shared<Uniform<UInt3>>(name, uniform_size, location);
-            break;
-        case GL_UNSIGNED_INT_VEC4:
-            uniform = std::make_shared<Uniform<UInt4>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT2:
-            uniform = std::make_shared<Uniform<Matrix22>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT3:
-            uniform = std::make_shared<Uniform<Matrix33>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT4:
-            uniform = std::make_shared<Uniform<Matrix44>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT2x3:
-            uniform = std::make_shared<Uniform<Matrix23>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT2x4:
-            uniform = std::make_shared<Uniform<Matrix32>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT3x2:
-            uniform = std::make_shared<Uniform<Matrix24>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT3x4:
-            uniform = std::make_shared<Uniform<Matrix42>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT4x2:
-            uniform = std::make_shared<Uniform<Matrix34>>(name, uniform_size, location);
-            break;
-        case GL_FLOAT_MAT4x3:
-            uniform = std::make_shared<Uniform<Matrix43>>(name, uniform_size, location);
-            break;
-        case GL_SAMPLER_1D:
-        case GL_SAMPLER_2D:
-        case GL_SAMPLER_3D:
-        case GL_INT_SAMPLER_1D:
-        case GL_INT_SAMPLER_2D:
-        case GL_INT_SAMPLER_3D:
-        case GL_SAMPLER_1D_ARRAY:
-        case GL_SAMPLER_2D_ARRAY:
-        case GL_SAMPLER_CUBE:
-        {
-            uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
-
-            GLint unit = -1;
-            glGetUniformiv(m_id, location, &unit);
-            uniform->SetUnit(GetUnitAvaliable(m_tex_uniforms, unit));
-
-            m_tex_uniforms.push_back(uniform);
+            AddUniform(name, uniform_type, 1);
         }
-            break;
-        case GL_IMAGE_2D:
-        {
-            uniform = std::make_shared<Uniform<Int1>>(name, uniform_size, location);
-
-            GLint unit = -1;
-            glGetUniformiv(m_id, location, &unit);
-            uniform->SetUnit(GetUnitAvaliable(m_img_uniforms, unit));
-
-            m_img_uniforms.push_back(uniform);
-        }
-            break;
-        default:
-            assert(0);
-        }
-
-        if (!uniform) {
-            continue;
-        }
-
-        AddUniform(name, uniform);
     }
 
     BindTextures();
@@ -412,6 +308,118 @@ void ShaderProgram::BindTextures() const
         const int unit = unif->GetUnit();
         assert(unit >= 0);
         unif->SetValue(&unit, 1);
+    }
+}
+
+void ShaderProgram::AddUniform(const std::string& name, GLenum type, GLint size)
+{
+    auto location = glGetUniformLocation(m_id, name.c_str());
+
+    std::shared_ptr<ur::Uniform> uniform = nullptr;
+    switch (type)
+    {
+    case GL_FLOAT:
+        uniform = std::make_shared<Uniform<Float1>>(name, size, location);
+        break;
+    case GL_FLOAT_VEC2:
+        uniform = std::make_shared<Uniform<Float2>>(name, size, location);
+        break;
+    case GL_FLOAT_VEC3:
+        uniform = std::make_shared<Uniform<Float3>>(name, size, location);
+        break;
+    case GL_FLOAT_VEC4:
+        uniform = std::make_shared<Uniform<Float4>>(name, size, location);
+        break;
+    case GL_BOOL:
+        uniform = std::make_shared<Uniform<UInt1>>(name, size, location);
+        break;
+    case GL_INT:
+        uniform = std::make_shared<Uniform<Int1>>(name, size, location);
+        break;
+    case GL_INT_VEC2:
+        uniform = std::make_shared<Uniform<Int2>>(name, size, location);
+        break;
+    case GL_INT_VEC3:
+        uniform = std::make_shared<Uniform<Int3>>(name, size, location);
+        break;
+    case GL_INT_VEC4:
+        uniform = std::make_shared<Uniform<Int4>>(name, size, location);
+        break;
+    case GL_UNSIGNED_INT:
+        uniform = std::make_shared<Uniform<UInt1>>(name, size, location);
+        break;
+    case GL_UNSIGNED_INT_VEC2:
+        uniform = std::make_shared<Uniform<UInt2>>(name, size, location);
+        break;
+    case GL_UNSIGNED_INT_VEC3:
+        uniform = std::make_shared<Uniform<UInt3>>(name, size, location);
+        break;
+    case GL_UNSIGNED_INT_VEC4:
+        uniform = std::make_shared<Uniform<UInt4>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT2:
+        uniform = std::make_shared<Uniform<Matrix22>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT3:
+        uniform = std::make_shared<Uniform<Matrix33>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT4:
+        uniform = std::make_shared<Uniform<Matrix44>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT2x3:
+        uniform = std::make_shared<Uniform<Matrix23>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT2x4:
+        uniform = std::make_shared<Uniform<Matrix32>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT3x2:
+        uniform = std::make_shared<Uniform<Matrix24>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT3x4:
+        uniform = std::make_shared<Uniform<Matrix42>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT4x2:
+        uniform = std::make_shared<Uniform<Matrix34>>(name, size, location);
+        break;
+    case GL_FLOAT_MAT4x3:
+        uniform = std::make_shared<Uniform<Matrix43>>(name, size, location);
+        break;
+    case GL_SAMPLER_1D:
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_3D:
+    case GL_INT_SAMPLER_1D:
+    case GL_INT_SAMPLER_2D:
+    case GL_INT_SAMPLER_3D:
+    case GL_SAMPLER_1D_ARRAY:
+    case GL_SAMPLER_2D_ARRAY:
+    case GL_SAMPLER_CUBE:
+    {
+        uniform = std::make_shared<Uniform<Int1>>(name, size, location);
+
+        GLint unit = -1;
+        glGetUniformiv(m_id, location, &unit);
+        uniform->SetUnit(GetUnitAvaliable(m_tex_uniforms, unit));
+
+        m_tex_uniforms.push_back(uniform);
+    }
+        break;
+    case GL_IMAGE_2D:
+    {
+        uniform = std::make_shared<Uniform<Int1>>(name, size, location);
+
+        GLint unit = -1;
+        glGetUniformiv(m_id, location, &unit);
+        uniform->SetUnit(GetUnitAvaliable(m_img_uniforms, unit));
+
+        m_img_uniforms.push_back(uniform);
+    }
+        break;
+    default:
+        assert(0);
+    }
+
+    if (uniform) {
+        ur::ShaderProgram::AddUniform(name, uniform);
     }
 }
 

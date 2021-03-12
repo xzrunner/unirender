@@ -69,14 +69,17 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
                 glTexImage2D(TypeConverter::To((TextureTarget)((int)TextureTarget::TextureCubeMap0 + i)), 0, 
                     fmt.internal_format, desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
             }
-        }
-        else {
+        } else {
             glTexImage2D(TypeConverter::To(desc.target), 0, fmt.internal_format,
                 desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
         }
     }
 
     ApplySampler(device.GetTextureSampler(desc.sampler_type));
+
+    if (m_desc.gen_mipmaps) {
+        glGenerateMipmap(TypeConverter::To(desc.target));
+    }
 }
 
 Texture::~Texture()
@@ -109,10 +112,10 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
 {
     auto target = TypeConverter::To(m_desc.target);
 
-    auto min_filter = TypeConverter::To(sampler->GetMinFilter());
-    auto mag_filter = TypeConverter::To(sampler->GetMagFilter());
-    auto wrap_s = TypeConverter::To(sampler->GetWrapS());
-    auto wrap_t = TypeConverter::To(sampler->GetWrapT());
+    auto min_filter = TypeConverter::To(ur::TextureMinificationFilter::Nearest);
+    auto mag_filter = TypeConverter::To(ur::TextureMagnificationFilter::Nearest);
+    auto wrap_s = TypeConverter::To(ur::TextureWrap::Repeat);
+    auto wrap_t = TypeConverter::To(ur::TextureWrap::Repeat);
 
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
@@ -164,11 +167,6 @@ bool Texture::ReadFromMemory(const ur::WritePixelBuffer& buf, int x, int y,
     glTexSubImage2D(TypeConverter::To(m_desc.target), 0, x, y, w, h,
         fmt.pixel_format, fmt.pixel_type, nullptr);
 
-    if (m_desc.gen_mipmaps) {
-        assert(m_desc.target == TextureTarget::Texture2D);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-
     return true;
 }
 
@@ -207,10 +205,6 @@ void Texture::ReadFromMemory(const void* pixels, ur::TextureFormat tex_fmt,
         break;
     default:
         assert(0);
-    }
-
-    if (m_desc.gen_mipmaps) {
-        glGenerateMipmap(target);
     }
 }
 

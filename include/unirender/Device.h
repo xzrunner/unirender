@@ -119,6 +119,7 @@ public:
     {
         NearestClamp,
         LinearClamp,
+        LinearClampMipmap,
         NearestRepeat,
         LinearRepeat,
     };
@@ -172,10 +173,11 @@ private:
 
     std::shared_ptr<DescriptorPool> m_desc_pool = nullptr;
 
-    std::shared_ptr<TextureSampler> m_nearest_clamp  = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_clamp   = nullptr;
-    std::shared_ptr<TextureSampler> m_nearest_repeat = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_repeat  = nullptr;
+    std::shared_ptr<TextureSampler> m_nearest_clamp       = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_clamp        = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_clamp_mipmap = nullptr;
+    std::shared_ptr<TextureSampler> m_nearest_repeat      = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_repeat       = nullptr;
 
     std::ostream& m_logger;
 

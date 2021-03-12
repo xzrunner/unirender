@@ -26,6 +26,13 @@ void Device::Init()
         TextureWrap::ClampToEdge,
         1.0f
     );
+    m_linear_clamp_mipmap = CreateTextureSampler(
+        TextureMinificationFilter::LinearMipmapLinear,
+        TextureMagnificationFilter::Linear,
+        TextureWrap::ClampToEdge,
+        TextureWrap::ClampToEdge,
+        1.0f
+    );
     m_nearest_repeat = CreateTextureSampler(
         TextureMinificationFilter::Nearest,
         TextureMagnificationFilter::Nearest,
@@ -51,6 +58,8 @@ Device::GetTextureSampler(TextureSamplerType type) const
         return m_nearest_clamp;
     case TextureSamplerType::LinearClamp:
         return m_linear_clamp;
+    case TextureSamplerType::LinearClampMipmap:
+        return m_linear_clamp_mipmap;
     case TextureSamplerType::NearestRepeat:
         return m_nearest_repeat;
     case TextureSamplerType::LinearRepeat:

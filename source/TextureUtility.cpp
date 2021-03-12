@@ -51,7 +51,7 @@ int TextureUtility::RequiredSizeInBytes(int width, int height, TextureFormat fmt
         pixel_size = 2;
         break;
     case TextureFormat::DEPTH:
-        pixel_size = 1;
+        pixel_size = 4;
         break;
     case TextureFormat::RGB32I:
         pixel_size = 12;

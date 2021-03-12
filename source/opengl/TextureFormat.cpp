@@ -9,10 +9,6 @@ namespace opengl
 
 TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
 {
-	if (gamma_correction) {
-		int zz = 0;
-	}
-
     compressed = false;
 	switch(fmt)
     {

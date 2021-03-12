@@ -686,7 +686,7 @@ void Context::ApplyShaderProgram(const DrawState& draw, const void* scene)
         }
         m_binded_program = draw.program;
     }
-    assert(!m_binded_program || m_binded_program && m_binded_program->CheckStatus());
+    assert(!m_binded_program || m_binded_program/* && m_binded_program->CheckStatus()*/);
 
     if (m_binded_program) {
         m_binded_program->Clean(*this, draw, scene);

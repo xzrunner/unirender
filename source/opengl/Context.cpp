@@ -670,6 +670,10 @@ void Context::ApplyBeforeDraw(const DrawState& draw, const void* scene)
 
 void Context::ApplyVertexArray(const std::shared_ptr<ur::VertexArray>& va)
 {
+    if (!va) {
+        return;
+    }
+
     auto gl_va = std::static_pointer_cast<opengl::VertexArray>(va);
     gl_va->Bind();
     gl_va->Clean();

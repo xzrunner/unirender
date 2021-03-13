@@ -34,7 +34,8 @@ public:
         const std::vector<unsigned int>& vs, 
         const std::vector<unsigned int>& fs,
         const std::vector<unsigned int>& tcs = std::vector<unsigned int>(),
-        const std::vector<unsigned int>& tes = std::vector<unsigned int>()
+        const std::vector<unsigned int>& tes = std::vector<unsigned int>(),
+        const std::vector<unsigned int>& gs = std::vector<unsigned int>()
     ) const override;
     virtual std::shared_ptr<ur::ShaderProgram>
         CreateShaderProgram(const std::vector<unsigned int>& cs) const override;

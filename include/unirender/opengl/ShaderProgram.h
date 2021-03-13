@@ -26,6 +26,7 @@ public:
         const std::vector<unsigned int>& fs,
         const std::vector<unsigned int>& tcs,
         const std::vector<unsigned int>& tes,
+        const std::vector<unsigned int>& gs,
         std::ostream& out = std::cerr
     );
     ShaderProgram(const std::vector<unsigned int>& cs);

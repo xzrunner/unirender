@@ -28,6 +28,7 @@ ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
                                             const std::vector<unsigned int>& fs,
                                             const std::vector<unsigned int>& tcs,
                                             const std::vector<unsigned int>& tes,
+                                            const std::vector<unsigned int>& gs,
                                             std::ostream& out)
 {
     m_id = glCreateProgram();
@@ -43,6 +44,9 @@ ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
     }
     if (!tes.empty()) {
         m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::TessEvalShader, tes));
+    }
+    if (!gs.empty()) {
+        m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::GeometryShader, gs));
     }
     for (auto& shader : m_shaders) {
         shader->Attach(m_id);

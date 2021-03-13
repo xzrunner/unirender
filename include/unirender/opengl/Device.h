@@ -35,7 +35,7 @@ public:
     virtual std::shared_ptr<VertexArray> CreateVertexArray() const override;
     virtual std::shared_ptr<Framebuffer> CreateFramebuffer() const override;
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(
-        int width, int height, InternalFormat format, AttachmentType attach) const override;
+        int width, int height, InternalFormat format) const override;
 
     virtual std::shared_ptr<ur::ShaderProgram> CreateShaderProgram(
         const std::vector<unsigned int>& vs, 

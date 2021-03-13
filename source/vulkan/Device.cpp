@@ -57,7 +57,7 @@ Device::CreateFramebuffer() const
 }
 
 std::shared_ptr<ur::RenderBuffer>
-Device::CreateRenderBuffer(int width, int height, InternalFormat format, AttachmentType attach) const
+Device::CreateRenderBuffer(int width, int height, InternalFormat format) const
 {
     return nullptr;
 }

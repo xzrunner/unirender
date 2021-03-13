@@ -136,9 +136,9 @@ Device::CreateFramebuffer() const
 }
 
 std::shared_ptr<ur::RenderBuffer>
-Device::CreateRenderBuffer(int width, int height, InternalFormat format, AttachmentType attach) const
+Device::CreateRenderBuffer(int width, int height, InternalFormat format) const
 {
-    return std::make_shared<ur::opengl::RenderBuffer>(width, height, format, attach);
+    return std::make_shared<ur::opengl::RenderBuffer>(width, height, format);
 }
 
 std::shared_ptr<ur::ShaderProgram>

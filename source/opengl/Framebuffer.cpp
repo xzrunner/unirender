@@ -119,7 +119,7 @@ void Framebuffer::Attachment::Attach()
         );
     }
     if (rbo) {
-        rbo->Bind();
+        rbo->Bind(type);
     }
     dirty = false;
 }

@@ -63,7 +63,7 @@ public:
     virtual std::shared_ptr<VertexArray> CreateVertexArray() const = 0;
     virtual std::shared_ptr<Framebuffer> CreateFramebuffer() const = 0;
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(
-        int width, int height, InternalFormat format, AttachmentType attach) const = 0;
+        int width, int height, InternalFormat format) const = 0;
 
     virtual std::shared_ptr<ShaderProgram> CreateShaderProgram(
         const std::vector<unsigned int>& vs, 

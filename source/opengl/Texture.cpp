@@ -112,10 +112,10 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
 {
     auto target = TypeConverter::To(m_desc.target);
 
-    auto min_filter = TypeConverter::To(ur::TextureMinificationFilter::Nearest);
-    auto mag_filter = TypeConverter::To(ur::TextureMagnificationFilter::Nearest);
-    auto wrap_s = TypeConverter::To(ur::TextureWrap::Repeat);
-    auto wrap_t = TypeConverter::To(ur::TextureWrap::Repeat);
+    auto min_filter = TypeConverter::To(sampler->GetMinFilter());
+    auto mag_filter = TypeConverter::To(sampler->GetMagFilter());
+    auto wrap_s = TypeConverter::To(sampler->GetWrapS());
+    auto wrap_t = TypeConverter::To(sampler->GetWrapT());
 
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);

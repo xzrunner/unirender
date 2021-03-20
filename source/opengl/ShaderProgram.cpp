@@ -397,6 +397,7 @@ void ShaderProgram::AddUniform(const std::string& name, GLenum type, GLint size)
     case GL_SAMPLER_1D_ARRAY:
     case GL_SAMPLER_2D_ARRAY:
     case GL_SAMPLER_CUBE:
+    case GL_SAMPLER_2D_SHADOW:
     {
         uniform = std::make_shared<Uniform<Int1>>(name, size, location);
 

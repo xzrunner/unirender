@@ -78,7 +78,7 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
         break;
 	case ur::TextureFormat::DEPTH:
 	#if OPENGLES == 3 || OPENGLES == 0
-		internal_format = GL_DEPTH_COMPONENT;
+		internal_format = GL_DEPTH_COMPONENT32;
 		pixel_format = GL_DEPTH_COMPONENT;
 	#else
 		internal_format = pixel_format = GL_ALPHA;

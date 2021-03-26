@@ -43,7 +43,7 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
     case ur::TextureFormat::RGBA16F:
         internal_format = GL_RGBA16F;
         pixel_format = GL_RGBA;
-        pixel_type = GL_FLOAT;
+        pixel_type = GL_HALF_FLOAT;
         break;
 	case ur::TextureFormat::RGBA32F:
 		internal_format = GL_RGBA32F;
@@ -53,7 +53,7 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
     case ur::TextureFormat::RGB16F:
         internal_format = GL_RGB16F;
         pixel_format = GL_RGB;
-        pixel_type = GL_FLOAT;
+        pixel_type = GL_HALF_FLOAT;
         break;
     case ur::TextureFormat::RGB32F:
         internal_format = GL_RGB32F;
@@ -63,7 +63,7 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
     case ur::TextureFormat::RG16F:
         internal_format = GL_RG16F;
         pixel_format = GL_RG;
-        pixel_type = GL_FLOAT;
+        pixel_type = GL_HALF_FLOAT;
         break;
 	case ur::TextureFormat::A8:
     case ur::TextureFormat::RED:
@@ -72,10 +72,15 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
         pixel_type = GL_UNSIGNED_BYTE;
         break;
     case ur::TextureFormat::R16:
-        internal_format = GL_R16_SNORM;
+		internal_format = GL_R16;
         pixel_format = GL_RED;
-        pixel_type = GL_SHORT;
+        pixel_type = GL_UNSIGNED_SHORT;
         break;
+	case ur::TextureFormat::R16F:
+		internal_format = GL_R16F;
+		pixel_format = GL_RED;
+		pixel_type = GL_HALF_FLOAT;
+		break;
 	case ur::TextureFormat::DEPTH:
 	#if OPENGLES == 3 || OPENGLES == 0
 		internal_format = GL_DEPTH_COMPONENT32;

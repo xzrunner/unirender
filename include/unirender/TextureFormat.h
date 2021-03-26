@@ -19,6 +19,7 @@ enum class TextureFormat
     A8,
     RED,
     R16,
+    R16F,
     DEPTH,
     RGB32I,
     PVR2,

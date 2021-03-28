@@ -58,7 +58,7 @@ public:
         Cube,
     };
     virtual std::shared_ptr<VertexArray>
-        GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const = 0;
+        GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit = false) const = 0;
 
     virtual std::shared_ptr<VertexArray> CreateVertexArray() const = 0;
     virtual std::shared_ptr<Framebuffer> CreateFramebuffer() const = 0;

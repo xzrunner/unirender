@@ -24,7 +24,7 @@ public:
     virtual int GetMaxNumImgUnits() const override { return m_max_num_img_units; }
 
     virtual std::shared_ptr<VertexArray>
-        GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const override;
+        GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit = false) const override;
     virtual std::shared_ptr<VertexArray> CreateVertexArray() const override;
     virtual std::shared_ptr<Framebuffer> CreateFramebuffer() const override;
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(

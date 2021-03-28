@@ -39,7 +39,7 @@ Device::Device(bool enable_validation_layers)
 }
 
 std::shared_ptr<ur::VertexArray>
-Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const
+Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit) const
 {
     return nullptr;
 }

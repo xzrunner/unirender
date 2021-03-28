@@ -91,7 +91,7 @@ Device::Device(std::ostream& logger)
 }
 
 std::shared_ptr<ur::VertexArray>
-Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const
+Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit) const
 {
     const int layout_idx = static_cast<int>(layout);
     switch (prim)
@@ -101,7 +101,7 @@ Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const
         if (m_quad_va[layout_idx]) {
             return m_quad_va[layout_idx];
         } else{
-            auto va = CreateQuadVertexArray(layout);
+            auto va = CreateQuadVertexArray(layout, unit);
             m_quad_va[layout_idx] = va;
             return va;
         }
@@ -112,7 +112,7 @@ Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout) const
         if (m_cube_va[layout_idx]) {
             return m_cube_va[layout_idx];
         } else{
-            auto va = CreateCubeVertexArray(layout);
+            auto va = CreateCubeVertexArray(layout, unit);
             m_cube_va[layout_idx] = va;
             return va;
         }
@@ -324,9 +324,8 @@ void Device::Init()
 }
 
 std::shared_ptr<ur::VertexArray>
-Device::CreateQuadVertexArray(VertexLayoutType layout) const
+Device::CreateQuadVertexArray(VertexLayoutType layout, bool unit) const
 {
-    const bool unit = false;
     const auto p_min = unit ? 0.0f : -1.0f;
 
     std::vector<float> vertices;
@@ -508,193 +507,195 @@ Device::CreateQuadVertexArray(VertexLayoutType layout) const
 }
 
 std::shared_ptr<ur::VertexArray>
-Device::CreateCubeVertexArray(VertexLayoutType layout) const
+Device::CreateCubeVertexArray(VertexLayoutType layout, bool unit) const
 {
+    const auto p_min = unit ? 0.0f : -1.0f;
+
     std::vector<float> vertices;
     switch (layout)
     {
     case VertexLayoutType::Pos:
         vertices = {
             // back face
-            -1.0f, -1.0f, -1.0f, // bottom-left
-             1.0f,  1.0f, -1.0f, // top-right
-             1.0f, -1.0f, -1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f, // top-right
-            -1.0f, -1.0f, -1.0f, // bottom-left
-            -1.0f,  1.0f, -1.0f, // top-left
+            p_min, p_min, p_min, // bottom-left
+             1.0f,  1.0f, p_min, // top-right
+             1.0f, p_min, p_min, // bottom-right
+             1.0f,  1.0f, p_min, // top-right
+            p_min, p_min, p_min, // bottom-left
+            p_min,  1.0f, p_min, // top-left
             // front face
-            -1.0f, -1.0f,  1.0f, // bottom-left
-             1.0f, -1.0f,  1.0f, // bottom-right
+            p_min, p_min,  1.0f, // bottom-left
+             1.0f, p_min,  1.0f, // bottom-right
              1.0f,  1.0f,  1.0f, // top-right
              1.0f,  1.0f,  1.0f, // top-right
-            -1.0f,  1.0f,  1.0f, // top-left
-            -1.0f, -1.0f,  1.0f, // bottom-left
+            p_min,  1.0f,  1.0f, // top-left
+            p_min, p_min,  1.0f, // bottom-left
             // left face
-            -1.0f,  1.0f,  1.0f, // top-right
-            -1.0f,  1.0f, -1.0f, // top-left
-            -1.0f, -1.0f, -1.0f, // bottom-left
-            -1.0f, -1.0f, -1.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, // bottom-right
-            -1.0f,  1.0f,  1.0f, // top-right
+            p_min,  1.0f,  1.0f, // top-right
+            p_min,  1.0f, p_min, // top-left
+            p_min, p_min, p_min, // bottom-left
+            p_min, p_min, p_min, // bottom-left
+            p_min, p_min,  1.0f, // bottom-right
+            p_min,  1.0f,  1.0f, // top-right
             // right face
              1.0f,  1.0f,  1.0f, // top-left
-             1.0f, -1.0f, -1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f, // top-right
-             1.0f, -1.0f, -1.0f, // bottom-right
+             1.0f, p_min, p_min, // bottom-right
+             1.0f,  1.0f, p_min, // top-right
+             1.0f, p_min, p_min, // bottom-right
              1.0f,  1.0f,  1.0f, // top-left
-             1.0f, -1.0f,  1.0f, // bottom-left
+             1.0f, p_min,  1.0f, // bottom-left
             // bottom face
-            -1.0f, -1.0f, -1.0f, // top-right
-             1.0f, -1.0f, -1.0f, // top-left
-             1.0f, -1.0f,  1.0f, // bottom-left
-             1.0f, -1.0f,  1.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, // bottom-right
-            -1.0f, -1.0f, -1.0f, // top-right
+            p_min, p_min, p_min, // top-right
+             1.0f, p_min, p_min, // top-left
+             1.0f, p_min,  1.0f, // bottom-left
+             1.0f, p_min,  1.0f, // bottom-left
+            p_min, p_min,  1.0f, // bottom-right
+            p_min, p_min, p_min, // top-right
             // top face
-            -1.0f,  1.0f, -1.0f, // top-left
+            p_min,  1.0f, p_min, // top-left
              1.0f,  1.0f , 1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f, // top-right
+             1.0f,  1.0f, p_min, // top-right
              1.0f,  1.0f,  1.0f, // bottom-right
-            -1.0f,  1.0f, -1.0f, // top-left
-            -1.0f,  1.0f,  1.0f  // bottom-left
+            p_min,  1.0f, p_min, // top-left
+            p_min,  1.0f,  1.0f  // bottom-left
         };
         break;
     case VertexLayoutType::PosTex:
         vertices = {
             // back face
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f, 1.0f, 0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-            -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, // top-left
+            p_min, p_min, p_min, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, p_min, 1.0f, 1.0f, // top-right
+             1.0f, p_min, p_min, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, p_min, 1.0f, 1.0f, // top-right
+            p_min, p_min, p_min, 0.0f, 0.0f, // bottom-left
+            p_min,  1.0f, p_min, 0.0f, 1.0f, // top-left
             // front face
-            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+            p_min, p_min,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, p_min,  1.0f, 1.0f, 0.0f, // bottom-right
              1.0f,  1.0f,  1.0f, 1.0f, 1.0f, // top-right
              1.0f,  1.0f,  1.0f, 1.0f, 1.0f, // top-right
-            -1.0f,  1.0f,  1.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            p_min,  1.0f,  1.0f, 0.0f, 1.0f, // top-left
+            p_min, p_min,  1.0f, 0.0f, 0.0f, // bottom-left
             // left face
-            -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-right
-            -1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-left
-            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-left
-            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-right
-            -1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-right
+            p_min,  1.0f,  1.0f, 1.0f, 0.0f, // top-right
+            p_min,  1.0f, p_min, 1.0f, 1.0f, // top-left
+            p_min, p_min, p_min, 0.0f, 1.0f, // bottom-left
+            p_min, p_min, p_min, 0.0f, 1.0f, // bottom-left
+            p_min, p_min,  1.0f, 0.0f, 0.0f, // bottom-right
+            p_min,  1.0f,  1.0f, 1.0f, 0.0f, // top-right
             // right face
              1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // bottom-right
+             1.0f, p_min, p_min, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, p_min, 1.0f, 1.0f, // top-right
+             1.0f, p_min, p_min, 0.0f, 1.0f, // bottom-right
              1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, p_min,  1.0f, 0.0f, 0.0f, // bottom-left
             // bottom face
-            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f, 1.0f, 1.0f, // top-left
-             1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f, 1.0f, 0.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, 0.0f, 0.0f, // bottom-right
-            -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, // top-right
+            p_min, p_min, p_min, 0.0f, 1.0f, // top-right
+             1.0f, p_min, p_min, 1.0f, 1.0f, // top-left
+             1.0f, p_min,  1.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, p_min,  1.0f, 1.0f, 0.0f, // bottom-left
+            p_min, p_min,  1.0f, 0.0f, 0.0f, // bottom-right
+            p_min, p_min, p_min, 0.0f, 1.0f, // top-right
             // top face
-            -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, // top-left
+            p_min,  1.0f, p_min, 0.0f, 1.0f, // top-left
              1.0f,  1.0f , 1.0f, 1.0f, 0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f, p_min, 1.0f, 1.0f, // top-right
              1.0f,  1.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-            -1.0f,  1.0f, -1.0f, 0.0f, 1.0f, // top-left
-            -1.0f,  1.0f,  1.0f, 0.0f, 0.0f  // bottom-left
+            p_min,  1.0f, p_min, 0.0f, 1.0f, // top-left
+            p_min,  1.0f,  1.0f, 0.0f, 0.0f  // bottom-left
         };
         break;
     case VertexLayoutType::PosNorm:
         vertices = {
             // back face
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // bottom-left
-             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // top-right
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // bottom-left
-            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, // top-left
+            p_min, p_min, p_min,  0.0f,  0.0f, -1.0f, // bottom-left
+             1.0f,  1.0f, p_min,  0.0f,  0.0f, -1.0f, // top-right
+             1.0f, p_min, p_min,  0.0f,  0.0f, -1.0f, // bottom-right
+             1.0f,  1.0f, p_min,  0.0f,  0.0f, -1.0f, // top-right
+            p_min, p_min, p_min,  0.0f,  0.0f, -1.0f, // bottom-left
+            p_min,  1.0f, p_min,  0.0f,  0.0f, -1.0f, // top-left
             // front face
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-left
-             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-right
+            p_min, p_min,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-left
+             1.0f, p_min,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-right
              1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-right
              1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-right
-            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-left
+            p_min,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, // top-left
+            p_min, p_min,  1.0f,  0.0f,  0.0f,  1.0f, // bottom-left
             // left face
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // top-right
-            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, // top-left
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, // bottom-left
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // bottom-right
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // top-right
+            p_min,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // top-right
+            p_min,  1.0f, p_min, -1.0f,  0.0f,  0.0f, // top-left
+            p_min, p_min, p_min, -1.0f,  0.0f,  0.0f, // bottom-left
+            p_min, p_min, p_min, -1.0f,  0.0f,  0.0f, // bottom-left
+            p_min, p_min,  1.0f, -1.0f,  0.0f,  0.0f, // bottom-right
+            p_min,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, // top-right
             // right face
              1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, // top-left
-             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, // top-right
-             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, // bottom-right
+             1.0f, p_min, p_min,  1.0f,  0.0f,  0.0f, // bottom-right
+             1.0f,  1.0f, p_min,  1.0f,  0.0f,  0.0f, // top-right
+             1.0f, p_min, p_min,  1.0f,  0.0f,  0.0f, // bottom-right
              1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, // top-left
-             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, // bottom-left
+             1.0f, p_min,  1.0f,  1.0f,  0.0f,  0.0f, // bottom-left
             // bottom face
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, // top-left
-             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-right
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, // top-right
+            p_min, p_min, p_min,  0.0f, -1.0f,  0.0f, // top-right
+             1.0f, p_min, p_min,  0.0f, -1.0f,  0.0f, // top-left
+             1.0f, p_min,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-left
+             1.0f, p_min,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-left
+            p_min, p_min,  1.0f,  0.0f, -1.0f,  0.0f, // bottom-right
+            p_min, p_min, p_min,  0.0f, -1.0f,  0.0f, // top-right
             // top face
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, // top-left
+            p_min,  1.0f, p_min,  0.0f,  1.0f,  0.0f, // top-left
              1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, // top-right
+             1.0f,  1.0f, p_min,  0.0f,  1.0f,  0.0f, // top-right
              1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, // bottom-right
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, // top-left
-            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f  // bottom-left
+            p_min,  1.0f, p_min,  0.0f,  1.0f,  0.0f, // top-left
+            p_min,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f  // bottom-left
         };
         break;
     case VertexLayoutType::PosNormTex:
         vertices = {
             // back face
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-            -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-            -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+            p_min, p_min, p_min,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f,  1.0f, p_min,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+             1.0f, p_min, p_min,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right
+             1.0f,  1.0f, p_min,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+            p_min, p_min, p_min,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+            p_min,  1.0f, p_min,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
             // front face
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+            p_min, p_min,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, p_min,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
              1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
              1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+            p_min,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+            p_min, p_min,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
             // left face
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-            -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-            -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-            -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            p_min,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+            p_min,  1.0f, p_min, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+            p_min, p_min, p_min, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            p_min, p_min, p_min, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+            p_min, p_min,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            p_min,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
             // right face
              1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f, p_min, p_min,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+             1.0f,  1.0f, p_min,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right
+             1.0f, p_min, p_min,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
              1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
+             1.0f, p_min,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
             // bottom face
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-             1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-            -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-            -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+            p_min, p_min, p_min,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+             1.0f, p_min, p_min,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+             1.0f, p_min,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+             1.0f, p_min,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+            p_min, p_min,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+            p_min, p_min, p_min,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
             // top face
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+            p_min,  1.0f, p_min,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
              1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right
+             1.0f,  1.0f, p_min,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right
              1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-            -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
+            p_min,  1.0f, p_min,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+            p_min,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
         };
         break;
     default:

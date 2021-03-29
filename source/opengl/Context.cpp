@@ -349,7 +349,7 @@ void Context::ForceApplyRenderState(const RenderState& rs)
     //glPatchParameteri(GL_PATCH_DEFAULT_OUTER_LEVEL, rs.tess_params.outer_level);
     //glPatchParameteri(GL_PATCH_DEFAULT_INNER_LEVEL, rs.tess_params.inner_level);
 
-    Enable(GL_CLIP_DISTANCE0, rs.clip_panel);
+    Enable(GL_CLIP_DISTANCE0, rs.clip_plane);
 
     check_error();
 }
@@ -384,7 +384,7 @@ void Context::ApplyRenderState(const RenderState& rs)
     ApplyDepthMask(rs.depth_mask);
     ApplyAlphaTest(rs.alpha_test);
     ApplyTessParams(rs.tess_params);
-    ApplyClipPanel(rs.clip_panel);
+    ApplyClipPanel(rs.clip_plane);
 
     check_error();
 }
@@ -659,9 +659,9 @@ void Context::ApplyTessParams(const TessPatchParams& tess_params)
     check_error();
 }
 
-void Context::ApplyClipPanel(bool clip_panel)
+void Context::ApplyClipPanel(bool clip_plane)
 {
-    Enable(GL_CLIP_DISTANCE0, clip_panel);
+    Enable(GL_CLIP_DISTANCE0, clip_plane);
 
     check_error();
 }

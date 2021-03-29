@@ -88,7 +88,7 @@ private:
     void ApplyBlending(const Blending& blending);
     void ApplyAlphaTest(const AlphaTest& alpha);
     void ApplyTessParams(const TessPatchParams& tess_params);
-    void ApplyClipPanel(bool clip_panel);
+    void ApplyClipPanel(bool clip_plane);
 
     void ApplyBeforeDraw(const DrawState& draw, const void* scene);
 

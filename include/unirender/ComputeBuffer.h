@@ -3,7 +3,6 @@
 #include "unirender/BufferUsageHint.h"
 
 #include <cstdint>
-#include <vector>
 
 namespace ur
 {
@@ -13,7 +12,7 @@ class ComputeBuffer
 public:
     virtual ~ComputeBuffer() {}
 
-    virtual void GetComputeBufferData(std::vector<int>& result) const = 0;
+    virtual void GetComputeBufferData(void* data, size_t size) const = 0;
 
 }; // ComputeBuffer
 

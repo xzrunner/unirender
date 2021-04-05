@@ -101,13 +101,7 @@ Device::CreateWritePixelBuffer(BufferUsageHint hint, int size_in_bytes) const
 }
 
 std::shared_ptr<ur::ComputeBuffer>
-Device::CreateComputeBuffer(const std::vector<int>& buf, size_t index) const
-{
-    return nullptr;
-}
-
-std::shared_ptr<ur::ComputeBuffer>
-Device::CreateComputeBuffer(const std::vector<float>& buf, size_t index) const
+Device::CreateComputeBuffer(const void* data, size_t size, size_t index) const
 {
     return nullptr;
 }

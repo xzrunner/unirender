@@ -54,9 +54,7 @@ public:
     virtual std::shared_ptr<ur::WritePixelBuffer>
         CreateWritePixelBuffer(BufferUsageHint hint, int size_in_bytes) const override;
     virtual std::shared_ptr<ur::ComputeBuffer>
-        CreateComputeBuffer(const std::vector<int>& buf, size_t index) const override;
-    virtual std::shared_ptr<ur::ComputeBuffer>
-        CreateComputeBuffer(const std::vector<float>& buf, size_t index) const override;
+        CreateComputeBuffer(const void* data, size_t size, size_t index) const override;
 
     virtual std::shared_ptr<ur::Texture>
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const override;

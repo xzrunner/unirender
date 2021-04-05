@@ -82,9 +82,7 @@ public:
     virtual std::shared_ptr<WritePixelBuffer>
         CreateWritePixelBuffer(BufferUsageHint hint, int size_in_bytes) const = 0;
     virtual std::shared_ptr<ComputeBuffer>
-        CreateComputeBuffer(const std::vector<int>& buf, size_t index) const = 0;
-    virtual std::shared_ptr<ComputeBuffer>
-        CreateComputeBuffer(const std::vector<float>& buf, size_t index) const = 0;
+        CreateComputeBuffer(const void* data, size_t size, size_t index) const = 0;
 
     virtual std::shared_ptr<Texture>
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const = 0;

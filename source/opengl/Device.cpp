@@ -180,15 +180,9 @@ Device::CreateWritePixelBuffer(BufferUsageHint hint, int size_in_bytes) const
 }
 
 std::shared_ptr<ur::ComputeBuffer>
-Device::CreateComputeBuffer(const std::vector<int>& buf, size_t index) const
+Device::CreateComputeBuffer(const void* data, size_t size, size_t index) const
 {
-    return std::make_shared<ur::opengl::ComputeBuffer>(buf, index);
-}
-
-std::shared_ptr<ur::ComputeBuffer>
-Device::CreateComputeBuffer(const std::vector<float>& buf, size_t index) const
-{
-    return std::make_shared<ur::opengl::ComputeBuffer>(buf, index);
+    return std::make_shared<ur::opengl::ComputeBuffer>(data, size, index);
 }
 
 std::shared_ptr<ur::Texture>

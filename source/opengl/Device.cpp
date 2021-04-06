@@ -295,7 +295,7 @@ void Device::ReadPixels(const unsigned char* pixels, ur::TextureFormat format,
                         int x, int y, int w, int h) const
 {
     TextureFormat gl_fmt(format);
-    glReadPixels(x, y, w, h, gl_fmt.internal_format, GL_UNSIGNED_BYTE, (GLvoid*)pixels);
+    glReadPixels(x, y, w, h, gl_fmt.pixel_format, GL_UNSIGNED_BYTE, (GLvoid*)pixels);
 }
 
 void Device::ReadPixels(const short* pixels, ur::TextureFormat format,

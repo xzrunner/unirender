@@ -13,30 +13,32 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
 	switch(fmt)
     {
 	case ur::TextureFormat::RGBA8:
-		internal_format = gamma_correction ? GL_SRGB8_ALPHA8 : GL_RGBA;
+		internal_format = gamma_correction ? GL_SRGB8_ALPHA8 : GL_RGBA8;
 		pixel_format = GL_RGBA;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
 	case ur::TextureFormat::RGB:
-		internal_format = gamma_correction ? GL_SRGB8 : GL_RGB;
+		internal_format = gamma_correction ? GL_SRGB8 : GL_RGB8;
 		pixel_format = GL_RGB;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
 	case ur::TextureFormat::RGBA4:
-		internal_format = pixel_format = GL_RGBA;
+		internal_format = GL_RGBA4;
+		pixel_format = GL_RGBA;
 		pixel_type = GL_UNSIGNED_SHORT_4_4_4_4;
 		break;
 	case ur::TextureFormat::RGB565:
-		internal_format = pixel_format = GL_RGB;
+		internal_format = GL_RGB;
+		pixel_format = GL_RGB;
 		pixel_type = GL_UNSIGNED_SHORT_5_6_5;
 		break;
 	case ur::TextureFormat::BGRA_EXT:
-		internal_format = GL_RGBA;
+		internal_format = GL_RGBA8;
 		pixel_format = GL_BGRA;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
 	case ur::TextureFormat::BGR_EXT:
-		internal_format = GL_RGB;
+		internal_format = GL_RGB8;
 		pixel_format = GL_BGR;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;

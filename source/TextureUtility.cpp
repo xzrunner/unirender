@@ -26,6 +26,9 @@ int TextureUtility::RequiredSizeInBytes(int width, int height, TextureFormat fmt
     case TextureFormat::BGR_EXT:
         pixel_size = 3;
         break;
+    case TextureFormat::RGBA16:
+        pixel_size = 8;
+        break;
     case TextureFormat::RGBA16F:
         pixel_size = 8;
         break;

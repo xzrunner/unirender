@@ -11,6 +11,7 @@ enum class TextureFormat
     RGB565,
     BGRA_EXT,
     BGR_EXT,
+    RGBA16,
     RGBA16F,
     RGBA32F,
     RGB16F,

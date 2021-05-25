@@ -42,6 +42,11 @@ TextureFormat::TextureFormat(ur::TextureFormat fmt, bool gamma_correction)
 		pixel_format = GL_BGR;
 		pixel_type = GL_UNSIGNED_BYTE;
 		break;
+	case ur::TextureFormat::RGBA16:
+		internal_format = GL_RGBA16;
+		pixel_format = GL_RGBA;
+		pixel_type = GL_UNSIGNED_SHORT;
+		break;
     case ur::TextureFormat::RGBA16F:
         internal_format = GL_RGBA16F;
         pixel_format = GL_RGBA;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "unirender/TextureFormat.h"
+#include "unirender/TextureTarget.h"
 #include "unirender/AccessType.h"
 
 #include <memory>
@@ -21,6 +22,7 @@ public:
     virtual int GetHeight() const = 0;
     virtual int GetDepth() const = 0;
 
+    virtual TextureTarget GetTarget() const = 0;
     virtual TextureFormat GetFormat() const = 0;
 
     virtual void Bind() const = 0;

@@ -30,6 +30,7 @@ public:
     virtual int GetHeight() const override { return m_desc.height; }
     virtual int GetDepth() const override { return m_desc.depth; }
 
+    virtual TextureTarget GetTarget() const override { return m_desc.target; }
     virtual TextureFormat GetFormat() const override { return m_desc.format; }
 
     virtual void Bind() const override;

@@ -262,7 +262,7 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
 			revert_y((GLubyte*)(pixels), w, h, 3, 4);
 
 			glBindTexture(GL_TEXTURE_CUBE_MAP, tex->GetTexID());
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB32F, w, h, 0, GL_RGB, GL_FLOAT, pixels);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, w, h, 0, GL_RGB, GL_FLOAT, pixels);
 			delete[] pixels;
 		}
 			break;

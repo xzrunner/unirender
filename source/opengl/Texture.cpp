@@ -116,6 +116,8 @@ void Texture::Upload(const void* pixels, int x, int y, int w, int h, int mipleve
 
 void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
 {
+    BindToLastTextureUnit();
+
     auto target = TypeConverter::To(m_desc.target);
 
     auto min_filter = TypeConverter::To(sampler->GetMinFilter());

@@ -1,4 +1,4 @@
-#include "unirender/opengl/ShaderProgram.h"
+﻿#include "unirender/opengl/ShaderProgram.h"
 #include "unirender/opengl/ShaderObject.h"
 #include "unirender/opengl/Uniform.h"
 #include "unirender/ShaderType.h"
@@ -60,6 +60,21 @@ ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
 }
 
 ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
+{
+    m_id = glCreateProgram();
+
+    m_shaders.push_back(std::make_shared<ShaderObject>(ShaderType::ComputeShader, cs));
+    for (auto& shader : m_shaders) {
+        shader->Attach(m_id);
+    }
+
+    glLinkProgram(m_id);
+    CheckLinkStatus();
+
+    InitUniforms();
+}
+
+ShaderProgram::ShaderProgram(const std::string& cs)
 {
     m_id = glCreateProgram();
 

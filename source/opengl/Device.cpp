@@ -161,6 +161,12 @@ Device::CreateShaderProgram(const std::vector<unsigned int>& cs) const
     return std::make_shared<ur::opengl::ShaderProgram>(cs);
 }
 
+std::shared_ptr<ur::ShaderProgram>
+Device::CreateShaderProgram(const std::string& cs) const
+{
+    return std::make_shared<ur::opengl::ShaderProgram>(cs);
+}
+
 std::shared_ptr<ur::VertexBuffer>
 Device::CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {

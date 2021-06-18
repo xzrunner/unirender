@@ -16,6 +16,7 @@ class ShaderObject
 public:
     ShaderObject(ShaderType type,
         const std::vector<unsigned int>& spirv);
+    ShaderObject(ShaderType type, const std::string& code);
     ~ShaderObject();
 
     void Attach(GLuint prograpm);
@@ -24,6 +25,8 @@ public:
     auto GetShaderType() const { return m_type; }
 
 private:
+    void Init(ShaderType type, const std::string& glsl);
+
     bool CheckCompileStatus(const std::string& source);
 
 private:

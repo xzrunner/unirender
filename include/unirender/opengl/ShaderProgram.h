@@ -30,6 +30,7 @@ public:
         std::ostream& out = std::cerr
     );
     ShaderProgram(const std::vector<unsigned int>& cs);
+    ShaderProgram(const std::string& cs);
     virtual ~ShaderProgram();
 
     virtual void Bind() const override;

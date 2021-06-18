@@ -74,6 +74,8 @@ public:
     ) const = 0;
     virtual std::shared_ptr<ShaderProgram>
         CreateShaderProgram(const std::vector<unsigned int>& cs) const = 0;
+    virtual std::shared_ptr<ur::ShaderProgram>
+        CreateShaderProgram(const std::string& cs) const = 0;
 
     virtual std::shared_ptr<VertexBuffer>
         CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const = 0;

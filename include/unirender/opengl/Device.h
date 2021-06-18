@@ -46,6 +46,8 @@ public:
     ) const override;
     virtual std::shared_ptr<ur::ShaderProgram>
         CreateShaderProgram(const std::vector<unsigned int>& cs) const override;
+    virtual std::shared_ptr<ur::ShaderProgram>
+        CreateShaderProgram(const std::string& cs) const override;
 
     virtual std::shared_ptr<ur::VertexBuffer>
         CreateVertexBuffer(BufferUsageHint usage_hint, int size_in_bytes) const override;

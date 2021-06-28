@@ -114,6 +114,9 @@ public:
     virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const = 0;
 
+    virtual void PushDebugGroup(const std::string& msg) const = 0;
+    virtual void PopDebugGroup() const = 0;
+
     void Init();
 
     enum class TextureSamplerType

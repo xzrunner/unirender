@@ -311,6 +311,16 @@ void Device::ReadPixels(const short* pixels, ur::TextureFormat format,
     glReadPixels(x, y, w, h, gl_fmt.internal_format, GL_SHORT, (GLvoid*)pixels);
 }
 
+void Device::PushDebugGroup(const std::string& msg) const
+{
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, msg.c_str());
+}
+
+void Device::PopDebugGroup() const
+{
+    glPopDebugGroup();
+}
+
 void Device::Init()
 {
 //#if OPENGLES < 2

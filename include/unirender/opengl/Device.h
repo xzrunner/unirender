@@ -86,6 +86,9 @@ public:
     virtual void ReadPixels(const short* pixels, ur::TextureFormat fmt,
         int x, int y, int w, int h) const override;
 
+    virtual void PushDebugGroup(const std::string& msg) const override;
+    virtual void PopDebugGroup() const override;
+
 private:
     void Init();
 

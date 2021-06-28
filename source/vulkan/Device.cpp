@@ -195,5 +195,13 @@ void Device::ReadPixels(const short* pixels, ur::TextureFormat format,
 {
 }
 
+void Device::PushDebugGroup(const std::string& msg) const
+{
+}
+
+void Device::PopDebugGroup() const
+{
+}
+
 }
 }

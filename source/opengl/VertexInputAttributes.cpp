@@ -66,7 +66,12 @@ void VertexInputAttributes::Attach(int index)
     assert(index >= 0 && index < static_cast<int>(m_attrs.size()));
 
     auto& attr = m_attrs[index].attr;
-    m_vbuf->Bind();
+
+    if (attr->GetInstancedDivisor() > 0) {
+        m_inst_buf->Bind();
+    } else {
+        m_vbuf->Bind();
+    }
 
     GLuint loc = attr->GetLocation();
     glEnableVertexAttribArray(loc);
@@ -78,6 +83,10 @@ void VertexInputAttributes::Attach(int index)
         attr->GetStrideInBytes(),
         (void*)(attr->GetOffsetInBytes())
     );
+
+    if (attr->GetInstancedDivisor() > 0) {
+        glVertexAttribDivisor(loc, attr->GetInstancedDivisor());
+    }
 }
 
 void VertexInputAttributes::Detach(int index)

@@ -25,6 +25,9 @@ public:
     auto GetOffsetInBytes() const { return m_offset_in_bytes; }
     auto GetStrideInBytes() const { return m_stride_in_bytes; }
 
+    auto GetInstancedDivisor() const { return m_instanced_divisor; }
+    void SetInstancedDivisor(int divisor) { m_instanced_divisor = divisor; }
+
 private:
     int m_loc = -1;
 
@@ -35,6 +38,8 @@ private:
 
     int m_offset_in_bytes = 0;
     int m_stride_in_bytes = 0;
+
+    int m_instanced_divisor = 0;
 
 }; // VertexInputAttribute
 

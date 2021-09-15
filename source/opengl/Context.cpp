@@ -121,13 +121,21 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
         if (draw.count == 0)
         {
             GLsizei count = ibuf->GetCount();
-            glDrawRangeElements(TypeConverter::To(prim_type), 0, va->GetMaxArrayIndex(),
-                count, TypeConverter::To(ibuf->GetDataType()), 0);
+            if (draw.num_instances > 0) {
+                glDrawElementsInstanced(TypeConverter::To(prim_type), count, TypeConverter::To(ibuf->GetDataType()), 0, draw.num_instances);
+            } else {
+                glDrawElements(TypeConverter::To(prim_type), count, TypeConverter::To(ibuf->GetDataType()), 0);
+            }
         }
         else
         {
-            glDrawRangeElements(TypeConverter::To(prim_type), draw.offset, draw.offset + draw.count,
-                draw.count, TypeConverter::To(ibuf->GetDataType()), 0);
+            if (draw.num_instances > 0) {
+                glDrawElementsInstancedBaseVertex(TypeConverter::To(prim_type), draw.count, 
+                    TypeConverter::To(ibuf->GetDataType()), 0, draw.num_instances, draw.offset);
+            } else {
+                glDrawElementsBaseVertex(TypeConverter::To(prim_type), draw.count, 
+                    TypeConverter::To(ibuf->GetDataType()), 0, draw.offset);
+            }
         }
     }
     else

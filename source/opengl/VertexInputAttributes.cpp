@@ -48,6 +48,8 @@ void VertexInputAttributes::Clean()
             } else {
                 Detach(i);
             }
+
+            attr.dirty = false;
         }
 
         if (attr.attr && m_vbuf) {

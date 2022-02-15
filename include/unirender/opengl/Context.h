@@ -89,6 +89,7 @@ private:
     void ApplyAlphaTest(const AlphaTest& alpha);
     void ApplyTessParams(const TessPatchParams& tess_params);
     void ApplyClipPanel(bool clip_plane);
+    void ApplyDepthClamp(bool depth_clamp);
 
     void ApplyBeforeDraw(const DrawState& draw, const void* scene);
 

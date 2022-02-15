@@ -359,6 +359,8 @@ void Context::ForceApplyRenderState(const RenderState& rs)
 
     Enable(GL_CLIP_DISTANCE0, rs.clip_plane);
 
+    Enable(GL_DEPTH_CLAMP, rs.depth_clamp);
+
     check_error();
 }
 
@@ -393,6 +395,7 @@ void Context::ApplyRenderState(const RenderState& rs)
     ApplyAlphaTest(rs.alpha_test);
     ApplyTessParams(rs.tess_params);
     ApplyClipPanel(rs.clip_plane);
+    ApplyDepthClamp(rs.depth_clamp);
 
     check_error();
 }
@@ -670,6 +673,13 @@ void Context::ApplyTessParams(const TessPatchParams& tess_params)
 void Context::ApplyClipPanel(bool clip_plane)
 {
     Enable(GL_CLIP_DISTANCE0, clip_plane);
+
+    check_error();
+}
+
+void Context::ApplyDepthClamp(bool depth_clamp)
+{
+    Enable(GL_DEPTH_CLAMP, depth_clamp);
 
     check_error();
 }

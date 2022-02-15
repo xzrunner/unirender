@@ -55,6 +55,7 @@ struct RenderState
     AlphaTest         alpha_test;
     TessPatchParams   tess_params;
     bool              clip_plane = false;
+    bool              depth_clamp = false;
 
     bool operator == (const RenderState& rs) const {
         return prim_restart == rs.prim_restart

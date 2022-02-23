@@ -64,7 +64,6 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
 
     m_last_tex_unit = GL_TEXTURE0 + (device.GetMaxNumTexUnits() - 1);
 
-    WritePixelBuffer::UnBind();
     BindToLastTextureUnit();
 
     if (desc.width != 0 && desc.height != 0)
@@ -166,14 +165,15 @@ bool Texture::ReadFromMemory(const ur::WritePixelBuffer& buf, int x, int y,
 
     VerifyRowAlignment(row_alignment);
 
-    auto& buf_gl = static_cast<const WritePixelBuffer&>(buf);
-    buf_gl.Bind();
+    buf.Bind();
     BindToLastTextureUnit();
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, row_alignment);
 
     glTexSubImage2D(TypeConverter::To(m_desc.target), 0, x, y, w, h,
         fmt.pixel_format, fmt.pixel_type, nullptr);
+
+    buf.UnBind();
 
     return true;
 }

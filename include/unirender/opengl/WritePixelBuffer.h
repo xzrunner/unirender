@@ -20,7 +20,7 @@ public:
     virtual void* WriteToMemory(int size, int offset) override;
 
     virtual void Bind() const override;
-    static void UnBind();
+    virtual void UnBind() const override;
 
     virtual unsigned char* Map() const override;
     virtual void Unmap() const override;

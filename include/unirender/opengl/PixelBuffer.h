@@ -20,6 +20,7 @@ public:
     ~PixelBuffer();
 
     void Bind() const;
+    void UnBind() const;
 
     void ReadFromMemory(const void* data, int size, int offset);
     void* WriteToMemory(int size, int offset) const;

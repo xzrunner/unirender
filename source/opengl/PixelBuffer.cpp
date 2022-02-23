@@ -18,8 +18,8 @@ PixelBuffer::PixelBuffer(BufferTarget type, BufferUsageHint hint, int size_in_by
     glGenBuffers(1, &m_id);
 
     Bind();
-
     glBufferData(TypeConverter::To(m_type), m_size_in_bytes, 0, TypeConverter::To(m_usage_hint));
+    UnBind();
 }
 
 PixelBuffer::~PixelBuffer()
@@ -32,14 +32,19 @@ void PixelBuffer::Bind() const
     glBindBuffer(TypeConverter::To(m_type), m_id);
 }
 
+void PixelBuffer::UnBind() const
+{
+    glBindBuffer(TypeConverter::To(m_type), 0);
+}
+
 void PixelBuffer::ReadFromMemory(const void* data, int size, int offset)
 {
     assert(offset >= 0 && size > 0
         && offset + size <= m_size_in_bytes);
 
     Bind();
-
     glBufferSubData(TypeConverter::To(m_type), offset, size, data);
+    UnBind();
 }
 
 void* PixelBuffer::WriteToMemory(int size, int offset) const
@@ -50,8 +55,8 @@ void* PixelBuffer::WriteToMemory(int size, int offset) const
     void* data = new uint8_t[size];
 
     Bind();
-
     glGetBufferSubData(m_id, offset, size, data);
+    UnBind();
 
     return data;
 }

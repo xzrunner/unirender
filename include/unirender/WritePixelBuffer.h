@@ -17,6 +17,7 @@ public:
     virtual void* WriteToMemory(int size, int offset) = 0;
 
     virtual void Bind() const = 0;
+    virtual void UnBind() const = 0;
 
     virtual unsigned char* Map() const = 0;
     virtual void Unmap() const = 0;

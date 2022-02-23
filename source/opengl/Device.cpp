@@ -229,8 +229,6 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
     desc.target = ur::TextureTarget::TextureCubeMap;
     desc.format = ur::TextureFormat::RGB;
 
-    WritePixelBuffer::UnBind();
-
     auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
     for (int i = 0; i < 6; ++i)
     {

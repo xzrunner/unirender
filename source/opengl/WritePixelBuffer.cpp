@@ -36,10 +36,9 @@ void WritePixelBuffer::Bind() const
     m_buf.Bind();
 }
 
-void WritePixelBuffer::UnBind()
+void WritePixelBuffer::UnBind() const
 {
-    const auto target = TypeConverter::To(BufferTarget::PixelUnpackBuffer);
-    glBindBuffer(target, 0);
+    m_buf.UnBind();
 }
 
 unsigned char* WritePixelBuffer::Map() const

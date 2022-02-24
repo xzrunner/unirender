@@ -44,6 +44,7 @@ public:
     virtual void BindToImage(uint32_t unit, AccessType access) const override;
 
     virtual void* WriteToMemory(int size) const override;
+    virtual void WriteToMemory(void* data) const override;
 
     bool ReadFromMemory(const WritePixelBuffer& buf, int x, int y,
         int w, int h, int row_alignment);

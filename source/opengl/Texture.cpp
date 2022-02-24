@@ -141,11 +141,16 @@ void* Texture::WriteToMemory(int size) const
     void* data = new uint8_t[size];
     memset(data, 0, size);
 
+    WriteToMemory(data);
+
+    return data;
+}
+
+void Texture::WriteToMemory(void* data) const
+{
     TextureFormat fmt(m_desc.format);
     BindToLastTextureUnit();
     glGetTexImage(TypeConverter::To(m_desc.target), 0, fmt.pixel_format, fmt.pixel_type, data);
-
-    return data;
 }
 
 bool Texture::ReadFromMemory(const ur::WritePixelBuffer& buf, int x, int y,

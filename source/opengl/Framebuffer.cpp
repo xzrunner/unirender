@@ -110,10 +110,9 @@ void Framebuffer::Attachment::Attach()
 {
     if (tex) {
         const GLuint texture = tex ? tex->GetTexID() : 0;
-        glFramebufferTexture2D(
+        glFramebufferTexture(
             GL_FRAMEBUFFER,
             TypeConverter::To(type),
-            TypeConverter::To(target),
             texture,
             mipmap_level
         );

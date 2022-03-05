@@ -63,6 +63,8 @@ public:
     virtual std::shared_ptr<ur::Texture>
         CreateTexture(size_t width, size_t height, ur::TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction = false) const override;
     virtual std::shared_ptr<ur::Texture>
+        CreateTexture3D(size_t width, size_t height, size_t depth, ur::TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction = false) const override;
+    virtual std::shared_ptr<ur::Texture>
         CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const override;
     virtual std::shared_ptr<TextureSampler> CreateTextureSampler(TextureMinificationFilter min_filter, 
         TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const override;

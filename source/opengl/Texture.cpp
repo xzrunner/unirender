@@ -66,18 +66,36 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
 
     BindToLastTextureUnit();
 
-    if (desc.width != 0 && desc.height != 0)
+    switch (desc.target)
     {
-        TextureFormat fmt(desc.format, desc.gamma_correction);
-        if (desc.target == TextureTarget::TextureCubeMap) {
-            for (int i = 0; i < 6; ++i) {
-                glTexImage2D(TypeConverter::To((TextureTarget)((int)TextureTarget::TextureCubeMap0 + i)), 0, 
-                    fmt.internal_format, desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
-            }
-        } else {
+    case TextureTarget::Texture2D:
+        if (desc.width != 0 && desc.height != 0)
+        {
+            TextureFormat fmt(desc.format, desc.gamma_correction);
             glTexImage2D(TypeConverter::To(desc.target), 0, fmt.internal_format,
                 desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
         }
+        break;
+    case TextureTarget::Texture3D:
+        if (desc.width != 0 && desc.height != 0 && desc.depth != 0)
+        {
+            TextureFormat fmt(desc.format, desc.gamma_correction);
+            glTexImage3D(TypeConverter::To(desc.target), 0, fmt.internal_format,
+                desc.width, desc.height, desc.depth, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+        }
+        break;
+    case TextureTarget::TextureCubeMap:
+        if (desc.width != 0 && desc.height != 0)
+        {
+            TextureFormat fmt(desc.format, desc.gamma_correction);
+            for (int i = 0; i < 6; ++i) {
+                glTexImage2D(TypeConverter::To((TextureTarget)((int)TextureTarget::TextureCubeMap0 + i)), 0,
+                    fmt.internal_format, desc.width, desc.height, 0, fmt.pixel_format, fmt.pixel_type, nullptr);
+            }
+        }
+        break;
+    default:
+        assert(0);
     }
 
     ApplySampler(device.GetTextureSampler(desc.sampler_type));
@@ -128,6 +146,9 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
+    if (m_desc.target == TextureTarget::Texture3D) {
+        glTexParameteri(target, GL_TEXTURE_WRAP_R, TypeConverter::To(TextureWrap::ClampToEdge));
+    }
 }
 
 void Texture::BindToImage(uint32_t unit, AccessType access) const

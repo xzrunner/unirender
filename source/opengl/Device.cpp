@@ -223,6 +223,22 @@ Device::CreateTexture(size_t width, size_t height, ur::TextureFormat format, con
 }
 
 std::shared_ptr<ur::Texture>
+Device::CreateTexture3D(size_t width, size_t height, size_t depth, ur::TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction) const
+{
+    TextureDescription desc;
+    desc.target = ur::TextureTarget::Texture3D;
+    desc.width  = width;
+    desc.height = height;
+    desc.depth  = depth;
+    desc.format = format;
+    desc.gamma_correction = gamma_correction;
+
+    auto tex = std::make_shared<ur::opengl::Texture>(desc, *this);
+    tex->ReadFromMemory(buf, format, width, height, depth, 4);
+    return tex;
+}
+
+std::shared_ptr<ur::Texture>
 Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
 {
     ur::TextureDescription desc;

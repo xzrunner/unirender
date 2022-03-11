@@ -32,6 +32,9 @@ public:
     virtual int QueryAttrLoc(const std::string& name) const override;
     virtual int QueryImgSlot(const std::string& name) const override;
 
+    virtual void BindSSBO(const std::string& name, int idx,
+        const std::shared_ptr<StorageBuffer>& ssbo) const override {}
+
     virtual bool HasStage(ShaderType stage) const { return false; }
 
     auto& GetShaderStages() const { return m_shader_stages; }

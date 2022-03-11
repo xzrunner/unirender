@@ -13,6 +13,7 @@ namespace ur
 {
 
 class Uniform;
+class StorageBuffer;
 
 namespace opengl
 {
@@ -42,13 +43,19 @@ public:
     virtual int QueryAttrLoc(const std::string& name) const override;
     virtual int QueryImgSlot(const std::string& name) const override;
 
+    virtual void BindSSBO(const std::string& name, int idx,
+        const std::shared_ptr<ur::StorageBuffer>& ssbo) const override;
+
     virtual bool HasStage(ShaderType stage) const;
 
 private:
     bool CheckLinkStatus(std::ostream& out = std::cerr);
 
+    void PrepareObjects();
+
     void InitVertexAttributes();
     void InitUniforms();
+    void InitResources();
 
     void BindTextures() const;
 

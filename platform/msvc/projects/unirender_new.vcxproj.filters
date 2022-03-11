@@ -376,6 +376,12 @@
     <ClInclude Include="..\..\..\include\unirender\noncopyable.h">
       <Filter>utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\StorageBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\StorageBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -550,6 +556,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\ImageUnits.cpp">
       <Filter>api\opengl\image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\StorageBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

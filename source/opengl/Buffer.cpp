@@ -32,6 +32,11 @@ void Buffer::Bind() const
     glBindBuffer(TypeConverter::To(m_type), m_id);
 }
 
+void Buffer::UnBind() const
+{
+    glBindBuffer(TypeConverter::To(m_type), 0);
+}
+
 void Buffer::ReadFromMemory(const void* data, int size, int offset)
 {
     assert(offset >= 0 && size > 0

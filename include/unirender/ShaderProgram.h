@@ -17,6 +17,7 @@ class Uniform;
 class UniformUpdater;
 class Context;
 struct DrawState;
+class StorageBuffer;
 
 class ShaderProgram
 {
@@ -31,6 +32,9 @@ public:
     virtual int QueryTexSlot(const std::string& name) const = 0;
     virtual int QueryAttrLoc(const std::string& name) const = 0;
     virtual int QueryImgSlot(const std::string& name) const = 0;
+
+    virtual void BindSSBO(const std::string& name, int idx, 
+        const std::shared_ptr<StorageBuffer>& ssbo) const = 0;
 
     virtual bool HasStage(ShaderType stage) const = 0;
 

@@ -1,6 +1,7 @@
 ﻿#include "unirender/opengl/ShaderProgram.h"
 #include "unirender/opengl/ShaderObject.h"
 #include "unirender/opengl/Uniform.h"
+#include "unirender/opengl/StorageBuffer.h"
 #include "unirender/ShaderType.h"
 
 #include <assert.h>
@@ -54,9 +55,7 @@ ShaderProgram::ShaderProgram::ShaderProgram(const std::vector<unsigned int>& vs,
 
     glLinkProgram(m_id);
     CheckLinkStatus(out);
-
-    InitVertexAttributes();
-    InitUniforms();
+    PrepareObjects();
 }
 
 ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
@@ -70,8 +69,7 @@ ShaderProgram::ShaderProgram(const std::vector<unsigned int>& cs)
 
     glLinkProgram(m_id);
     CheckLinkStatus();
-
-    InitUniforms();
+    PrepareObjects();
 }
 
 ShaderProgram::ShaderProgram(const std::string& cs)
@@ -85,8 +83,7 @@ ShaderProgram::ShaderProgram(const std::string& cs)
 
     glLinkProgram(m_id);
     CheckLinkStatus();
-
-    InitUniforms();
+    PrepareObjects();
 }
 
 ShaderProgram::~ShaderProgram()
@@ -162,6 +159,14 @@ int ShaderProgram::QueryImgSlot(const std::string& name) const
     return -1;
 }
 
+void ShaderProgram::BindSSBO(const std::string& name, int idx, 
+                             const std::shared_ptr<ur::StorageBuffer>& ssbo) const
+{
+    std::static_pointer_cast<ur::opengl::StorageBuffer>(ssbo)->BindIndex(idx);
+    GLuint loc = glGetProgramResourceIndex(m_id, GL_SHADER_STORAGE_BLOCK, name.c_str());
+    glShaderStorageBlockBinding(m_id, loc, idx);
+}
+
 bool ShaderProgram::HasStage(ShaderType stage) const
 {
     for (auto& shader : m_shaders) {
@@ -199,6 +204,13 @@ bool ShaderProgram::CheckStatus() const
     {
         return true;
     }
+}
+
+void ShaderProgram::PrepareObjects()
+{
+    InitVertexAttributes();
+    InitUniforms();
+    //InitResources();
 }
 
 void ShaderProgram::InitVertexAttributes()
@@ -318,6 +330,52 @@ void ShaderProgram::InitUniforms()
     BindTextures();
 
     delete[] name_buf;
+}
+
+void ShaderProgram::InitResources()
+{
+    GLint no_of, ssbo_max_len, var_max_len;
+    glGetProgramInterfaceiv(m_id, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &no_of);
+    glGetProgramInterfaceiv(m_id, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH, &ssbo_max_len);
+    glGetProgramInterfaceiv(m_id, GL_BUFFER_VARIABLE, GL_MAX_NAME_LENGTH, &var_max_len);
+
+    std::vector< GLchar >name(ssbo_max_len);
+    for (int i_resource = 0; i_resource < no_of; i_resource++) 
+    {
+        // get name of the shader storage block
+        GLsizei strLength;
+        glGetProgramResourceName(m_id, GL_SHADER_STORAGE_BLOCK, i_resource, ssbo_max_len, &strLength, name.data());
+
+        // get resource index of the shader storage block
+        GLint resInx = glGetProgramResourceIndex(m_id, GL_SHADER_STORAGE_BLOCK, name.data());
+
+        // get number of the buffer variables in the shader storage block
+        GLenum prop = GL_NUM_ACTIVE_VARIABLES;
+        GLint num_var;
+        glGetProgramResourceiv(m_id, GL_SHADER_STORAGE_BLOCK, resInx, 1, &prop, 1, nullptr, &num_var);
+
+        // get resource indices of the buffer variables
+        std::vector<GLint> vars(num_var);
+        prop = GL_ACTIVE_VARIABLES;
+        glGetProgramResourceiv(m_id, GL_SHADER_STORAGE_BLOCK, resInx, 1, &prop, (GLsizei)vars.size(), nullptr, vars.data());
+
+        std::vector<GLint> offsets(num_var);
+        std::vector<std::string> var_names(num_var);
+        for (GLint i = 0; i < num_var; i++) 
+        {
+            // get offset of buffer variable relative to SSBO
+            GLenum prop = GL_OFFSET;
+            glGetProgramResourceiv(m_id, GL_BUFFER_VARIABLE, vars[i], 1, &prop, (GLsizei)offsets.size(), nullptr, &offsets[i]);
+
+            // get name of buffer variable
+            std::vector<GLchar>var_name(var_max_len);
+            GLsizei strLength;
+            glGetProgramResourceName(m_id, GL_BUFFER_VARIABLE, vars[i], var_max_len, &strLength, var_name.data());
+            var_names[i] = var_name.data();
+        }
+
+
+    }
 }
 
 void ShaderProgram::BindTextures() const

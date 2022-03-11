@@ -57,9 +57,11 @@
     <ClInclude Include="..\..\..\include\unirender\opengl\ImageUnit.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\ImageUnits.h" />
     <ClInclude Include="..\..\..\include\unirender\opengl\PixelBuffer.h" />
+    <ClInclude Include="..\..\..\include\unirender\opengl\StorageBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\Pipeline.h" />
     <ClInclude Include="..\..\..\include\unirender\PipelineLayout.h" />
     <ClInclude Include="..\..\..\include\unirender\RenderPass.h" />
+    <ClInclude Include="..\..\..\include\unirender\StorageBuffer.h" />
     <ClInclude Include="..\..\..\include\unirender\TextureUnit.h" />
     <ClInclude Include="..\..\..\include\unirender\typedef.h" />
     <ClInclude Include="..\..\..\include\unirender\UniformBuffer.h" />
@@ -231,6 +233,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)/opengl/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)/opengl/</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\StorageBuffer.cpp" />
     <ClCompile Include="..\..\..\source\opengl\Texture.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/opengl/</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/opengl/</ObjectFileName>

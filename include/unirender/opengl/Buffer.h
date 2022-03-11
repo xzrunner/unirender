@@ -17,6 +17,7 @@ public:
     ~Buffer();
 
     void Bind() const;
+    void UnBind() const;
 
     void ReadFromMemory(const void* data, int size, int offset);
     void* WriteToMemory(int size, int offset);
@@ -25,6 +26,8 @@ public:
     auto GetUsageHint() const { return m_usage_hint; }
 
     void Reset(int size_in_bytes);
+
+    auto GetID() const { return m_id; }
 
 private:
     GLuint m_id = 0;

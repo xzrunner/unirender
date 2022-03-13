@@ -108,14 +108,28 @@ void Framebuffer::Clean()
 
 void Framebuffer::Attachment::Attach()
 {
-    if (tex) {
+    if (tex) 
+    {
         const GLuint texture = tex ? tex->GetTexID() : 0;
-        glFramebufferTexture(
-            GL_FRAMEBUFFER,
-            TypeConverter::To(type),
-            texture,
-            mipmap_level
-        );
+        if (target >= TextureTarget::TextureCubeMap0 && target <= TextureTarget::TextureCubeMap5)
+        {
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                TypeConverter::To(type),
+                TypeConverter::To(target),
+                texture,
+                mipmap_level
+            );
+        }
+        else
+        {
+            glFramebufferTexture(
+                GL_FRAMEBUFFER,
+                TypeConverter::To(type),
+                texture,
+                mipmap_level
+            );
+        }
     }
     if (rbo) {
         rbo->Bind(type);

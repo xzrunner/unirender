@@ -47,6 +47,13 @@ void Device::Init()
         TextureWrap::Repeat,
         1.0f
     );
+    m_linear_repeat_mipmap = CreateTextureSampler(
+        TextureMinificationFilter::LinearMipmapLinear,
+        TextureMagnificationFilter::Linear,
+        TextureWrap::Repeat,
+        TextureWrap::Repeat,
+        1.0f
+    );
 }
 
 std::shared_ptr<TextureSampler> 
@@ -64,6 +71,8 @@ Device::GetTextureSampler(TextureSamplerType type) const
         return m_nearest_repeat;
     case TextureSamplerType::LinearRepeat:
         return m_linear_repeat;
+    case TextureSamplerType::LinearRepeatMipmap:
+        return m_linear_repeat_mipmap;
     default:
         assert(0);
         return nullptr;

@@ -131,6 +131,7 @@ public:
         LinearClampMipmap,
         NearestRepeat,
         LinearRepeat,
+        LinearRepeatMipmap,
     };
     std::shared_ptr<TextureSampler> 
         GetTextureSampler(TextureSamplerType type) const;
@@ -182,11 +183,12 @@ private:
 
     std::shared_ptr<DescriptorPool> m_desc_pool = nullptr;
 
-    std::shared_ptr<TextureSampler> m_nearest_clamp       = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_clamp        = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_clamp_mipmap = nullptr;
-    std::shared_ptr<TextureSampler> m_nearest_repeat      = nullptr;
-    std::shared_ptr<TextureSampler> m_linear_repeat       = nullptr;
+    std::shared_ptr<TextureSampler> m_nearest_clamp        = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_clamp         = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_clamp_mipmap  = nullptr;
+    std::shared_ptr<TextureSampler> m_nearest_repeat       = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_repeat        = nullptr;
+    std::shared_ptr<TextureSampler> m_linear_repeat_mipmap = nullptr;
 
     std::ostream& m_logger;
 

@@ -18,6 +18,7 @@ TextureSampler::TextureSampler(TextureMinificationFilter min_filter, TextureMagn
     glSamplerParameteri(m_id, GL_TEXTURE_MAG_FILTER, TypeConverter::To(mag_filter));
     glSamplerParameteri(m_id, GL_TEXTURE_WRAP_S,     TypeConverter::To(wrap_s));
     glSamplerParameteri(m_id, GL_TEXTURE_WRAP_T,     TypeConverter::To(wrap_t));
+    glSamplerParameteri(m_id, GL_TEXTURE_WRAP_R,     TypeConverter::To(wrap_t));
 }
 
 TextureSampler::~TextureSampler()

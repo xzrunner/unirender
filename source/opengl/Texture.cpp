@@ -153,7 +153,7 @@ void Texture::ApplySampler(const std::shared_ptr<ur::TextureSampler>& sampler)
     glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap_s);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap_t);
     if (m_desc.target == TextureTarget::Texture3D) {
-        glTexParameteri(target, GL_TEXTURE_WRAP_R, TypeConverter::To(TextureWrap::ClampToEdge));
+        glTexParameteri(target, GL_TEXTURE_WRAP_R, wrap_t);
     }
 }
 

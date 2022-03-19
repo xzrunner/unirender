@@ -31,7 +31,7 @@ public:
     virtual int GetDepth() const override { return m_desc.depth; }
 
     virtual TextureTarget GetTarget() const override { return m_desc.target; }
-    virtual TextureFormat GetFormat() const override { return m_desc.format; }
+    virtual ur::TextureFormat GetFormat() const override { return m_desc.format; }
 
     virtual void Bind() const override;
     static void UnBind(TextureTarget target);

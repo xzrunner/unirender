@@ -93,10 +93,6 @@ void VertexBuffer::ReadFromMemory(const void* data, int size, int offset)
     //    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     //m_buffer.Upload(data, size);
     
-    if (m_vi_binding.stride == 0) {
-        int zz = 0;
-    }
-
     assert(m_vi_binding.stride != 0);
     m_vertex_count = size / m_vi_binding.stride;
     

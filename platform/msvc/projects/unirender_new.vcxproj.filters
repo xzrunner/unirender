@@ -382,6 +382,12 @@
     <ClInclude Include="..\..\..\include\unirender\opengl\StorageBuffer.h">
       <Filter>api\opengl\buffer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\TextureBuffer.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\unirender\opengl\TextureBuffer.h">
+      <Filter>api\opengl\buffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\opengl\Framebuffer.cpp">
@@ -558,6 +564,9 @@
       <Filter>api\opengl\image</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\opengl\StorageBuffer.cpp">
+      <Filter>api\opengl\buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\opengl\TextureBuffer.cpp">
       <Filter>api\opengl\buffer</Filter>
     </ClCompile>
   </ItemGroup>

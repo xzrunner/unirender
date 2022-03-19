@@ -100,11 +100,15 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
             }
         }
         break;
+    case TextureTarget::TextureBuffer:
+        break;
     default:
         assert(0);
     }
 
-    ApplySampler(device.GetTextureSampler(desc.sampler_type));
+    if (desc.target != TextureTarget::TextureBuffer) {
+        ApplySampler(device.GetTextureSampler(desc.sampler_type));
+    }
 
     if (m_desc.gen_mipmaps) {
         glGenerateMipmap(TypeConverter::To(desc.target));

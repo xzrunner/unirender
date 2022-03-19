@@ -28,6 +28,7 @@ class ShaderProgram;
 class VertexBuffer;
 class IndexBuffer;
 class StorageBuffer;
+class TextureBuffer;
 class Texture;
 struct TextureDescription;
 class TextureSampler;
@@ -88,6 +89,8 @@ public:
         CreateComputeBuffer(const void* data, size_t size, size_t index) const = 0;
     virtual std::shared_ptr<StorageBuffer>
         CreateStorageBuffer(BufferUsageHint usage_hint, int size_in_bytes) const = 0;
+    virtual std::shared_ptr<TextureBuffer>
+        CreateTextureBuffer(BufferUsageHint usage_hint, int size_in_bytes, ur::TextureFormat format) const = 0;
 
     virtual std::shared_ptr<Texture>
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const = 0;

@@ -11,6 +11,7 @@
 #include "unirender/opengl/RenderBuffer.h"
 #include "unirender/opengl/ComputeBuffer.h"
 #include "unirender/opengl/StorageBuffer.h"
+#include "unirender/opengl/TextureBuffer.h"
 #include "unirender/opengl/TextureFormat.h"
 
 #include <array>
@@ -196,6 +197,12 @@ std::shared_ptr<ur::StorageBuffer>
 Device::CreateStorageBuffer(BufferUsageHint usage_hint, int size_in_bytes) const
 {
     return std::make_shared<ur::opengl::StorageBuffer>(usage_hint, size_in_bytes);
+}
+
+std::shared_ptr<ur::TextureBuffer>
+Device::CreateTextureBuffer(BufferUsageHint usage_hint, int size_in_bytes, ur::TextureFormat format) const
+{
+    return std::make_shared<ur::opengl::TextureBuffer>(usage_hint, size_in_bytes, format, *this);
 }
 
 std::shared_ptr<ur::Texture>

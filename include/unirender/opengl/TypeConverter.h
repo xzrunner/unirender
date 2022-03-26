@@ -262,6 +262,7 @@ public:
             GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
             GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
             GL_TEXTURE_BUFFER,
+            GL_TEXTURE_2D_ARRAY,
         };
         return targets[static_cast<int>(target)];
     }

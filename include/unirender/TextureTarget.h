@@ -16,6 +16,7 @@ enum class TextureTarget
     TextureCubeMap4,
     TextureCubeMap5,
     TextureBuffer,
+    Texture2DArray,
 };
 
 }

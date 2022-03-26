@@ -102,6 +102,8 @@ Texture::Texture(TextureDescription desc, const ur::Device& device)
         break;
     case TextureTarget::TextureBuffer:
         break;
+    case TextureTarget::Texture2DArray:
+        break;
     default:
         assert(0);
     }
@@ -246,6 +248,10 @@ void Texture::ReadFromMemory(const void* pixels, ur::TextureFormat tex_fmt,
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, fmt.internal_format,
                 width, height, 0, fmt.pixel_format, fmt.pixel_type, pixels);
         }
+        break;
+    case TextureTarget::Texture2DArray:
+        glTexImage3D(target, 0, fmt.internal_format, width, height, depth, 
+            0, fmt.pixel_format, fmt.pixel_type, pixels);
         break;
     default:
         assert(0);

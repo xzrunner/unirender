@@ -13,6 +13,7 @@
 #include "unirender/opengl/StorageBuffer.h"
 #include "unirender/opengl/TextureBuffer.h"
 #include "unirender/opengl/TextureFormat.h"
+#include "unirender/TextureUtility.h"
 
 #include <array>
 #include <vector>
@@ -311,6 +312,78 @@ Device::CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return tex;
+}
+
+std::shared_ptr<ur::Texture>
+Device::CreateTextureArray(const std::vector<TexturePtr>& textures) const
+{
+    if (textures.empty()) {
+        return nullptr;
+    }
+
+    auto first_tex = textures.front();
+
+    ur::TextureDescription desc;
+
+    desc.target = ur::TextureTarget::Texture2DArray;
+    desc.format = ur::TextureFormat::RGBA8; // fixme
+
+    desc.width  = first_tex->GetWidth();
+    desc.height = first_tex->GetHeight();
+    desc.depth  = textures.size();
+
+    desc.sampler_type = Device::TextureSamplerType::LinearRepeat;
+
+    int sz = ur::TextureUtility::RequiredSizeInBytes(desc.width, desc.height, ur::TextureFormat::RGBA8, 4);
+
+    uint8_t* buf = new uint8_t[sz];
+
+    int tot_sz = sz * textures.size();
+    uint8_t* tot_pixels = new uint8_t[tot_sz];
+    for (int i = 0, n = textures.size(); i < n; ++i)
+    {
+        auto tex = textures[i];
+
+        auto w = tex->GetWidth();
+        auto h = tex->GetHeight();
+        auto fmt = tex->GetFormat();
+
+        int curr_sz = ur::TextureUtility::RequiredSizeInBytes(w, h, fmt, 4);
+        auto pixels = (uint8_t*)tex->WriteToMemory(curr_sz);
+        if (fmt == ur::TextureFormat::RGBA8)
+        {
+            memcpy(buf, pixels, sz);
+        }
+        else if (fmt == ur::TextureFormat::RGB)
+        {
+            memset(buf, 0, sz);
+            for (int i = 0, n = w * h; i < n; ++i) {
+                memcpy(&buf[i * 4], &pixels[i * 3], sizeof(uint8_t) * 3);
+            }
+        }
+        else if (fmt == ur::TextureFormat::A8)
+        {
+            memset(buf, 0, sz);
+            for (int i = 0, n = w * h; i < n; ++i) {
+                buf[i * 4] = pixels[i];
+            }            
+        }
+        else
+        {
+            assert(0);
+        }
+        delete[] pixels;
+
+        memcpy(&tot_pixels[sz * i], buf, sz);
+    }
+
+    delete[] buf;
+
+    auto ret = std::make_shared<ur::opengl::Texture>(desc, *this);
+    ret->ReadFromMemory(tot_pixels, desc.format, desc.width, desc.height, textures.size(), 4, 0);
+    delete[] tot_pixels;
+
+    return ret;
 }
 
 std::shared_ptr<ur::TextureSampler>

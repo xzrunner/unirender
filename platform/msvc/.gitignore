@@ -1,7 +1,0 @@
-unirender/
-projects/*
-
-!projects/unirender.vcxproj
-!projects/unirender.vcxproj.filters
-!projects/unirender_new.vcxproj
-!projects/unirender_new.vcxproj.filters

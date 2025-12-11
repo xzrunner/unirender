@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 project(unirender)
 
@@ -354,14 +354,9 @@ set(ALL_FILES
     ${vertex_array}
 )
 
-add_subdirectory(external/Vulkan-Headers)
-
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/external/Vulkan-Headers/include)
-include_directories(${CMAKE_SOURCE_DIR}/external/gl3w/include)
-include_directories(${CMAKE_SOURCE_DIR}/external/shadertrans/include)
-
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE include external/Vulkan-Headers/include external/gl3w/include external/shadertrans/include)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 if(MSVC)

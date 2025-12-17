@@ -424,14 +424,15 @@ void Device::PopDebugGroup() const
 
 void Device::Init()
 {
-//#if OPENGLES < 2
-//    glewInit();
-//#endif
+    GLint major, minor;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
 
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &m_max_num_vert_attrs);
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &m_max_num_tex_units);
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_max_num_color_attachments);
-    glGetIntegerv(GL_MAX_IMAGE_UNITS, &m_max_num_img_units);
+    if (major > 4 || (major == 4 && minor >= 2))
+        glGetIntegerv(GL_MAX_IMAGE_UNITS, &m_max_num_img_units);
 }
 
 std::shared_ptr<ur::VertexArray>

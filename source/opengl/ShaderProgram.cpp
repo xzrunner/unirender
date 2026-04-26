@@ -302,6 +302,12 @@ void ShaderProgram::InitUniforms()
     GLint uniform_name_max_length;
     glGetProgramiv(m_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_name_max_length);
 
+    // fix for Parallels
+    const char* renderer = (const char*)glGetString(GL_RENDERER);
+    if (strstr(renderer, "Parallels")) {
+        uniform_name_max_length = 256;
+    }
+
     GLchar* name_buf = new char[uniform_name_max_length];
 
     for (int i = 0; i < number_of_uniforms; ++i)

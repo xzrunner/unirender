@@ -35,7 +35,7 @@ public:
     virtual void BindSSBO(const std::string& name, int idx,
         const std::shared_ptr<StorageBuffer>& ssbo) const override {}
 
-    virtual bool HasStage(ShaderType stage) const { return false; }
+    virtual bool HasStage(ShaderType stage) const override { return false; }
 
     auto& GetShaderStages() const { return m_shader_stages; }
 

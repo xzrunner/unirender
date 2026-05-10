@@ -2,8 +2,9 @@
 #include "unirender/vulkan/PhysicalDevice.h"
 #include "unirender/vulkan/LogicalDevice.h"
 #include "unirender/vulkan/CommandPool.h"
+#include "unirender/VertexInputAttribute.h"
 
-#include <assert.h>
+#include <cassert>
 
 namespace
 {
@@ -13,43 +14,36 @@ VkFormat to_attr_format(ur::ComponentDataType type, size_t num)
     switch (type)
     {
     case ur::ComponentDataType::Float:
-    {
         switch (num)
         {
-        case 1:
-            return VK_FORMAT_R32_SFLOAT;
-        case 2:
-            return VK_FORMAT_R32G32_SFLOAT;
-        case 3:
-            return VK_FORMAT_R32G32B32_SFLOAT;
-        case 4:
-            return VK_FORMAT_R32G32B32A32_SFLOAT;
-        default:
-            assert(0);
+        case 1: return VK_FORMAT_R32_SFLOAT;
+        case 2: return VK_FORMAT_R32G32_SFLOAT;
+        case 3: return VK_FORMAT_R32G32B32_SFLOAT;
+        case 4: return VK_FORMAT_R32G32B32A32_SFLOAT;
+        default: assert(0); return VK_FORMAT_UNDEFINED;
         }
-    }
-        break;
+    case ur::ComponentDataType::Int:
+        switch (num)
+        {
+        case 1: return VK_FORMAT_R32_SINT;
+        case 2: return VK_FORMAT_R32G32_SINT;
+        case 3: return VK_FORMAT_R32G32B32_SINT;
+        case 4: return VK_FORMAT_R32G32B32A32_SINT;
+        default: assert(0); return VK_FORMAT_UNDEFINED;
+        }
     case ur::ComponentDataType::UnsignedByte:
-    {
         switch (num)
         {
-        case 1:
-            return VK_FORMAT_R8_UNORM;
-        case 2:
-            return VK_FORMAT_R8G8_UNORM;
-        case 3:
-            return VK_FORMAT_R8G8B8_UNORM;
-        case 4:
-            return VK_FORMAT_R8G8B8A8_UNORM;
-        default:
-            assert(0);
+        case 1: return VK_FORMAT_R8_UNORM;
+        case 2: return VK_FORMAT_R8G8_UNORM;
+        case 3: return VK_FORMAT_R8G8B8_UNORM;
+        case 4: return VK_FORMAT_R8G8B8A8_UNORM;
+        default: assert(0); return VK_FORMAT_UNDEFINED;
         }
-    }
-        break;
     default:
         assert(0);
+        return VK_FORMAT_UNDEFINED;
     }
-    return VK_FORMAT_UNDEFINED;
 }
 
 }
@@ -67,71 +61,104 @@ VertexBuffer::VertexBuffer(const std::shared_ptr<LogicalDevice>& device,
     , m_cmd_pool(cmd_pool)
     , m_buffer(device)
 {
-    m_vi_binding.binding = 0;
+    m_vi_binding.binding   = 0;
     m_vi_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    m_vi_binding.stride    = 0; // set when vertex attrs are configured
 }
 
 int VertexBuffer::GetSizeInBytes() const
 {
-	return 0;
+    // FIX: return actual buffer size
+    return m_size_in_bytes;
 }
 
 BufferUsageHint VertexBuffer::GetUsageHint() const
 {
-	return BufferUsageHint::StreamDraw;
+    return BufferUsageHint::StreamDraw;
 }
 
 void VertexBuffer::ReadFromMemory(const void* data, int size, int offset)
 {
-    Buffer staging(m_device);
-    staging.Create(m_phy_dev->GetHandler(), size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    staging.Upload(data, size);
-    m_buffer.Create(m_phy_dev->GetHandler(), size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    m_buffer.CopyFrom(staging, size, m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
+    if (!data || size <= 0) return;
 
-    //m_buffer.Create(m_phy_dev->GetHandler(), size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    //    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    //m_buffer.Upload(data, size);
-    
-    assert(m_vi_binding.stride != 0);
-    m_vertex_count = size / m_vi_binding.stride;
-    
-    //m_info.range = mem_reqs.size;
-    //m_info.offset = 0;
+    // Use staging buffer -> device-local buffer
+    Buffer staging(m_device);
+    staging.Create(m_phy_dev->GetHandler(), size,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    staging.Upload(data, size);
+
+    m_buffer.Create(m_phy_dev->GetHandler(), size,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    m_buffer.CopyFrom(staging, size,
+        m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
+
+    // FIX: track buffer size
+    m_size_in_bytes = size;
+
+    // FIX: recompute vertex count if stride is known
+    if (m_vi_binding.stride > 0) {
+        m_vertex_count = static_cast<size_t>(size) / m_vi_binding.stride;
+    }
 }
 
 void* VertexBuffer::WriteToMemory(int size, int offset)
 {
-	return nullptr;
+    return nullptr; // TODO: map for CPU write
 }
 
 void VertexBuffer::Bind() const
 {
+    // Binding is done in Context::BuildCommandBuffer via vkCmdBindVertexBuffers
 }
 
 void VertexBuffer::UnBind()
 {
+    // No-op in Vulkan
 }
 
 void VertexBuffer::Reserve(int size_in_bytes)
 {
+    if (size_in_bytes <= 0) return;
+
+    m_buffer.Create(m_phy_dev->GetHandler(), size_in_bytes,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    m_size_in_bytes = size_in_bytes;
 }
 
-void VertexBuffer::SetVertInputAttrDesc(const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs)
+void VertexBuffer::SetVertInputAttrDesc(
+    const std::vector<std::shared_ptr<ur::VertexInputAttribute>>& attrs)
 {
-    if (!attrs.empty()) {
-        m_vi_binding.stride = attrs.front()->GetStrideInBytes();
+    m_vi_attribs.clear();
+    m_vi_attribs.reserve(attrs.size());
+
+    uint32_t stride = 0;
+    for (size_t i = 0; i < attrs.size(); ++i)
+    {
+        if (!attrs[i]) continue;
+
+        VkVertexInputAttributeDescription desc;
+        desc.location = static_cast<uint32_t>(attrs[i]->GetLocation());
+        desc.binding  = 0;
+        desc.format   = to_attr_format(attrs[i]->GetCompDataType(),
+                                       attrs[i]->GetNumOfComps());
+        desc.offset   = static_cast<uint32_t>(attrs[i]->GetOffsetInBytes());
+        m_vi_attribs.push_back(desc);
+
+        // Track maximum stride
+        uint32_t attr_stride = static_cast<uint32_t>(attrs[i]->GetStrideInBytes());
+        if (attr_stride > stride) {
+            stride = attr_stride;
+        }
     }
 
-    m_vi_attribs.resize(attrs.size());
-    for (size_t i = 0, n = attrs.size(); i < n; ++i)
-    {
-        auto& src = attrs[i];
-        auto& dst = m_vi_attribs[i];
-        dst.binding = 0;
-        dst.location = i;
-        dst.format = to_attr_format(src->GetCompDataType(), src->GetNumOfComps());
-        dst.offset = src->GetOffsetInBytes();
+    m_vi_binding.stride = stride;
+
+    // FIX: recompute vertex count if data is already uploaded
+    if (m_size_in_bytes > 0 && stride > 0) {
+        m_vertex_count = static_cast<size_t>(m_size_in_bytes) / stride;
     }
 }
 

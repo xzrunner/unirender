@@ -4,19 +4,14 @@
 
 namespace ur
 {
-namespace vulkan
+namespace metal
 {
-
-class Instance;
-class ValidationLayers;
-class PhysicalDevice;
-class LogicalDevice;
-class CommandPool;
 
 class Device : public ur::Device
 {
 public:
-    Device(bool enable_validation_layers);
+    Device(std::ostream& logger = std::cerr);
+    virtual ~Device();
 
     virtual int GetMaxNumVertAttrs() const override { return m_max_num_vert_attrs; }
     virtual int GetMaxNumTexUnits() const override { return m_max_num_tex_units; }
@@ -58,27 +53,32 @@ public:
     virtual std::shared_ptr<ur::Texture>
         CreateTexture(const TextureDescription& desc, const void* pixels = nullptr) const override;
     virtual std::shared_ptr<ur::Texture>
-        CreateTexture(size_t width, size_t height, TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction = false) const override;
+        CreateTexture(size_t width, size_t height, TextureFormat format,
+                      const void* buf, size_t buf_sz, bool gamma_correction = false) const override;
     virtual std::shared_ptr<ur::Texture>
-        CreateTexture3D(size_t width, size_t height, size_t depth, ur::TextureFormat format, const void* buf, size_t buf_sz, bool gamma_correction = false) const override { return nullptr; }
+        CreateTexture3D(size_t width, size_t height, size_t depth, ur::TextureFormat format,
+                        const void* buf, size_t buf_sz, bool gamma_correction = false) const override;
     virtual std::shared_ptr<ur::Texture>
         CreateTextureCubeMap(const std::array<TexturePtr, 6>& textures) const override;
     virtual std::shared_ptr<ur::Texture>
         CreateTextureArray(const std::vector<TexturePtr>& textures) const override { return nullptr; }
-    virtual std::shared_ptr<TextureSampler> CreateTextureSampler(TextureMinificationFilter min_filter,
-        TextureMagnificationFilter mag_filter, TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const override;
+    virtual std::shared_ptr<TextureSampler>
+        CreateTextureSampler(TextureMinificationFilter min_filter, TextureMagnificationFilter mag_filter,
+                             TextureWrap wrap_s, TextureWrap wrap_t, float max_anistropy = 1.0) const override;
+
+    virtual std::shared_ptr<VertexBuffer>
+        CreateVertexBuffer(const void* data, size_t size) const override;
 
     virtual std::shared_ptr<ur::UniformBuffer>
         CreateUniformBuffer(const void* data, size_t size) const override;
     virtual std::shared_ptr<ur::DescriptorPool>
-        CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const override;
+        CreateDescriptorPool(size_t max_sets, const std::vector<std::pair<DescriptorType, size_t>>& pool_sizes) const override { return nullptr; }
     virtual std::shared_ptr<ur::DescriptorSetLayout>
-        CreateDescriptorSetLayout(const std::vector<std::pair<DescriptorType, ShaderType>>& bindings) const override;
-    virtual std::shared_ptr<ur::DescriptorSet> CreateDescriptorSet(const ur::DescriptorPool& pool,
-        const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts,
-        const std::vector<ur::Descriptor>& descriptors) const override;
-    virtual std::shared_ptr<ur::VertexBuffer>
-        CreateVertexBuffer(const void* data, size_t size) const override;
+        CreateDescriptorSetLayout(const std::vector<std::pair<DescriptorType, ShaderType>>& bindings) const override { return nullptr; }
+    virtual std::shared_ptr<ur::DescriptorSet>
+        CreateDescriptorSet(const ur::DescriptorPool& pool,
+                            const std::vector<std::shared_ptr<ur::DescriptorSetLayout>>& layouts,
+                            const std::vector<ur::Descriptor>& descriptors) const override { return nullptr; }
 
     virtual void DispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) const override;
 
@@ -90,22 +90,19 @@ public:
     virtual void PushDebugGroup(const std::string& msg) const override;
     virtual void PopDebugGroup() const override;
 
+    void* GetMTLDevice()    const { return m_mtl_device; }
+    void* GetCommandQueue() const { return m_cmd_queue; }
+
 private:
-    int m_max_num_vert_attrs        = 0;
-    int m_max_num_tex_units         = 0;
-    int m_max_num_color_attachments = 0;
-    int m_max_num_img_units         = 0;
+    void Init();
 
-    bool m_enable_validation_layers = false;
+    int m_max_num_vert_attrs        = 31;
+    int m_max_num_tex_units         = 31;
+    int m_max_num_color_attachments = 8;
+    int m_max_num_img_units         = 8;
 
-    std::shared_ptr<Instance>         m_instance   = nullptr;
-    std::shared_ptr<ValidationLayers> m_valid_layers = nullptr;
-
-    std::shared_ptr<PhysicalDevice> m_phy_dev   = nullptr;
-    std::shared_ptr<LogicalDevice>  m_logic_dev = nullptr;
-    uint32_t m_present_family_id = 0;
-
-    std::shared_ptr<CommandPool> m_cmd_pool = nullptr;
+    void* m_mtl_device = nullptr;   // id<MTLDevice>
+    void* m_cmd_queue  = nullptr;   // id<MTLCommandQueue>
 
     friend class Context;
 

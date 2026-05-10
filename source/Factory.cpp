@@ -3,6 +3,10 @@
 #include "unirender/opengl/Context.h"
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/Context.h"
+#ifdef __APPLE__
+#include "unirender/metal/Device.h"
+#include "unirender/metal/Context.h"
+#endif
 
 namespace ur
 {
@@ -25,6 +29,11 @@ std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
         ret = std::make_shared<vulkan::Device>(enable_validation_layers);
     }
         break;
+    case APIType::Metal:
+#ifdef __APPLE__
+        ret = std::make_shared<metal::Device>(logger);
+#endif
+        break;
     }
     return ret;
 }
@@ -40,6 +49,11 @@ std::shared_ptr<Context> CreateContext(APIType type, const Device& device, void*
         break;
     case APIType::Vulkan:
         ret = std::make_shared<vulkan::Context>(device, hwnd, width, height);
+        break;
+    case APIType::Metal:
+#ifdef __APPLE__
+        ret = std::make_shared<metal::Context>(device, hwnd, width, height);
+#endif
         break;
     }
     return ret;

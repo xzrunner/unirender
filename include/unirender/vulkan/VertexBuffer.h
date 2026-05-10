@@ -22,7 +22,7 @@ class VertexBuffer : public ur::VertexBuffer
 {
 public:
     VertexBuffer(const std::shared_ptr<LogicalDevice>& device,
-        const std::shared_ptr<PhysicalDevice>& phy_dev, 
+        const std::shared_ptr<PhysicalDevice>& phy_dev,
         const std::shared_ptr<CommandPool>& cmd_pool);
 
     virtual int GetSizeInBytes() const override;
@@ -54,9 +54,9 @@ private:
     std::vector<VkVertexInputAttributeDescription> m_vi_attribs;
 
     Buffer m_buffer;
-    //VkDescriptorBufferInfo m_info;
 
-    size_t m_vertex_count = 0;
+    size_t m_vertex_count   = 0;
+    int    m_size_in_bytes  = 0;   // FIX: track actual buffer size
 
 }; // VertexBuffer
 

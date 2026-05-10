@@ -29,417 +29,519 @@
 #include <vulkan/vulkan.h>
 
 #include <iostream>
-
-#include <assert.h>
+#include <cassert>
 
 namespace ur
 {
 namespace vulkan
 {
 
-Context::Context(const ur::Device& device, void* hwnd,
-	             uint32_t width, uint32_t height)
-	: m_device(static_cast<const vulkan::Device&>(device))
+// ---------------------------------------------------------------------------
+// Helper: ur::PrimitiveType -> VkPrimitiveTopology
+// ---------------------------------------------------------------------------
+static VkPrimitiveTopology ToVkTopology(PrimitiveType pt)
 {
-	Init(hwnd, width, height);
+    switch (pt)
+    {
+    case PrimitiveType::Points:         return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+    case PrimitiveType::Lines:          return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    case PrimitiveType::LineStrip:      return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+    case PrimitiveType::Triangles:      return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    case PrimitiveType::TriangleStrip:  return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+    case PrimitiveType::TriangleFan:    return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+    default:                            return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    }
+}
 
-    //VkSemaphoreCreateInfo imageAcquiredSemaphoreCreateInfo;
-    //imageAcquiredSemaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    //imageAcquiredSemaphoreCreateInfo.pNext = NULL;
-    //imageAcquiredSemaphoreCreateInfo.flags = 0;
+// ===========================================================================
+// Construction / destruction
+// ===========================================================================
 
-    //VkResult res = vkCreateSemaphore(vk_dev, &imageAcquiredSemaphoreCreateInfo, NULL, &imageAcquiredSemaphore);
-    //assert(res == VK_SUCCESS);
-
-	// Semaphores (Used for correct command ordering)
-	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
-	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	semaphoreCreateInfo.pNext = nullptr;
-
-	auto logic_dev = m_device.m_logic_dev->GetHandler();
-
-	// Semaphore used to ensures that image presentation is complete before starting to submit again
-	VkResult res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &m_semaphores.present_complete);
-	assert(res == VK_SUCCESS);
-
-	// Semaphore used to ensures that all commands submitted have been finished before submitting the image to the queue
-	res = vkCreateSemaphore(logic_dev, &semaphoreCreateInfo, nullptr, &m_semaphores.render_complete);
-	assert(res == VK_SUCCESS);
-
-	// Fences (Used to check draw command buffer completion)
-	VkFenceCreateInfo fence_ci = {};
-	fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	// Create in signaled state so we don't wait on first render of each command buffer
-	fence_ci.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	res = vkCreateFence(logic_dev, &fence_ci, nullptr, &m_wait_fence);
-	assert(res == VK_SUCCESS);
+Context::Context(const ur::Device& device, void* hwnd,
+                 uint32_t width, uint32_t height)
+    : m_device(static_cast<const vulkan::Device&>(device))
+{
+    Init(hwnd, width, height);
 }
 
 Context::~Context()
-{ 
-	auto logic_dev = m_device.m_logic_dev->GetHandler();
+{
+    auto logic_dev = m_device.m_logic_dev->GetHandler();
 
-	vkDestroySemaphore(logic_dev, m_semaphores.present_complete, nullptr);
-	vkDestroySemaphore(logic_dev, m_semaphores.render_complete, nullptr);
+    // Wait for all GPU work to finish before destroying resources
+    vkDeviceWaitIdle(logic_dev);
 
-	vkDestroyFence(logic_dev, m_wait_fence, nullptr);
+    vkDestroySemaphore(logic_dev, m_semaphores.present_complete, nullptr);
+    vkDestroySemaphore(logic_dev, m_semaphores.render_complete, nullptr);
+    vkDestroyFence(logic_dev, m_wait_fence, nullptr);
 }
+
+// ===========================================================================
+// Init -- called once from the constructor
+// ===========================================================================
+
+void Context::Init(void* hwnd, uint32_t width, uint32_t height)
+{
+    m_width  = width;
+    m_height = height;
+
+    // ---- 1. Surface -------------------------------------------------------
+    m_surface = std::make_shared<Surface>(m_device.m_instance, hwnd);
+
+    // ---- 2. Verify physical device supports this surface ------------------
+    auto phy_dev = std::make_shared<PhysicalDevice>(*m_device.m_instance, m_surface.get());
+    if (phy_dev->GetHandler() != m_device.m_phy_dev->GetHandler()) {
+        throw std::runtime_error("Surface requires a different physical device!");
+    }
+
+    // ---- 3. (Re)create logical device with present queue ------------------
+    //      The Device may have been created without a surface, so the present
+    //      queue may not exist yet.  Recreate if necessary.
+    PhysicalDevice::QueueFamilyIndices indices =
+        PhysicalDevice::FindQueueFamilies(phy_dev->GetHandler(), m_surface.get());
+
+    if (!m_device.m_logic_dev ||
+        m_device.m_logic_dev->GetPresentQueue() == VK_NULL_HANDLE)
+    {
+        const_cast<Device&>(m_device).m_logic_dev =
+            std::make_shared<LogicalDevice>(
+                m_device.m_enable_validation_layers,
+                *m_device.m_phy_dev, m_surface.get());
+        const_cast<Device&>(m_device).m_present_family_id =
+            indices.present_family.value();
+    }
+
+    // ---- 4. Command pool / buffer -----------------------------------------
+    m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
+    if (!m_device.m_cmd_pool) {
+        const_cast<Device&>(m_device).m_cmd_pool = m_cmd_pool;
+    }
+    m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
+
+    // ---- 5. Swapchain & depth buffer --------------------------------------
+    m_swapchain = std::make_shared<Swapchain>(
+        m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
+
+    m_depth_buf = std::make_shared<DepthBuffer>(
+        m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
+
+    m_include_depth = true;
+
+    // ---- 6. Standard descriptor set layouts / pipeline layouts -------------
+    SetupDescriptorLayouts();
+
+    // ---- 7. RenderPass, FrameBuffers, PipelineCache -----------------------
+    m_renderpass     = std::make_shared<RenderPass>(*this, m_include_depth, /*clear=*/true);
+    m_frame_buffers  = std::make_shared<FrameBuffers>(*this, m_include_depth);
+    m_pipeline_cache = std::make_shared<PipelineCache>(m_device.m_logic_dev);
+
+    // ---- 8. Synchronisation primitives ------------------------------------
+    VkSemaphoreCreateInfo sem_ci = {};
+    sem_ci.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    VkResult res;
+    res = vkCreateSemaphore(vk_dev, &sem_ci, nullptr, &m_semaphores.present_complete);
+    assert(res == VK_SUCCESS);
+    res = vkCreateSemaphore(vk_dev, &sem_ci, nullptr, &m_semaphores.render_complete);
+    assert(res == VK_SUCCESS);
+
+    VkFenceCreateInfo fence_ci = {};
+    fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_ci.flags = VK_FENCE_CREATE_SIGNALED_BIT; // start signaled
+    res = vkCreateFence(vk_dev, &fence_ci, nullptr, &m_wait_fence);
+    assert(res == VK_SUCCESS);
+}
+
+// ---------------------------------------------------------------------------
+// Setup commonly-used descriptor set layouts
+// ---------------------------------------------------------------------------
+void Context::SetupDescriptorLayouts()
+{
+    auto& dev = const_cast<Device&>(m_device);
+
+    std::vector<std::pair<DescriptorType, ShaderType>> single_ubo = {
+        { DescriptorType::UniformBuffer, ShaderType::VertexShader }
+    };
+    dev.SetDescriptorSetLayout("single_ubo",
+        m_device.CreateDescriptorSetLayout(single_ubo));
+
+    std::vector<std::pair<DescriptorType, ShaderType>> single_img = {
+        { DescriptorType::CombinedImageSampler, ShaderType::FragmentShader }
+    };
+    dev.SetDescriptorSetLayout("single_img",
+        m_device.CreateDescriptorSetLayout(single_img));
+
+    std::vector<std::pair<DescriptorType, ShaderType>> ubo_img = {
+        { DescriptorType::UniformBuffer,        ShaderType::VertexShader },
+        { DescriptorType::CombinedImageSampler, ShaderType::FragmentShader }
+    };
+    dev.SetDescriptorSetLayout("single_ubo_single_img",
+        m_device.CreateDescriptorSetLayout(ubo_img));
+
+    std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = {
+        m_device.GetDescriptorSetLayout("single_ubo_single_img")
+    };
+    dev.SetPipelineLayout("single_ubo_single_img",
+        std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts));
+}
+
+// ===========================================================================
+// Resize
+// ===========================================================================
 
 void Context::Resize(uint32_t width, uint32_t height)
 {
-	m_width = width;
-	m_height = height;
+    if (width == 0 || height == 0) return;
 
-	auto vk_dev = m_device.m_logic_dev->GetHandler();
+    m_width  = width;
+    m_height = height;
 
-	vkDeviceWaitIdle(vk_dev);
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    vkDeviceWaitIdle(vk_dev);
 
-	// should destroy before create
-	m_swapchain.reset();
-	m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
+    // Destroy in reverse order, then recreate
+    m_frame_buffers.reset();
+    m_renderpass.reset();
+    m_depth_buf.reset();
+    m_swapchain.reset();
 
-	m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
+    m_swapchain = std::make_shared<Swapchain>(
+        m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
+    m_depth_buf = std::make_shared<DepthBuffer>(
+        m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
+    m_renderpass    = std::make_shared<RenderPass>(*this, m_include_depth, /*clear=*/true);
+    m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-	m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
-
-	m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
+    m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
 }
+
+// ===========================================================================
+// Clear -- store values; applied at render-pass begin
+// ===========================================================================
 
 void Context::Clear(const ClearState& clear_state)
 {
-	m_clear_flag = clear_state.buffers;
+    m_clear_flag = clear_state.buffers;
 
-	if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::ColorBuffer)) {
-		m_clear_color = clear_state.color;
-	}
-
-	if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::DepthBuffer)) {
-		m_clear_depth = clear_state.depth;
-	}
-
-	if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::StencilBuffer)) {
-		m_clear_stencil = clear_state.stencil;
-	}
+    if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::ColorBuffer)) {
+        m_clear_color = clear_state.color;
+    }
+    if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::DepthBuffer)) {
+        m_clear_depth = clear_state.depth;
+    }
+    if (static_cast<uint32_t>(m_clear_flag) & static_cast<uint32_t>(ClearBuffers::StencilBuffer)) {
+        m_clear_stencil = clear_state.stencil;
+    }
 }
 
-void Context::Draw(PrimitiveType prim_type, int offset, int count, const DrawState& draw, const void* scene)
+// ===========================================================================
+// Draw (public overloads)
+// ===========================================================================
+
+void Context::Draw(PrimitiveType prim_type, int offset, int count,
+                   const DrawState& draw, const void* scene)
 {
-	Draw(draw);
+    DrawImpl(draw, prim_type, offset, count);
 }
 
-void Context::Draw(PrimitiveType prim_type, const DrawState& draw, const void* scene)
+void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
+                   const void* scene)
 {
-	Draw(draw);
+    if (!draw.vertex_array) return;
+
+    auto ib = draw.vertex_array->GetIndexBuffer();
+    if (ib) {
+        DrawImpl(draw, prim_type, 0, static_cast<int>(ib->GetCount()));
+    } else {
+        auto vb = draw.vertex_array->GetVertexBuffer();
+        int count = vb ? static_cast<int>(vb->GetVertexCount()) : 0;
+        DrawImpl(draw, prim_type, 0, count);
+    }
 }
+
+// ===========================================================================
+// DrawImpl -- the real rendering pipeline
+// ===========================================================================
+
+void Context::DrawImpl(const DrawState& ds, PrimitiveType prim_type,
+                       int offset, int count)
+{
+    if (count == 0) return;
+
+    // ---- 1. Wait for previous frame's fence ----
+    WaitSync();
+
+    // ---- 2. Acquire next swapchain image ----
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    VkResult res = vkAcquireNextImageKHR(
+        vk_dev, m_swapchain->GetHandler(), UINT64_MAX,
+        m_semaphores.present_complete, VK_NULL_HANDLE, &m_current_buffer);
+
+    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+        Resize(m_width, m_height);
+        return;
+    }
+    assert(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR);
+
+    // ---- 3. Build command buffer ----
+    BuildCommandBuffer(ds, prim_type, offset, count);
+
+    // ---- 4. Submit command buffer ----
+    VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+    VkSubmitInfo submit_info = {};
+    submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.pWaitDstStageMask    = &wait_stage;
+    submit_info.pWaitSemaphores      = &m_semaphores.present_complete;
+    submit_info.waitSemaphoreCount   = 1;
+    submit_info.pSignalSemaphores    = &m_semaphores.render_complete;
+    submit_info.signalSemaphoreCount = 1;
+    auto cmd_buf = m_cmd_buf->GetHandler();
+    submit_info.pCommandBuffers      = &cmd_buf;
+    submit_info.commandBufferCount   = 1;
+
+    auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
+    res = vkQueueSubmit(graphics_queue, 1, &submit_info, m_wait_fence);
+    assert(res == VK_SUCCESS);
+
+    // ---- 5. Present ----
+    VkResult present = m_swapchain->QueuePresent(
+        graphics_queue, m_current_buffer, m_semaphores.render_complete);
+    if (present == VK_ERROR_OUT_OF_DATE_KHR || present == VK_SUBOPTIMAL_KHR) {
+        Resize(m_width, m_height);
+    } else {
+        assert(present == VK_SUCCESS);
+    }
+}
+
+// ===========================================================================
+// BuildCommandBuffer -- records one frame
+// ===========================================================================
+
+void Context::BuildCommandBuffer(const DrawState& ds, PrimitiveType prim_type,
+                                 int offset, int count)
+{
+    VkResult res;
+    auto cmd_buf = m_cmd_buf->GetHandler();
+
+    VkCommandBufferBeginInfo cb_begin = {};
+    cb_begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    res = vkBeginCommandBuffer(cmd_buf, &cb_begin);
+    assert(res == VK_SUCCESS);
+
+    // ---- Begin render pass ----
+    std::vector<VkClearValue> clear_values;
+    clear_values.resize(m_include_depth ? 2 : 1);
+    clear_values[0].color = {{
+        m_clear_color.r / 255.0f,
+        m_clear_color.g / 255.0f,
+        m_clear_color.b / 255.0f,
+        m_clear_color.a / 255.0f
+    }};
+    if (m_include_depth) {
+        clear_values[1].depthStencil = {
+            static_cast<float>(m_clear_depth),
+            static_cast<uint32_t>(m_clear_stencil)
+        };
+    }
+
+    VkRenderPassBeginInfo rp_begin = {};
+    rp_begin.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    rp_begin.renderPass        = m_renderpass->GetHandler();
+    rp_begin.framebuffer       = m_frame_buffers->GetHandler(m_current_buffer);
+    rp_begin.renderArea.offset = {0, 0};
+    rp_begin.renderArea.extent = { static_cast<uint32_t>(m_width),
+                                   static_cast<uint32_t>(m_height) };
+    rp_begin.clearValueCount   = static_cast<uint32_t>(clear_values.size());
+    rp_begin.pClearValues      = clear_values.data();
+
+    vkCmdBeginRenderPass(cmd_buf, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
+
+    // ---- Viewport & scissor (dynamic state) ----
+    VkViewport viewport = {};
+    viewport.x        = static_cast<float>(m_viewport.x);
+    viewport.y        = static_cast<float>(m_viewport.y);
+    viewport.width    = (m_viewport.w > 0) ? static_cast<float>(m_viewport.w)
+                                           : static_cast<float>(m_width);
+    viewport.height   = (m_viewport.h > 0) ? static_cast<float>(m_viewport.h)
+                                           : static_cast<float>(m_height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
+
+    VkRect2D scissor = {};
+    scissor.extent.width  = static_cast<uint32_t>(m_width);
+    scissor.extent.height = static_cast<uint32_t>(m_height);
+    vkCmdSetScissor(cmd_buf, 0, 1, &scissor);
+
+    // ---- Bind descriptor sets ----
+    if (ds.desc_set) {
+        std::vector<VkDescriptorSet> desc_sets;
+        desc_sets.push_back(
+            std::static_pointer_cast<vulkan::DescriptorSet>(ds.desc_set)->GetHandler());
+        vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            std::static_pointer_cast<vulkan::PipelineLayout>(ds.pipeline_layout)->GetHandler(),
+            0, static_cast<uint32_t>(desc_sets.size()), desc_sets.data(), 0, nullptr);
+    }
+
+    // ---- Bind pipeline ----
+    if (ds.pipeline) {
+        vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            std::static_pointer_cast<vulkan::Pipeline>(ds.pipeline)->GetHandler());
+    }
+
+    // ---- Bind vertex / index buffers, draw ----
+    if (ds.vertex_array)
+    {
+        auto vb = ds.vertex_array->GetVertexBuffer();
+        auto ib = ds.vertex_array->GetIndexBuffer();
+
+        VkDeviceSize vb_offsets[1] = {0};
+        if (vb) {
+            auto vk_vb = std::static_pointer_cast<vulkan::VertexBuffer>(vb)->GetBuffer();
+            if (vk_vb != VK_NULL_HANDLE) {
+                vkCmdBindVertexBuffers(cmd_buf, 0, 1, &vk_vb, vb_offsets);
+            }
+        }
+
+        if (ib) {
+            auto vk_ib = std::static_pointer_cast<vulkan::IndexBuffer>(ib)->GetBuffer();
+            // FIX: support both uint16 and uint32 index types
+            VkIndexType idx_type = (ib->GetDataType() == IndexBufferDataType::UnsignedInt)
+                ? VK_INDEX_TYPE_UINT32
+                : VK_INDEX_TYPE_UINT16;
+            vkCmdBindIndexBuffer(cmd_buf, vk_ib, 0, idx_type);
+            vkCmdDrawIndexed(cmd_buf, static_cast<uint32_t>(count), 1,
+                             static_cast<uint32_t>(offset), 0, 0);
+        } else {
+            vkCmdDraw(cmd_buf, static_cast<uint32_t>(count), 1,
+                      static_cast<uint32_t>(offset), 0);
+        }
+    }
+
+    vkCmdEndRenderPass(cmd_buf);
+
+    res = vkEndCommandBuffer(cmd_buf);
+    assert(res == VK_SUCCESS);
+}
+
+// ===========================================================================
+// WaitSync -- wait for previous frame to finish
+// ===========================================================================
+
+void Context::WaitSync()
+{
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    VkResult res;
+    res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
+    assert(res == VK_SUCCESS);
+    res = vkResetFences(vk_dev, 1, &m_wait_fence);
+    assert(res == VK_SUCCESS);
+}
+
+// ===========================================================================
+// Viewport
+// ===========================================================================
 
 void Context::SetViewport(int x, int y, int w, int h)
 {
-	m_viewport = Rectangle(x, y, w, h);
+    m_viewport = Rectangle(x, y, w, h);
 }
 
 void Context::GetViewport(int& x, int& y, int& w, int& h) const
 {
-	x = m_viewport.x;
-	y = m_viewport.y;
-	w = m_viewport.w;
-	h = m_viewport.h;
+    x = m_viewport.x;
+    y = m_viewport.y;
+    w = m_viewport.w;
+    h = m_viewport.h;
 }
+
+// ===========================================================================
+// Texture / sampler / image binding -- stored for next draw
+// ===========================================================================
 
 void Context::SetTexture(size_t slot, const ur::TexturePtr& tex)
 {
+    if (slot < m_bound_textures.size()) {
+        m_bound_textures[slot] = tex;
+    }
 }
 
-void Context::SetTextureSampler(size_t slot, const std::shared_ptr<ur::TextureSampler>& sampler)
+void Context::SetTextureSampler(size_t slot,
+    const std::shared_ptr<ur::TextureSampler>& sampler)
 {
+    if (slot < m_bound_samplers.size()) {
+        m_bound_samplers[slot] = sampler;
+    }
 }
 
 void Context::SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access)
 {
+    // TODO: storage image binding for compute shaders
 }
 
-void Context::SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb) 
+// ===========================================================================
+// Framebuffer
+// ===========================================================================
+
+void Context::SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb)
 {
+    m_set_framebuffer = fb;
 }
 
-std::shared_ptr<ur::Framebuffer> Context::GetFramebuffer() const 
+std::shared_ptr<ur::Framebuffer> Context::GetFramebuffer() const
 {
-    return nullptr;
+    return m_set_framebuffer;
 }
 
-void Context::SetUnpackRowLength(int len)
-{
+// ===========================================================================
+// Pixel transfer state -- N/A for Vulkan
+// ===========================================================================
 
-}
+void Context::SetUnpackRowLength(int len) {}
+void Context::SetPackRowLength(int len) {}
 
-void Context::SetPackRowLength(int len)
-{
-
-}
+// ===========================================================================
+// Misc
+// ===========================================================================
 
 bool Context::CheckRenderTargetStatus()
 {
-	return true;
+    return true; // Vulkan validates at pipeline creation
 }
 
 void Context::Flush()
 {
-	vkDeviceWaitIdle(m_device.m_logic_dev->GetHandler());
+    vkDeviceWaitIdle(m_device.m_logic_dev->GetHandler());
 }
 
 std::shared_ptr<ur::Pipeline>
-Context::CreatePipeline(bool include_depth, bool include_vi, const ur::PipelineLayout& layout,
-                        const ur::VertexBuffer& vb, const ur::ShaderProgram& prog) const
+Context::CreatePipeline(bool include_depth, bool include_vi,
+                        const ur::PipelineLayout& layout,
+                        const ur::VertexBuffer& vb,
+                        const ur::ShaderProgram& prog) const
 {
     return std::make_shared<Pipeline>(*this, m_include_depth, include_vi, layout, vb, prog);
 }
 
-void Context::Init(void* hwnd, uint32_t width, uint32_t height)
+void Context::SetMemoryBarrier(const std::vector<BarrierType>& types)
 {
-	m_width  = width;
-	m_height = height;
-
-    m_surface = std::make_shared<Surface>(m_device.m_instance, hwnd);
-
-    auto phy_dev = std::make_shared<PhysicalDevice>(*m_device.m_instance, m_surface.get());
-	if (phy_dev->GetHandler() != m_device.m_phy_dev->GetHandler()) {
-		throw std::runtime_error("different physical device!");
-	}
-
-	PhysicalDevice::QueueFamilyIndices indices = PhysicalDevice::FindQueueFamilies(phy_dev->GetHandler(), m_surface.get());
-
-	if (!m_device.m_logic_dev) {
-		const_cast<Device&>(m_device).m_logic_dev = std::make_shared<LogicalDevice>(m_device.m_enable_validation_layers, *m_device.m_phy_dev, m_surface.get());
-		const_cast<Device&>(m_device).m_present_family_id = indices.present_family.value();
-	} else {
-		if (indices.present_family.value() != m_device.m_present_family_id) {
-			throw std::runtime_error("different logic device!");
-		}
-	}
-
-    m_swapchain = std::make_shared<Swapchain>(m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
-
-    m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
-	if (!m_device.m_cmd_pool) {
-		const_cast<Device&>(m_device).m_cmd_pool = m_cmd_pool;
-	}
-    m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
-
-    m_depth_buf = std::make_shared<DepthBuffer>(m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
-
-	std::vector<std::pair<DescriptorType, ShaderType>> single_ubo_bindings = {
-		{ ur::DescriptorType::UniformBuffer, ur::ShaderType::VertexShader } 
-	};
-	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_ubo", m_device.CreateDescriptorSetLayout(single_ubo_bindings));
-
-	std::vector<std::pair<DescriptorType, ShaderType>> single_img_bindings = {
-		{ ur::DescriptorType::CombinedImageSampler, ur::ShaderType::FragmentShader }
-	};
-	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_img", m_device.CreateDescriptorSetLayout(single_img_bindings));
-
-	std::vector<std::pair<DescriptorType, ShaderType>> single_ubo_single_img_bindings = {
-		{ ur::DescriptorType::UniformBuffer, ur::ShaderType::VertexShader },
-		{ ur::DescriptorType::CombinedImageSampler, ur::ShaderType::FragmentShader }
-	};
-	const_cast<Device&>(m_device).SetDescriptorSetLayout("single_ubo_single_img", m_device.CreateDescriptorSetLayout(single_ubo_single_img_bindings));
-
-	std::vector<std::shared_ptr<ur::DescriptorSetLayout>> layouts = { m_device.GetDescriptorSetLayout("single_ubo_single_img") };
-	const_cast<Device&>(m_device).SetPipelineLayout("single_ubo_single_img", std::make_shared<PipelineLayout>(m_device.m_logic_dev, layouts));
-
-    m_renderpass = std::make_shared<RenderPass>(*this, m_include_depth);
-
-    m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
-
-	std::vector<std::pair<ur::DescriptorType, size_t>> pool_sizes = {
-		{ ur::DescriptorType::UniformBuffer,        1024 },
-		{ ur::DescriptorType::CombinedImageSampler, 1024 },
-	};
-	const_cast<Device&>(m_device).SetDescriptorPool(m_device.CreateDescriptorPool(1024, pool_sizes));
-
-    m_pipeline_cache = std::make_shared<PipelineCache>(m_device.m_logic_dev);
+    // TODO: vkCmdPipelineBarrier for buffer/image memory barriers
 }
 
+// ===========================================================================
+// Accessors used by RenderPass, FrameBuffers, Pipeline
+// ===========================================================================
+
 std::shared_ptr<PhysicalDevice> Context::GetPhysicalDevice() const
-{ 
-	return m_device.m_phy_dev; 
+{
+    return m_device.m_phy_dev;
 }
 
 std::shared_ptr<LogicalDevice> Context::GetLogicalDevice() const
-{ 
-	return m_device.m_logic_dev; 
-}
-
-void Context::Draw(const DrawState& draw)
 {
-	auto vk_dev = m_device.m_logic_dev->GetHandler();
-
-	// Get next image in the swap chain (back/front buffer)
-	VkResult res = vkAcquireNextImageKHR(vk_dev, m_swapchain->GetHandler(),
-		UINT64_MAX, m_semaphores.present_complete, VK_NULL_HANDLE, &m_current_buffer);
-    assert(res == VK_SUCCESS);
-
-	WaitSync();
-
-	BuildCommandBuffers(draw);
-
-	// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
-	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	// The submit info structure specifices a command buffer queue submission batch
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.pWaitDstStageMask = &waitStageMask;               // Pointer to the list of pipeline stages that the semaphore waits will occur at
-	submit_info.pWaitSemaphores = &m_semaphores.present_complete; // Semaphore(s) to wait upon before the submitted command buffer starts executing
-	submit_info.waitSemaphoreCount = 1;                           // One wait semaphore
-	submit_info.pSignalSemaphores = &m_semaphores.render_complete;// Semaphore(s) to be signaled when command buffers have completed
-	submit_info.signalSemaphoreCount = 1;                         // One signal semaphore
-	auto cmd_buf = m_cmd_buf->GetHandler();
-	submit_info.pCommandBuffers = &cmd_buf;                       // Command buffers(s) to execute in this batch (submission)
-	submit_info.commandBufferCount = 1;                           // One command buffer
-
-	auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
-
-	// Submit to the graphics queue passing a wait fence
-
-	//// Create fence to ensure that the command buffer has finished executing
-	//VkFenceCreateInfo fence_ci = {};
-	//fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	//fence_ci.flags = 0;
-	//VkFence fence;
-	//res = vkCreateFence(vk_dev, &fence_ci, nullptr, &fence);
-	//assert(res == VK_SUCCESS);
-
-	res = vkQueueSubmit(graphics_queue, 1, &submit_info, m_wait_fence);
-	assert(res == VK_SUCCESS);
-
-	//res = vkWaitForFences(vk_dev, 1, &fence, VK_TRUE, UINT64_MAX);
-	//assert(res == VK_SUCCESS);
-	//vkDestroyFence(vk_dev, fence, nullptr);
-
-	// Present the current buffer to the swap chain
-	// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
-	// This ensures that the image is not presented to the windowing system until all commands have been submitted
-	VkResult present = m_swapchain->QueuePresent(graphics_queue, m_current_buffer, m_semaphores.render_complete);
-	if (!((present == VK_SUCCESS) || (present == VK_SUBOPTIMAL_KHR))) {
-		assert(present == VK_SUCCESS);
-	}
-}
-
-void Context::BuildCommandBuffers(const DrawState& ds)
-{
-	VkResult res;
-
-	auto vk_dev = m_device.m_logic_dev->GetHandler();
-
-	VkCommandBufferBeginInfo cb_begin_info = {};
-	cb_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	cb_begin_info.pNext = nullptr;
-
-	std::vector<VkClearValue> clear_values;
-	clear_values.resize(m_include_depth ? 2 : 1);
-	auto& dst_col = clear_values[0].color.float32;
-	dst_col[0] = m_clear_color.r / 255.0f;
-	dst_col[1] = m_clear_color.r / 255.0f;
-	dst_col[2] = m_clear_color.r / 255.0f;
-	dst_col[3] = m_clear_color.r / 255.0f;
-	if (m_include_depth) {
-		clear_values[1].depthStencil.depth = static_cast<float>(m_clear_depth);
-		clear_values[1].depthStencil.stencil = m_clear_stencil;
-	}
-
-	VkRenderPassBeginInfo rp_begin_info = {};
-	rp_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	rp_begin_info.pNext = nullptr;
-	rp_begin_info.renderPass = m_renderpass->GetHandler();
-	rp_begin_info.renderArea.offset.x = 0;
-	rp_begin_info.renderArea.offset.y = 0;
-	rp_begin_info.renderArea.extent.width = m_width;
-	rp_begin_info.renderArea.extent.height = m_height;
-	rp_begin_info.clearValueCount = clear_values.size();
-	rp_begin_info.pClearValues = clear_values.data();
-
-	auto cmd_buf = m_cmd_buf->GetHandler();
-	auto& frame_bufs = m_frame_buffers->GetHandler();
-
-	// Set target frame buffer
-	rp_begin_info.framebuffer = frame_bufs[m_current_buffer];
-
-	res = vkBeginCommandBuffer(cmd_buf, &cb_begin_info);
-	assert(res == VK_SUCCESS);
-
-	// Start the first sub pass specified in our default render pass setup by the base class
-	// This will clear the color and depth attachment
-	vkCmdBeginRenderPass(cmd_buf, &rp_begin_info, VK_SUBPASS_CONTENTS_INLINE);
-
-	// Update dynamic viewport state
-	VkViewport viewport = {};
-	// fixme: Extension VK_KHR_maintenance1 not found in list of known instance extensions.
-	//viewport.x = 0;
-	//viewport.y = m_viewport.h;
-	//viewport.width = (float)m_viewport.w;
-	//viewport.height = -(float)m_viewport.h;
-	viewport.width = (float)m_viewport.w;
-	viewport.height = (float)m_viewport.h;
-	viewport.minDepth = (float) 0.0f;
-	viewport.maxDepth = (float) 1.0f;
-	vkCmdSetViewport(cmd_buf, 0, 1, &viewport);
-
-	// Update dynamic scissor state
-	VkRect2D scissor = {};
-	scissor.extent.width = m_width;
-	scissor.extent.height = m_height;
-	scissor.offset.x = 0;
-	scissor.offset.y = 0;
-	vkCmdSetScissor(cmd_buf, 0, 1, &scissor);
-
-	// Bind descriptor sets describing shader binding points
-	std::vector<VkDescriptorSet> desc_sets;
-	desc_sets.push_back(std::static_pointer_cast<vulkan::DescriptorSet>(ds.desc_set)->GetHandler());
-	vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
-		std::static_pointer_cast<vulkan::PipelineLayout>(ds.pipeline_layout)->GetHandler(), 0, desc_sets.size(), desc_sets.data(), 0, nullptr);
-
-	// Bind the rendering pipeline
-	// The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time
-	vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
-		std::static_pointer_cast<vulkan::Pipeline>(ds.pipeline)->GetHandler());
-
-	// Bind triangle vertex buffer (contains position and colors)
-	auto ib = ds.vertex_array->GetIndexBuffer();
-	auto vb = ds.vertex_array->GetVertexBuffer();
-	VkDeviceSize offsets[1] = { 0 };
-	auto vk_vb = std::static_pointer_cast<vulkan::VertexBuffer>(vb)->GetBuffer();
-	if (vk_vb != VK_NULL_HANDLE) {
-		vkCmdBindVertexBuffers(cmd_buf, 0, 1, &vk_vb, offsets);
-	}
-	if (ib)
-	{
-		auto vk_ib = std::static_pointer_cast<vulkan::IndexBuffer>(ib)->GetBuffer();
-		vkCmdBindIndexBuffer(cmd_buf, vk_ib, 0, VK_INDEX_TYPE_UINT16);
-
-		size_t count = ib->GetCount();
-		vkCmdDrawIndexed(cmd_buf, count, 1, 0, 0, 0);
-	}
-	else
-	{
-		vkCmdDraw(cmd_buf, vb->GetVertexCount(), 1, 0, 0);
-	}
-
-	vkCmdEndRenderPass(cmd_buf);
-
-	// Ending the render pass will add an implicit barrier transitioning the frame buffer color attachment to
-	// VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system
-
-	res = vkEndCommandBuffer(cmd_buf);
-	assert(res == VK_SUCCESS);
-}
-
-void Context::WaitSync()
-{
-	VkResult res;
-	auto vk_dev = m_device.m_logic_dev->GetHandler();
-
-	res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
-	assert(res == VK_SUCCESS);
-	res = vkResetFences(vk_dev, 1, &m_wait_fence);
-	assert(res == VK_SUCCESS);
+    return m_device.m_logic_dev;
 }
 
 }

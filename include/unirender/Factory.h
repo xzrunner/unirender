@@ -15,6 +15,7 @@ enum class APIType
 {
 	OpenGL,
 	Vulkan,
+	Metal,
 };
 
 std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger = std::cerr);

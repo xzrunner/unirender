@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.16)
 
 project(unirender)
 
-add_definitions(
-    -DNO_BOOST
-    -DVK_USE_PLATFORM_WIN32_KHR
-)
+add_definitions(-DNO_BOOST)
+if(WIN32)
+    add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+elseif(APPLE)
+    add_definitions(-DVK_USE_PLATFORM_METAL_EXT)
+elseif(UNIX)
+    add_definitions(-DVK_USE_PLATFORM_XCB_KHR)
+endif()
 
 ################################################################################
 # Source groups
@@ -209,6 +213,33 @@ set(api__vulkan__9.utility
 )
 source_group("api\\vulkan\\9.utility" FILES ${api__vulkan__9.utility})
 
+if(APPLE)
+    set(api__metal
+        "include/unirender/metal/Device.h"
+        "include/unirender/metal/Context.h"
+        "include/unirender/metal/VertexArray.h"
+        "include/unirender/metal/VertexBuffer.h"
+        "include/unirender/metal/IndexBuffer.h"
+        "include/unirender/metal/Texture.h"
+        "include/unirender/metal/TextureSampler.h"
+        "include/unirender/metal/ShaderProgram.h"
+        "include/unirender/metal/Framebuffer.h"
+        "include/unirender/metal/RenderBuffer.h"
+        "include/unirender/metal/UniformBuffer.h"
+        "source/metal/Device.mm"
+        "source/metal/Context.mm"
+        "source/metal/VertexBuffer.mm"
+        "source/metal/IndexBuffer.mm"
+        "source/metal/Texture.mm"
+        "source/metal/TextureSampler.mm"
+        "source/metal/ShaderProgram.mm"
+        "source/metal/Framebuffer.mm"
+        "source/metal/RenderBuffer.mm"
+        "source/metal/UniformBuffer.mm"
+    )
+    source_group("api\\metal" FILES ${api__metal})
+endif()
+
 set(buffer
     "include/unirender/BufferTarget.h"
     "include/unirender/BufferUsageHint.h"
@@ -361,4 +392,28 @@ target_include_directories(${PROJECT_NAME} PRIVATE include external/Vulkan-Heade
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PUBLIC "/Zc:__cplusplus")
+endif()
+
+if(APPLE)
+    target_sources(${PROJECT_NAME} PRIVATE ${api__metal})
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        "-framework Metal"
+        "-framework QuartzCore"
+        "-framework Foundation"
+    )
+    set_source_files_properties(
+        source/metal/Device.mm
+        source/metal/Context.mm
+        source/metal/VertexBuffer.mm
+        source/metal/IndexBuffer.mm
+        source/metal/Texture.mm
+        source/metal/TextureSampler.mm
+        source/metal/ShaderProgram.mm
+        source/metal/Framebuffer.mm
+        source/metal/RenderBuffer.mm
+        source/metal/UniformBuffer.mm
+        PROPERTIES
+        COMPILE_FLAGS "-x objective-c++ -fobjc-arc"
+    )
 endif()

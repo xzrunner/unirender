@@ -34,12 +34,12 @@ public:
 
     virtual void Reserve(int size_in_bytes) override;
 
-    virtual void SetDataType(IndexBufferDataType data_type) override {}
+    virtual void SetDataType(IndexBufferDataType data_type) override;
 
     void Create(const PhysicalDevice& phy_dev, const void* data, size_t size);
 
     auto GetBuffer() const { return m_buffer.GetHandler(); }
-    auto GetCount() const { return m_count; }
+    auto GetCount()  const { return m_count; }
 
 private:
     std::shared_ptr<LogicalDevice>  m_device   = nullptr;
@@ -48,7 +48,11 @@ private:
 
     Buffer m_buffer;
 
-    uint32_t m_count  = 0;
+    uint32_t m_count        = 0;
+    int      m_size_in_bytes = 0;
+
+    // FIX: track data type (default UnsignedShort for backward compat)
+    IndexBufferDataType m_data_type = IndexBufferDataType::UnsignedShort;
 
 }; // IndexBuffer
 

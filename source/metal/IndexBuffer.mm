@@ -1,0 +1,73 @@
+#import <Metal/Metal.h>
+#include "unirender/metal/IndexBuffer.h"
+#include <cstring>
+
+namespace ur
+{
+namespace metal
+{
+
+IndexBuffer::IndexBuffer(void* mtl_device, int size_in_bytes)
+    : m_mtl_device(mtl_device)
+    , m_size_in_bytes(size_in_bytes)
+{
+    if (size_in_bytes > 0) {
+        CreateBuffer(size_in_bytes);
+    }
+}
+
+IndexBuffer::~IndexBuffer()
+{
+    if (m_mtl_buffer) {
+        CFRelease(m_mtl_buffer);
+        m_mtl_buffer = nullptr;
+    }
+}
+
+void IndexBuffer::CreateBuffer(int size)
+{
+    if (m_mtl_buffer) {
+        CFRelease(m_mtl_buffer);
+        m_mtl_buffer = nullptr;
+    }
+    id<MTLDevice> device = (__bridge id<MTLDevice>)m_mtl_device;
+    id<MTLBuffer> buf = [device newBufferWithLength:size
+                                           options:MTLResourceStorageModeShared];
+    m_mtl_buffer = (__bridge_retained void*)buf;
+    m_size_in_bytes = size;
+}
+
+void IndexBuffer::ReadFromMemory(const void* data, int size, int offset)
+{
+    if (!data || size <= 0) return;
+
+    if (!m_mtl_buffer || offset + size > m_size_in_bytes) {
+        CreateBuffer(offset + size);
+    }
+
+    id<MTLBuffer> buf = (__bridge id<MTLBuffer>)m_mtl_buffer;
+    memcpy((uint8_t*)[buf contents] + offset, data, size);
+
+    size_t elem_size = (m_data_type == IndexBufferDataType::UnsignedInt) ? 4 : 2;
+    m_count = static_cast<size_t>(size) / elem_size;
+}
+
+void* IndexBuffer::WriteToMemory(int size, int offset)
+{
+    if (!m_mtl_buffer) return nullptr;
+
+    void* dst = new uint8_t[size];
+    id<MTLBuffer> buf = (__bridge id<MTLBuffer>)m_mtl_buffer;
+    memcpy(dst, (uint8_t*)[buf contents] + offset, size);
+    return dst;
+}
+
+void IndexBuffer::Reserve(int size_in_bytes)
+{
+    if (size_in_bytes > m_size_in_bytes) {
+        CreateBuffer(size_in_bytes);
+    }
+}
+
+}
+}

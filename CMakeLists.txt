@@ -387,7 +387,18 @@ set(ALL_FILES
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
-target_include_directories(${PROJECT_NAME} PRIVATE include external/Vulkan-Headers/include external/gl3w/include external/shadertrans/include)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME} PRIVATE external/Vulkan-Headers/include)
+if(TARGET gl3w)
+    target_link_libraries(${PROJECT_NAME} PRIVATE gl3w)
+else()
+    target_include_directories(${PROJECT_NAME} PRIVATE external/gl3w/include)
+endif()
+if(TARGET shadertrans)
+    target_link_libraries(${PROJECT_NAME} PRIVATE shadertrans)
+else()
+    target_include_directories(${PROJECT_NAME} PRIVATE external/shadertrans/include)
+endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 if(MSVC)

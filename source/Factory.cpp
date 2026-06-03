@@ -1,8 +1,12 @@
 #include "unirender/Factory.h"
+#ifndef __APPLE__ // the OpenGL backend is excluded on macOS (Metal is used instead)
 #include "unirender/opengl/Device.h"
 #include "unirender/opengl/Context.h"
+#endif
+#ifndef __APPLE__ // the Vulkan backend is excluded on macOS (Metal is used instead)
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/Context.h"
+#endif
 #ifdef __APPLE__
 #include "unirender/metal/Device.h"
 #include "unirender/metal/Context.h"
@@ -17,9 +21,12 @@ std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
     switch (type)
     {
     case APIType::OpenGL:
+#ifndef __APPLE__
         ret = std::make_shared<opengl::Device>(logger);
+#endif
         break;
     case APIType::Vulkan:
+#ifndef __APPLE__
     {
 #ifdef NDEBUG
         const bool enable_validation_layers = false;
@@ -28,6 +35,7 @@ std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
 #endif
         ret = std::make_shared<vulkan::Device>(enable_validation_layers);
     }
+#endif
         break;
     case APIType::Metal:
 #ifdef __APPLE__
@@ -45,10 +53,14 @@ std::shared_ptr<Context> CreateContext(APIType type, const Device& device, void*
     switch (type)
     {
     case APIType::OpenGL:
+#ifndef __APPLE__
         ret = std::make_shared<opengl::Context>(device);
+#endif
         break;
     case APIType::Vulkan:
+#ifndef __APPLE__
         ret = std::make_shared<vulkan::Context>(device, hwnd, width, height);
+#endif
         break;
     case APIType::Metal:
 #ifdef __APPLE__

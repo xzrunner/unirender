@@ -9,16 +9,15 @@ MTLPixelFormat ToMTLFormat(ur::InternalFormat fmt)
 {
     switch (fmt)
     {
-    case ur::InternalFormat::RGBA8:       return MTLPixelFormatRGBA8Unorm;
-    case ur::InternalFormat::RGBA16F:     return MTLPixelFormatRGBA16Float;
-    case ur::InternalFormat::RGBA32F:     return MTLPixelFormatRGBA32Float;
-    case ur::InternalFormat::RED:         return MTLPixelFormatR8Unorm;
-    case ur::InternalFormat::R16:         return MTLPixelFormatR16Unorm;
-    case ur::InternalFormat::R16F:        return MTLPixelFormatR16Float;
-    case ur::InternalFormat::RG16F:       return MTLPixelFormatRG16Float;
+    // ur::InternalFormat was simplified to base formats only (no bit-depth/float
+    // variants), so map to 8-bit unorm; HDR formats are not expressible here.
+    case ur::InternalFormat::RED:            return MTLPixelFormatR8Unorm;
+    case ur::InternalFormat::RG:             return MTLPixelFormatRG8Unorm;
+    case ur::InternalFormat::RGB:            return MTLPixelFormatRGBA8Unorm; // Metal has no 24-bit RGB
+    case ur::InternalFormat::RGBA:           return MTLPixelFormatRGBA8Unorm;
     case ur::InternalFormat::DepthComponent: return MTLPixelFormatDepth32Float;
     case ur::InternalFormat::DepthStencil:   return MTLPixelFormatDepth32Float_Stencil8;
-    default:                              return MTLPixelFormatRGBA8Unorm;
+    default:                                 return MTLPixelFormatRGBA8Unorm;
     }
 }
 

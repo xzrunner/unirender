@@ -18,8 +18,8 @@ public:
     virtual void Bind(AttachmentType attach) const override {}
     static void UnBind() {}
 
-    virtual int GetWidth()  const override { return m_width; }
-    virtual int GetHeight() const override { return m_height; }
+    int GetWidth()  const { return m_width; }
+    int GetHeight() const { return m_height; }
 
     void* GetMTLTexture() const { return m_mtl_texture; }
 

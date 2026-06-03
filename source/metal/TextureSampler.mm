@@ -60,10 +60,7 @@ TextureSampler::TextureSampler(void* mtl_device,
                                TextureMagnificationFilter mag_filter,
                                TextureWrap wrap_s, TextureWrap wrap_t,
                                float max_anisotropy)
-    : m_min_filter(min_filter)
-    , m_mag_filter(mag_filter)
-    , m_wrap_s(wrap_s)
-    , m_wrap_t(wrap_t)
+    : ur::TextureSampler(min_filter, mag_filter, wrap_s, wrap_t, max_anisotropy)
 {
     id<MTLDevice> device = (__bridge id<MTLDevice>)mtl_device;
 

@@ -12,7 +12,7 @@ MTLPixelFormat ToMTLPixelFormat(ur::TextureFormat fmt, bool gamma)
     switch (fmt)
     {
     case ur::TextureFormat::RGBA8:    return gamma ? MTLPixelFormatRGBA8Unorm_sRGB : MTLPixelFormatRGBA8Unorm;
-    case ur::TextureFormat::BGRA8:    return gamma ? MTLPixelFormatBGRA8Unorm_sRGB : MTLPixelFormatBGRA8Unorm;
+    case ur::TextureFormat::BGRA_EXT:    return gamma ? MTLPixelFormatBGRA8Unorm_sRGB : MTLPixelFormatBGRA8Unorm;
     case ur::TextureFormat::RGB:      return MTLPixelFormatRGBA8Unorm; // Metal has no RGB8; promote to RGBA
     case ur::TextureFormat::RGBA4:    return MTLPixelFormatABGR4Unorm;
     case ur::TextureFormat::RGB565:   return MTLPixelFormatB5G6R5Unorm;
@@ -28,7 +28,6 @@ MTLPixelFormat ToMTLPixelFormat(ur::TextureFormat fmt, bool gamma)
     case ur::TextureFormat::RG32F:    return MTLPixelFormatRG32Float;
     case ur::TextureFormat::R32F:     return MTLPixelFormatR32Float;
     case ur::TextureFormat::DEPTH:    return MTLPixelFormatDepth32Float;
-    case ur::TextureFormat::DEPTH24STENCIL8: return MTLPixelFormatDepth32Float_Stencil8;
     default:                          return MTLPixelFormatRGBA8Unorm;
     }
 }
@@ -45,7 +44,7 @@ size_t BytesPerPixel(ur::TextureFormat fmt)
     case ur::TextureFormat::RGB565:   return 2;
     case ur::TextureFormat::RGB:      return 3;
     case ur::TextureFormat::RGBA8:
-    case ur::TextureFormat::BGRA8:
+    case ur::TextureFormat::BGRA_EXT:
     case ur::TextureFormat::RG16F:
     case ur::TextureFormat::R32F:
     case ur::TextureFormat::DEPTH:    return 4;

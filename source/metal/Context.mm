@@ -1,5 +1,9 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
+#include <TargetConditionals.h>
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>      // NSView
+#endif
 
 #include "unirender/metal/Context.h"
 #include "unirender/metal/Device.h"
@@ -13,6 +17,7 @@
 #include "unirender/metal/UniformBuffer.h"
 #include "unirender/DrawState.h"
 #include "unirender/ClearState.h"
+#include "unirender/VertexInputAttribute.h"
 #include "unirender/VertexArray.h"
 #include "unirender/IndexBuffer.h"
 #include "unirender/VertexBuffer.h"
@@ -482,7 +487,7 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
                 MTLVertexFormat vfmt = MTLVertexFormatFloat3; // default
                 switch (a->GetCompDataType()) {
                 case ComponentDataType::Float:
-                    switch (a->GetNumOfComp()) {
+                    switch (a->GetNumOfComps()) {
                     case 1: vfmt = MTLVertexFormatFloat;  break;
                     case 2: vfmt = MTLVertexFormatFloat2; break;
                     case 3: vfmt = MTLVertexFormatFloat3; break;
@@ -490,7 +495,7 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
                     }
                     break;
                 case ComponentDataType::UnsignedByte:
-                    switch (a->GetNumOfComp()) {
+                    switch (a->GetNumOfComps()) {
                     case 2: vfmt = MTLVertexFormatUChar2Normalized; break;
                     case 4: vfmt = MTLVertexFormatUChar4Normalized; break;
                     default: vfmt = MTLVertexFormatUChar4Normalized; break;

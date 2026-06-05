@@ -49,8 +49,9 @@ ShaderProgram::ShaderProgram(void* mtl_device, const std::string& msl_source)
 
 ShaderProgram::~ShaderProgram()
 {
-    if (m_frag_func)   { CFRelease(m_frag_func);   m_frag_func = nullptr; }
-    if (m_vert_func)   { CFRelease(m_vert_func);   m_vert_func = nullptr; }
+    if (m_frag_func)      { CFRelease(m_frag_func);      m_frag_func = nullptr; }
+    if (m_vert_func)      { CFRelease(m_vert_func);      m_vert_func = nullptr; }
+    if (m_vert_func_flip) { CFRelease(m_vert_func_flip); m_vert_func_flip = nullptr; }
     if (m_mtl_library) { CFRelease(m_mtl_library);  m_mtl_library = nullptr; }
     for (auto& u : m_ubos) { if (u.mtl_buffer) { CFRelease(u.mtl_buffer); } }
     m_ubos.clear();
@@ -159,6 +160,25 @@ void ShaderProgram::CompileFromSPIRV(const std::vector<unsigned int>& vs,
         m_valid = false; return;
     }
     id<MTLFunction> vfunc = [vlib newFunctionWithName:@"vertex_main"];
+
+    // A second vertex function with clip-space y negated, for offscreen (FBO)
+    // passes -- Metal render-to-texture is top-left origin while OpenGL (which the
+    // engine's UV math assumes) is bottom-left, so without this every FBO render
+    // is vertically mirrored. SPIRV-Cross emits the entry's [[position]] output as
+    // `out.gl_Position` and returns `out;`, so inject the negation before it.
+    {
+        std::string vs_flip = vs_msl;
+        size_t rp = vs_flip.rfind("return out;");
+        if (rp != std::string::npos && vs_flip.find("out.gl_Position") != std::string::npos) {
+            vs_flip.insert(rp, "out.gl_Position.y = -out.gl_Position.y;\n    ");
+            NSError* ferr = nil;
+            id<MTLLibrary> vlib_flip =
+                [device newLibraryWithSource:[NSString stringWithUTF8String:vs_flip.c_str()]
+                                     options:nil error:&ferr];
+            id<MTLFunction> vfunc_flip = vlib_flip ? [vlib_flip newFunctionWithName:@"vertex_main"] : nil;
+            if (vfunc_flip) { m_vert_func_flip = (__bridge_retained void*)vfunc_flip; }
+        }
+    }
 
     err = nil;
     id<MTLLibrary> flib = [device newLibraryWithSource:[NSString stringWithUTF8String:fs_msl.c_str()]

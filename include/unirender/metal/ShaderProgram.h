@@ -42,6 +42,12 @@ public:
     void* GetFragmentFunction() const { return m_frag_func; }
     void* GetMTLLibrary()       const { return m_mtl_library; }
 
+    // A second vertex function whose clip-space y is negated, used when rendering
+    // to an offscreen framebuffer: Metal's render-to-texture origin is top-left
+    // (OpenGL is bottom-left), so FBO passes must flip y to match the GL-convention
+    // sampling the rest of the engine assumes. Falls back to the normal function.
+    void* GetVertexFunctionFlipped() const { return m_vert_func_flip ? m_vert_func_flip : m_vert_func; }
+
     // A reflected uniform block. Its backing MTLBuffer (CPU-written via the
     // QueryUniform() path) must be bound at buffer_index in the given stage
     // at draw time.
@@ -68,10 +74,11 @@ private:
                           const std::vector<unsigned int>& fs);
     void CompileFromMSL(const std::string& source);
 
-    void* m_mtl_device  = nullptr;  // id<MTLDevice>
-    void* m_mtl_library = nullptr;  // id<MTLLibrary>
-    void* m_vert_func   = nullptr;  // id<MTLFunction>
-    void* m_frag_func   = nullptr;  // id<MTLFunction>
+    void* m_mtl_device    = nullptr;  // id<MTLDevice>
+    void* m_mtl_library   = nullptr;  // id<MTLLibrary>
+    void* m_vert_func     = nullptr;  // id<MTLFunction>
+    void* m_vert_func_flip = nullptr; // id<MTLFunction>, clip-space y negated (FBO passes)
+    void* m_frag_func     = nullptr;  // id<MTLFunction>
 
     std::vector<UBOBinding>              m_ubos;
     std::unordered_map<std::string, int> m_tex_slots;     // name -> MSL texture index

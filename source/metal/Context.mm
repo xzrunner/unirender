@@ -225,6 +225,9 @@ void Context::BeginColorPass(void* color_tex, bool with_depth, bool clear)
 
     m_cur_color_target = color_tex;
     m_cur_has_depth    = with_depth;
+    // Screen passes carry a depth attachment; offscreen FBO passes don't. FBO
+    // passes render with a clip-space y flip (Metal top-left vs GL bottom-left).
+    m_cur_is_fbo       = !with_depth;
 }
 
 void Context::EnsureCmdBuffer()
@@ -588,7 +591,11 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
     id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
 
     MTLRenderPipelineDescriptor* pd = [[MTLRenderPipelineDescriptor alloc] init];
-    pd.vertexFunction   = (__bridge id<MTLFunction>)mtl_prog->GetVertexFunction();
+    // Offscreen FBO passes use the clip-space-y-flipped vertex function so the
+    // rendered texture matches OpenGL's bottom-left origin (which the engine's UV
+    // math assumes); the screen pass uses the normal one.
+    pd.vertexFunction   = (__bridge id<MTLFunction>)(m_cur_is_fbo
+        ? mtl_prog->GetVertexFunctionFlipped() : mtl_prog->GetVertexFunction());
     pd.fragmentFunction = (__bridge id<MTLFunction>)mtl_prog->GetFragmentFunction();
     // Match the pipeline's attachment formats to the CURRENT render target
     // (the screen drawable, or an FBO color texture with no depth).

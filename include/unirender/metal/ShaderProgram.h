@@ -57,6 +57,12 @@ public:
     // collide with any vertex-stage uniform block.
     int GetVertexBufferIndex() const { return m_vtx_buf_index; }
 
+    // Reflected MSL texture/sampler indices (name -> [[texture(N)]]/[[sampler(N)]]).
+    // The engine's SetTexture() slot is NOT generally equal to these, so Draw()
+    // must map through them when binding.
+    const std::unordered_map<std::string, int>& GetTexSlots()     const { return m_tex_slots; }
+    const std::unordered_map<std::string, int>& GetSamplerSlots() const { return m_sampler_slots; }
+
 private:
     void CompileFromSPIRV(const std::vector<unsigned int>& vs,
                           const std::vector<unsigned int>& fs);
@@ -68,7 +74,8 @@ private:
     void* m_frag_func   = nullptr;  // id<MTLFunction>
 
     std::vector<UBOBinding>              m_ubos;
-    std::unordered_map<std::string, int> m_tex_slots; // name -> MSL texture index
+    std::unordered_map<std::string, int> m_tex_slots;     // name -> MSL texture index
+    std::unordered_map<std::string, int> m_sampler_slots; // name -> MSL sampler index
     int                                  m_vtx_buf_index = 0;
 
     bool m_valid = false;

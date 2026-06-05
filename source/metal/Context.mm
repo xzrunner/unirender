@@ -25,6 +25,8 @@
 
 #include <cassert>
 #include <iostream>
+#include <algorithm>
+#include <vector>
 
 namespace
 {
@@ -337,14 +339,33 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
         }
     }
 
-    // --- Bind textures & samplers. Metal needs a sampler bound even when the
-    //     engine passes a null one (SetTextureSampler(slot, nullptr)); GL/Vulkan
-    //     tolerate that, but an unbound MSL sampler samples 0 (-> black). ---
+    // --- Bind textures & samplers. The MSL index a sampled image binds to comes
+    //     from reflection (HLSL register(tN) -> SPIR-V binding -> MSL [[texture(M)]])
+    //     and is not necessarily the engine's SetTexture() slot, so map each
+    //     engine-bound texture (in ascending slot order) onto the shader's reflected
+    //     tex/sampler MSL indices (ascending). Metal also needs a sampler bound even
+    //     when the engine passes a null one (SetTextureSampler(slot, nullptr)) --
+    //     an unbound MSL sampler reads 0. ---
+    std::vector<int> shader_tex_idx, shader_smp_idx;
+    if (mtl_prog) {
+        for (auto& kv : mtl_prog->GetTexSlots())     { shader_tex_idx.push_back(kv.second); }
+        for (auto& kv : mtl_prog->GetSamplerSlots()) { shader_smp_idx.push_back(kv.second); }
+        std::sort(shader_tex_idx.begin(), shader_tex_idx.end());
+        std::sort(shader_smp_idx.begin(), shader_smp_idx.end());
+    }
+    size_t tex_ord = 0;
     for (size_t i = 0; i < MAX_SLOTS; ++i) {
         if (!m_bound_textures[i]) { continue; }
         auto mtl_tex = std::static_pointer_cast<metal::Texture>(m_bound_textures[i]);
         if (!mtl_tex->GetMTLTexture()) { continue; }
-        [encoder setFragmentTexture:(__bridge id<MTLTexture>)mtl_tex->GetMTLTexture() atIndex:i];
+
+        NSUInteger tex_index = (tex_ord < shader_tex_idx.size())
+            ? (NSUInteger)shader_tex_idx[tex_ord] : (NSUInteger)i;
+        NSUInteger smp_index = (tex_ord < shader_smp_idx.size())
+            ? (NSUInteger)shader_smp_idx[tex_ord] : tex_index;
+        ++tex_ord;
+
+        [encoder setFragmentTexture:(__bridge id<MTLTexture>)mtl_tex->GetMTLTexture() atIndex:tex_index];
 
         id<MTLSamplerState> samp = nil;
         if (m_bound_samplers[i]) {
@@ -366,7 +387,7 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
             }
             samp = s_default;
         }
-        [encoder setFragmentSamplerState:samp atIndex:i];
+        [encoder setFragmentSamplerState:samp atIndex:smp_index];
     }
 
     // --- Draw ---

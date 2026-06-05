@@ -90,6 +90,10 @@ void ShaderProgram::CompileFromSPIRV(const std::vector<unsigned int>& vs,
             const spirv_cross::SPIRType& type = comp.get_type(ubo.base_type_id);
             size_t size = comp.get_declared_struct_size(type);
             if (size == 0) { continue; }
+            // SPIRV-Cross returns ~0u for a block it optimized out (e.g. all members
+            // unused). Binding a buffer at that index in Metal is out of range and
+            // crashes setVertex/FragmentBuffer -- skip it.
+            if (idx == (unsigned int)-1 || idx >= 31u) { continue; }
             id<MTLBuffer> buf = [dev newBufferWithLength:size
                                                  options:MTLResourceStorageModeShared];
             uint8_t* contents = (uint8_t*)[buf contents];
@@ -105,8 +109,22 @@ void ShaderProgram::CompileFromSPIRV(const std::vector<unsigned int>& vs,
                 AddUniform(full, std::make_shared<MtlUniform>(full, contents + off));
             }
         }
+        auto valid_idx = [](unsigned int v) { return v != (unsigned int)-1 && v < 31u; };
         for (auto& img : res.sampled_images) {
-            m_tex_slots[comp.get_name(img.id)] = (int)comp.get_automatic_msl_resource_binding(img.id);
+            unsigned int idx = comp.get_automatic_msl_resource_binding(img.id);
+            if (valid_idx(idx)) { m_tex_slots[comp.get_name(img.id)] = (int)idx; }
+        }
+        // HLSL Texture2D + SamplerState (via DXC) become SEPARATE SPIR-V image
+        // and sampler objects, not combined sampled_images -- reflect those too,
+        // else m_tex_slots stays empty and the texture never binds at its MSL
+        // index (-> sampler reads 0 -> black).
+        for (auto& img : res.separate_images) {
+            unsigned int idx = comp.get_automatic_msl_resource_binding(img.id);
+            if (valid_idx(idx)) { m_tex_slots[comp.get_name(img.id)] = (int)idx; }
+        }
+        for (auto& smp : res.separate_samplers) {
+            unsigned int idx = comp.get_automatic_msl_resource_binding(smp.id);
+            if (valid_idx(idx)) { m_sampler_slots[comp.get_name(smp.id)] = (int)idx; }
         }
         return msl;
     };

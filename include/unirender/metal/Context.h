@@ -69,6 +69,14 @@ private:
     void Init(void* hwnd, uint32_t width, uint32_t height);
     void BeginFrame();
     void EndFrame();
+    // Start a render pass to the given color texture (drawable or an FBO's
+    // attachment). Ends the current encoder first. with_depth attaches the depth
+    // buffer; clear uses m_clear_state, otherwise the existing content is loaded.
+    void BeginColorPass(void* color_tex, bool with_depth, bool clear);
+    void EndEncoder();
+    // Lazily create the per-frame command buffer that holds BOTH the offscreen
+    // (atlas) passes and the screen passes -- created on whichever happens first.
+    void EnsureCmdBuffer();
 
     // Build or retrieve a MTLRenderPipelineState for the given DrawState
     void* GetOrCreatePipelineState(const DrawState& draw);
@@ -93,7 +101,16 @@ private:
     void* m_depth_texture   = nullptr;  // id<MTLTexture>
     void* m_depth_stencil_state = nullptr; // id<MTLDepthStencilState>
 
+    // Current render target (drawable texture or an FBO color texture) + whether
+    // the active pass has a depth attachment -- the pipeline must match these.
+    void* m_cur_color_target = nullptr; // id<MTLTexture>
+    bool  m_cur_has_depth    = false;
+
     bool m_frame_active = false;
+    // True when m_cmd_buffer is a transient buffer created for offscreen
+    // (render-to-texture) work that happens outside a screen frame, e.g. the
+    // dtex glyph atlas. It is committed when the FBO is unbound.
+    bool m_offscreen_cmd = false;
 
     // Bound texture / sampler slots
     static constexpr size_t MAX_SLOTS = 32;

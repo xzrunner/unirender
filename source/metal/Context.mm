@@ -91,6 +91,7 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
         layer.device          = device;
         layer.pixelFormat     = MTLPixelFormatBGRA8Unorm;
         layer.framebufferOnly = YES;
+        layer.contentsScale   = 1.0; // 1 drawable pixel per point (match the editor's point coords)
         layer.drawableSize    = CGSizeMake(width, height);
 
 #if TARGET_OS_OSX
@@ -117,8 +118,9 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
     // --- Depth/Stencil state ---
     {
         MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
-        dsd.depthCompareFunction = MTLCompareFunctionLess;
-        dsd.depthWriteEnabled    = YES;
+        // 2D editor: draw order defines layering, so never reject on depth.
+        dsd.depthCompareFunction = MTLCompareFunctionAlways;
+        dsd.depthWriteEnabled    = NO;
         id<MTLDepthStencilState> dss = [device newDepthStencilStateWithDescriptor:dsd];
         m_depth_stencil_state = (__bridge_retained void*)dss;
     }
@@ -161,6 +163,77 @@ void Context::Resize(uint32_t width, uint32_t height)
 // Frame management
 // ===========================================================================
 
+void Context::EndEncoder()
+{
+    if (m_render_encoder) {
+        id<MTLRenderCommandEncoder> encoder =
+            (__bridge_transfer id<MTLRenderCommandEncoder>)m_render_encoder;
+        [encoder endEncoding];
+        m_render_encoder = nullptr;
+    }
+}
+
+void Context::BeginColorPass(void* color_tex, bool with_depth, bool clear)
+{
+    EndEncoder();
+
+    id<MTLCommandBuffer> cmdBuf  = (__bridge id<MTLCommandBuffer>)m_cmd_buffer;
+    id<MTLTexture>       colorTex = (__bridge id<MTLTexture>)color_tex;
+    if (!cmdBuf || !colorTex) { return; }
+
+    MTLRenderPassDescriptor* rpd = [MTLRenderPassDescriptor renderPassDescriptor];
+    rpd.colorAttachments[0].texture     = colorTex;
+    rpd.colorAttachments[0].loadAction  = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+    rpd.colorAttachments[0].storeAction = MTLStoreActionStore;
+    if (clear) {
+        rpd.colorAttachments[0].clearColor =
+            MTLClearColorMake(m_clear_state.color.r / 255.0,
+                              m_clear_state.color.g / 255.0,
+                              m_clear_state.color.b / 255.0,
+                              m_clear_state.color.a / 255.0);
+    }
+
+    if (with_depth) {
+        id<MTLTexture> depthTex = (__bridge id<MTLTexture>)m_depth_texture;
+        rpd.depthAttachment.texture        = depthTex;
+        rpd.depthAttachment.loadAction     = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+        rpd.depthAttachment.storeAction    = MTLStoreActionDontCare;
+        rpd.depthAttachment.clearDepth     = m_clear_state.depth;
+        rpd.stencilAttachment.texture      = depthTex;
+        rpd.stencilAttachment.loadAction   = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+        rpd.stencilAttachment.storeAction  = MTLStoreActionDontCare;
+        rpd.stencilAttachment.clearStencil = m_clear_state.stencil;
+    }
+
+    id<MTLRenderCommandEncoder> encoder = [cmdBuf renderCommandEncoderWithDescriptor:rpd];
+    m_render_encoder = (__bridge_retained void*)encoder;
+
+    if (with_depth) {
+        [encoder setDepthStencilState:(__bridge id<MTLDepthStencilState>)m_depth_stencil_state];
+    }
+
+    MTLViewport vp;
+    vp.originX = m_viewport.x;
+    vp.originY = m_viewport.y;
+    vp.width   = (m_viewport.w > 0) ? m_viewport.w : (double)colorTex.width;
+    vp.height  = (m_viewport.h > 0) ? m_viewport.h : (double)colorTex.height;
+    vp.znear   = 0.0;
+    vp.zfar    = 1.0;
+    [encoder setViewport:vp];
+
+    m_cur_color_target = color_tex;
+    m_cur_has_depth    = with_depth;
+}
+
+void Context::EnsureCmdBuffer()
+{
+    if (!m_cmd_buffer) {
+        id<MTLCommandQueue> queue = (__bridge id<MTLCommandQueue>)m_device.GetCommandQueue();
+        id<MTLCommandBuffer> cmdBuf = [queue commandBuffer];
+        m_cmd_buffer = (__bridge_retained void*)cmdBuf;
+    }
+}
+
 void Context::BeginFrame()
 {
     if (m_frame_active) return;
@@ -171,70 +244,29 @@ void Context::BeginFrame()
     if (!drawable) return;
     m_drawable = (__bridge_retained void*)drawable;
 
-    id<MTLCommandQueue> queue = (__bridge id<MTLCommandQueue>)m_device.GetCommandQueue();
-    id<MTLCommandBuffer> cmdBuf = [queue commandBuffer];
-    m_cmd_buffer = (__bridge_retained void*)cmdBuf;
-
-    // Build render pass descriptor
-    MTLRenderPassDescriptor* rpd = [MTLRenderPassDescriptor renderPassDescriptor];
-
-    rpd.colorAttachments[0].texture     = drawable.texture;
-    rpd.colorAttachments[0].loadAction  = MTLLoadActionClear;
-    rpd.colorAttachments[0].storeAction = MTLStoreActionStore;
-    rpd.colorAttachments[0].clearColor  =
-        MTLClearColorMake(m_clear_state.color.r / 255.0,
-                          m_clear_state.color.g / 255.0,
-                          m_clear_state.color.b / 255.0,
-                          m_clear_state.color.a / 255.0);
-
-    id<MTLTexture> depthTex = (__bridge id<MTLTexture>)m_depth_texture;
-    rpd.depthAttachment.texture      = depthTex;
-    rpd.depthAttachment.loadAction   = MTLLoadActionClear;
-    rpd.depthAttachment.storeAction  = MTLStoreActionDontCare;
-    rpd.depthAttachment.clearDepth   = m_clear_state.depth;
-
-    rpd.stencilAttachment.texture      = depthTex;
-    rpd.stencilAttachment.loadAction   = MTLLoadActionClear;
-    rpd.stencilAttachment.storeAction  = MTLStoreActionDontCare;
-    rpd.stencilAttachment.clearStencil = m_clear_state.stencil;
-
-    id<MTLRenderCommandEncoder> encoder = [cmdBuf renderCommandEncoderWithDescriptor:rpd];
-    m_render_encoder = (__bridge_retained void*)encoder;
-
-    // Set depth/stencil state
-    [encoder setDepthStencilState:(__bridge id<MTLDepthStencilState>)m_depth_stencil_state];
-
-    // Set viewport
-    MTLViewport vp;
-    vp.originX = m_viewport.x;
-    vp.originY = m_viewport.y;
-    vp.width   = (m_viewport.w > 0) ? m_viewport.w : m_width;
-    vp.height  = (m_viewport.h > 0) ? m_viewport.h : m_height;
-    vp.znear   = 0.0;
-    vp.zfar    = 1.0;
-    [encoder setViewport:vp];
+    // Reuse the command buffer if offscreen (atlas) passes already started it this
+    // frame, so those passes execute before the screen passes that sample them.
+    EnsureCmdBuffer();
 
     m_frame_active = true;
+    BeginColorPass((__bridge void*)drawable.texture, /*with_depth*/true, /*clear*/true);
 }
 
 void Context::EndFrame()
 {
-    if (!m_frame_active) return;
+    EndEncoder();
+    m_cur_color_target = nullptr;
 
-    if (m_render_encoder) {
-        id<MTLRenderCommandEncoder> encoder =
-            (__bridge_transfer id<MTLRenderCommandEncoder>)m_render_encoder;
-        [encoder endEncoding];
-        m_render_encoder = nullptr;
-    }
-
-    if (m_cmd_buffer && m_drawable) {
-        id<MTLCommandBuffer> cmdBuf    = (__bridge_transfer id<MTLCommandBuffer>)m_cmd_buffer;
-        id<CAMetalDrawable>  drawable  = (__bridge_transfer id<CAMetalDrawable>)m_drawable;
-        [cmdBuf presentDrawable:drawable];
+    // Commit whatever was recorded this frame (atlas passes and/or screen passes).
+    if (m_cmd_buffer) {
+        id<MTLCommandBuffer> cmdBuf = (__bridge_transfer id<MTLCommandBuffer>)m_cmd_buffer;
+        if (m_drawable) {
+            id<CAMetalDrawable> drawable = (__bridge_transfer id<CAMetalDrawable>)m_drawable;
+            [cmdBuf presentDrawable:drawable];
+            m_drawable = nullptr;
+        }
         [cmdBuf commit];
         m_cmd_buffer = nullptr;
-        m_drawable   = nullptr;
     }
 
     m_frame_active = false;
@@ -258,7 +290,7 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
                    const DrawState& draw, const void* scene)
 {
     if (count <= 0) return;
-    if (!m_frame_active) BeginFrame();
+    if (!m_render_encoder) BeginFrame(); // use the active pass (FBO atlas or screen); else start the screen frame
     if (!m_render_encoder) return;
 
     id<MTLRenderCommandEncoder> encoder =
@@ -270,34 +302,71 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
         [encoder setRenderPipelineState:(__bridge id<MTLRenderPipelineState>)pso];
     }
 
-    // --- Bind vertex buffer ---
+    // --- Bind vertex buffer + reflected uniform blocks. The shader picks the
+    //     MSL buffer indices so vertex (stage_in) data and UBOs never collide. ---
+    auto mtl_prog = draw.program
+        ? std::static_pointer_cast<metal::ShaderProgram>(draw.program) : nullptr;
+    const int vtx_index = mtl_prog ? mtl_prog->GetVertexBufferIndex() : 0;
+
+    // Run the shader's uniform updaters -- writes matrices etc. into the UBO
+    // backing buffers (same as the GL backend's program->Clean() before a draw).
+    if (draw.program) {
+        draw.program->Clean(*this, draw, scene);
+    }
+
     if (draw.vertex_array) {
         auto vb = draw.vertex_array->GetVertexBuffer();
         if (vb) {
             auto mtl_vb = std::static_pointer_cast<metal::VertexBuffer>(vb);
             if (mtl_vb->GetMTLBuffer()) {
                 id<MTLBuffer> buf = (__bridge id<MTLBuffer>)mtl_vb->GetMTLBuffer();
-                [encoder setVertexBuffer:buf offset:0 atIndex:0];
+                [encoder setVertexBuffer:buf offset:0 atIndex:vtx_index];
             }
         }
     }
 
-    // --- Bind textures & samplers ---
-    for (size_t i = 0; i < MAX_SLOTS; ++i) {
-        if (m_bound_textures[i]) {
-            auto mtl_tex = std::static_pointer_cast<metal::Texture>(m_bound_textures[i]);
-            if (mtl_tex->GetMTLTexture()) {
-                id<MTLTexture> t = (__bridge id<MTLTexture>)mtl_tex->GetMTLTexture();
-                [encoder setFragmentTexture:t atIndex:i];
+    if (mtl_prog) {
+        for (auto& ubo : mtl_prog->GetUBOs()) {
+            if (!ubo.mtl_buffer) { continue; }
+            id<MTLBuffer> b = (__bridge id<MTLBuffer>)ubo.mtl_buffer;
+            if (ubo.stage == ShaderType::VertexShader) {
+                [encoder setVertexBuffer:b offset:0 atIndex:ubo.buffer_index];
+            } else {
+                [encoder setFragmentBuffer:b offset:0 atIndex:ubo.buffer_index];
             }
         }
+    }
+
+    // --- Bind textures & samplers. Metal needs a sampler bound even when the
+    //     engine passes a null one (SetTextureSampler(slot, nullptr)); GL/Vulkan
+    //     tolerate that, but an unbound MSL sampler samples 0 (-> black). ---
+    for (size_t i = 0; i < MAX_SLOTS; ++i) {
+        if (!m_bound_textures[i]) { continue; }
+        auto mtl_tex = std::static_pointer_cast<metal::Texture>(m_bound_textures[i]);
+        if (!mtl_tex->GetMTLTexture()) { continue; }
+        [encoder setFragmentTexture:(__bridge id<MTLTexture>)mtl_tex->GetMTLTexture() atIndex:i];
+
+        id<MTLSamplerState> samp = nil;
         if (m_bound_samplers[i]) {
             auto mtl_s = std::static_pointer_cast<metal::TextureSampler>(m_bound_samplers[i]);
             if (mtl_s->GetMTLSamplerState()) {
-                id<MTLSamplerState> s = (__bridge id<MTLSamplerState>)mtl_s->GetMTLSamplerState();
-                [encoder setFragmentSamplerState:s atIndex:i];
+                samp = (__bridge id<MTLSamplerState>)mtl_s->GetMTLSamplerState();
             }
         }
+        if (!samp) {
+            static id<MTLSamplerState> s_default = nil;
+            if (!s_default) {
+                MTLSamplerDescriptor* sd = [[MTLSamplerDescriptor alloc] init];
+                sd.minFilter    = MTLSamplerMinMagFilterLinear;
+                sd.magFilter    = MTLSamplerMinMagFilterLinear;
+                sd.sAddressMode = MTLSamplerAddressModeClampToEdge;
+                sd.tAddressMode = MTLSamplerAddressModeClampToEdge;
+                id<MTLDevice> dev = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
+                s_default = [dev newSamplerStateWithDescriptor:sd];
+            }
+            samp = s_default;
+        }
+        [encoder setFragmentSamplerState:samp atIndex:i];
     }
 
     // --- Draw ---
@@ -413,6 +482,35 @@ void Context::SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access
 void Context::SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb)
 {
     m_set_framebuffer = fb;
+
+    // Resolve the FBO's first color-attachment texture (if any).
+    void* colorTex = nullptr;
+    if (fb) {
+        auto mfb = std::static_pointer_cast<metal::Framebuffer>(fb);
+        for (auto& att : mfb->GetAttachments()) {
+            if (att.tex) {
+                colorTex = std::static_pointer_cast<metal::Texture>(att.tex)->GetMTLTexture();
+                break;
+            }
+        }
+    }
+
+    // One command buffer holds both offscreen (atlas) and screen passes this
+    // frame; Metal executes them in submission order, so an atlas rendered here
+    // is ready for a later screen pass that samples it -- no CPU sync needed.
+    if (colorTex) {
+        EnsureCmdBuffer();
+        BeginColorPass(colorTex, /*with_depth*/false, /*clear*/false);
+    } else if (m_frame_active && m_drawable) {
+        // Back to the screen drawable mid-frame; keep existing content.
+        id<CAMetalDrawable> drawable = (__bridge id<CAMetalDrawable>)m_drawable;
+        BeginColorPass((__bridge void*)drawable.texture, /*with_depth*/true, /*clear*/false);
+    } else {
+        // Unbinding an FBO before any screen frame has begun: just end the pass;
+        // the screen pass starts later on the first on-screen draw (BeginFrame).
+        EndEncoder();
+        m_cur_color_target = nullptr;
+    }
 }
 
 std::shared_ptr<ur::Framebuffer> Context::GetFramebuffer() const
@@ -464,15 +562,24 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
     if (!mtl_prog->GetVertexFunction() || !mtl_prog->GetFragmentFunction()) {
         return nullptr;
     }
+    const int vtxIdx = mtl_prog->GetVertexBufferIndex();
 
     id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
 
     MTLRenderPipelineDescriptor* pd = [[MTLRenderPipelineDescriptor alloc] init];
     pd.vertexFunction   = (__bridge id<MTLFunction>)mtl_prog->GetVertexFunction();
     pd.fragmentFunction = (__bridge id<MTLFunction>)mtl_prog->GetFragmentFunction();
-    pd.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
-    pd.depthAttachmentPixelFormat      = MTLPixelFormatDepth32Float_Stencil8;
-    pd.stencilAttachmentPixelFormat    = MTLPixelFormatDepth32Float_Stencil8;
+    // Match the pipeline's attachment formats to the CURRENT render target
+    // (the screen drawable, or an FBO color texture with no depth).
+    id<MTLTexture> curColor = (__bridge id<MTLTexture>)m_cur_color_target;
+    pd.colorAttachments[0].pixelFormat = curColor ? curColor.pixelFormat : MTLPixelFormatBGRA8Unorm;
+    if (m_cur_has_depth) {
+        pd.depthAttachmentPixelFormat   = MTLPixelFormatDepth32Float_Stencil8;
+        pd.stencilAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+    } else {
+        pd.depthAttachmentPixelFormat   = MTLPixelFormatInvalid;
+        pd.stencilAttachmentPixelFormat = MTLPixelFormatInvalid;
+    }
 
     // Configure vertex descriptor from vertex array attributes
     if (draw.vertex_array) {
@@ -507,14 +614,14 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
 
                 vd.attributes[a->GetLocation()].format      = vfmt;
                 vd.attributes[a->GetLocation()].offset      = a->GetOffsetInBytes();
-                vd.attributes[a->GetLocation()].bufferIndex = 0;
+                vd.attributes[a->GetLocation()].bufferIndex = vtxIdx;
             }
 
-            // Layout for buffer index 0
+            // Layout for the vertex (stage_in) buffer
             if (!attrs.empty() && attrs[0]) {
-                vd.layouts[0].stride       = attrs[0]->GetStrideInBytes();
-                vd.layouts[0].stepRate     = 1;
-                vd.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+                vd.layouts[vtxIdx].stride       = attrs[0]->GetStrideInBytes();
+                vd.layouts[vtxIdx].stepRate     = 1;
+                vd.layouts[vtxIdx].stepFunction = MTLVertexStepFunctionPerVertex;
             }
 
             pd.vertexDescriptor = vd;

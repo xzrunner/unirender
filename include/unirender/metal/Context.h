@@ -105,6 +105,9 @@ private:
     // the active pass has a depth attachment -- the pipeline must match these.
     void* m_cur_color_target = nullptr; // id<MTLTexture>
     bool  m_cur_has_depth    = false;
+    // True while the active pass targets an offscreen FBO (not the screen drawable);
+    // such passes use the clip-space-y-flipped vertex function (GL vs Metal origin).
+    bool  m_cur_is_fbo       = false;
 
     bool m_frame_active = false;
     // True when m_cmd_buffer is a transient buffer created for offscreen

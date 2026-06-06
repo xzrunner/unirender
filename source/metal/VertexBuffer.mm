@@ -42,7 +42,16 @@ void VertexBuffer::ReadFromMemory(const void* data, int size, int offset)
 {
     if (!data || size <= 0) return;
 
-    if (!m_mtl_buffer || offset + size > m_size_in_bytes) {
+    // Metal defers a draw until the command buffer commits, but this buffer is
+    // reused across many 2D batches per frame (SpriteRenderer flushes on every
+    // texture/state change). Reusing one MTLBuffer would make every encoded-but-
+    // not-yet-executed draw read the LAST batch's data -- dropped glyphs and stray
+    // triangles linking unrelated primitives. On a full rewrite (offset 0) orphan
+    // the buffer (allocate a fresh one) so each pending draw keeps its own snapshot;
+    // Metal retains the old buffer until its command buffer completes, then frees it.
+    if (offset == 0) {
+        CreateBuffer(size);
+    } else if (!m_mtl_buffer || offset + size > m_size_in_bytes) {
         CreateBuffer(offset + size);
     }
 

@@ -75,6 +75,14 @@ void ShaderProgram::CompileFromSPIRV(const std::vector<unsigned int>& vs,
         spirv_cross::CompilerMSL comp(spirv);
         spirv_cross::CompilerMSL::Options opts; // .platform defaults to macOS
         opts.set_msl_version(2, 0);
+        // Metal requires a fragment color output to have at least as many
+        // components as its attachment's pixel format. Several MRT shaders write
+        // vec3 (e.g. the deferred GBuffer's normal target), and Metal has no
+        // 3-component 16F format -- it is promoted to RGBA16Float (4 comp), so a
+        // vec3 output makes pipeline creation fail. Pad every fragment output to
+        // 4 components so any attachment format is satisfied. GL keeps the vec3
+        // source; this only affects the MSL translation.
+        opts.pad_fragment_output_components = true;
         comp.set_msl_options(opts);
         for (auto& ep : comp.get_entry_points_and_stages()) {
             if (ep.execution_model == model) {
@@ -91,6 +99,16 @@ void ShaderProgram::CompileFromSPIRV(const std::vector<unsigned int>& vs,
             const spirv_cross::SPIRType& type = comp.get_type(ubo.base_type_id);
             size_t size = comp.get_declared_struct_size(type);
             if (size == 0) { continue; }
+            // get_declared_struct_size() returns the std140 size up to the end of
+            // the last member WITHOUT the trailing round-up (e.g. { vec3; vec3;
+            // vec3; } -> 44). MSL pads the block up to its 16-byte alignment (48),
+            // and Metal validates the bound buffer against that MSL size -- a 44B
+            // buffer trips "argument has a length(48)" and asserts. Round up to 16
+            // to match the MSL block size (get_declared_struct_size_msl() would be
+            // exact but is a protected CompilerMSL member). Member offsets coincide
+            // between std140 and MSL for scalar/vec/mat members, so the per-uniform
+            // write offsets below stay correct.
+            size = (size + 15u) & ~size_t(15u);
             // SPIRV-Cross returns ~0u for a block it optimized out (e.g. all members
             // unused). Binding a buffer at that index in Metal is out of range and
             // crashes setVertex/FragmentBuffer -- skip it.

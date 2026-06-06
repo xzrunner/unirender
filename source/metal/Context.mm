@@ -299,13 +299,13 @@ void Context::BeginColorPass(void* const* color_texs, size_t color_count,
 void Context::EnsureCmdBuffer()
 {
     if (!m_cmd_buffer) {
-        // Throttle the CPU to one frame in flight. Shaders' uniform blocks (and the
-        // sprite renderer's UBO) are single shared MTLBuffers the CPU memcpys into
-        // every frame; without this the CPU races ahead and overwrites them while
-        // the GPU is still reading the previous frame -> intermittent flicker of the
-        // 2D text/nodes even when idle. The slot is returned in EndFrame's completion
-        // handler once the GPU is done. (Dynamic vertex/index buffers are already
-        // orphaned per write, so only the uniform buffers need this.)
+        // Throttle the CPU to one frame in flight, returned in EndFrame's completion
+        // handler once the GPU is done. Defensive guard against the CPU racing ahead
+        // and mutating a shared GPU resource (textures uploaded via replaceRegion,
+        // etc.) while the previous frame still reads it. The per-draw uniform aliasing
+        // that caused the 2D text/node flicker is fixed directly in Draw() by
+        // snapshotting UBOs with setVertex/FragmentBytes, so this is no longer the
+        // primary correctness mechanism -- it just bounds in-flight work.
         if (m_frame_sem) {
             dispatch_semaphore_wait((__bridge dispatch_semaphore_t)m_frame_sem,
                                     DISPATCH_TIME_FOREVER);
@@ -478,10 +478,20 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
         for (auto& ubo : mtl_prog->GetUBOs()) {
             if (!ubo.mtl_buffer) { continue; }
             id<MTLBuffer> b = (__bridge id<MTLBuffer>)ubo.mtl_buffer;
+            // Snapshot the UBO contents INTO the command stream per draw with
+            // setVertex/FragmentBytes instead of binding the shared MTLBuffer.
+            // Each UBO is a single buffer the CPU memcpys into before every draw
+            // (program->Clean above), so binding it by reference makes every
+            // deferred draw read whatever was written LAST -- when one frame uses
+            // several transforms (e.g. the preview clears its 2D matrix to identity,
+            // then the node graph sets the zoomed camera) all draws snap to the last
+            // matrix, leaving a ghost of the other at the wrong scale. setBytes
+            // copies the current bytes immediately, giving each draw its own values.
+            // (UBOs here are tens of bytes, far under the 4 KB setBytes limit.)
             if (ubo.stage == ShaderType::VertexShader) {
-                [encoder setVertexBuffer:b offset:0 atIndex:ubo.buffer_index];
+                [encoder setVertexBytes:[b contents] length:ubo.size atIndex:ubo.buffer_index];
             } else {
-                [encoder setFragmentBuffer:b offset:0 atIndex:ubo.buffer_index];
+                [encoder setFragmentBytes:[b contents] length:ubo.size atIndex:ubo.buffer_index];
             }
         }
     }

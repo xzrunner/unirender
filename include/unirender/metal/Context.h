@@ -9,6 +9,8 @@
 
 #include <array>
 #include <memory>
+#include <unordered_map>
+#include <cstdint>
 
 #undef DrawState
 
@@ -81,6 +83,12 @@ private:
     // (atlas) passes and the screen passes -- created on whichever happens first.
     void EnsureCmdBuffer();
 
+    // Create the screen depth/stencil texture. On Apple-family (TBDR) GPUs it is
+    // MTLStorageModeMemoryless (lives only in tile memory, zero DRAM) since it is
+    // never sampled and never stored; falls back to Private on Intel Macs. Returns a
+    // __bridge_retained id<MTLTexture> the caller owns. Used by Init and Resize.
+    void* MakeDepthTexture(uint32_t width, uint32_t height) const;
+
     // Build or retrieve a MTLRenderPipelineState for the given DrawState
     void* GetOrCreatePipelineState(const DrawState& draw);
 
@@ -129,6 +137,16 @@ private:
     static constexpr size_t MAX_SLOTS = 32;
     std::array<ur::TexturePtr, MAX_SLOTS> m_bound_textures = {};
     std::array<std::shared_ptr<ur::TextureSampler>, MAX_SLOTS> m_bound_samplers = {};
+
+    // Pipeline-state caches. Building an MTLRenderPipelineState (and, less so, an
+    // MTLDepthStencilState) is expensive -- it compiles/links the shader functions --
+    // so we build each unique configuration once and reuse it, instead of rebuilding
+    // one per draw call (the GL "switching programs is cheap" assumption). Each entry
+    // is a __bridge_retained Metal object OWNED by the cache and released in the
+    // destructor; GetOrCreatePipelineState/Draw hand out borrowed (non-owning)
+    // pointers. Keyed by a hash of everything that affects the state object.
+    std::unordered_map<uint64_t, void*> m_pso_cache; // id<MTLRenderPipelineState>
+    std::unordered_map<uint64_t, void*> m_dss_cache; // id<MTLDepthStencilState>
 
 }; // Context
 

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <cstdint>
 
 namespace ur
 {
@@ -41,6 +42,13 @@ public:
     void* GetVertexFunction()   const { return m_vert_func; }
     void* GetFragmentFunction() const { return m_frag_func; }
     void* GetMTLLibrary()       const { return m_mtl_library; }
+
+    // Stable, process-unique id assigned at construction. The Metal Context's
+    // pipeline-state cache keys on this (NOT the MTLFunction pointer, which a freed
+    // program can hand to a later one when the allocator recycles the address --
+    // that would alias two different shaders onto one cached pipeline). A new
+    // ShaderProgram always gets a fresh id, so no stale-pipeline aliasing is possible.
+    uint64_t GetId() const { return m_id; }
 
     // A second vertex function whose clip-space y is negated, used when rendering
     // to an offscreen framebuffer: Metal's render-to-texture origin is top-left
@@ -84,6 +92,11 @@ private:
     std::unordered_map<std::string, int> m_tex_slots;     // name -> MSL texture index
     std::unordered_map<std::string, int> m_sampler_slots; // name -> MSL sampler index
     int                                  m_vtx_buf_index = 0;
+
+    // Monotonic counter -> stable per-instance id (see GetId()). Assigned for every
+    // constructor via the default member initializer below.
+    static uint64_t NextId();
+    uint64_t m_id = NextId();
 
     bool m_valid = false;
 

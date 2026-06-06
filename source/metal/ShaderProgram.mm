@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
+#include <atomic>
 
 namespace
 {
@@ -32,6 +33,14 @@ namespace ur
 {
 namespace metal
 {
+
+uint64_t ShaderProgram::NextId()
+{
+    // Atomic so it is safe even if shader programs are ever built off the render
+    // thread; ids are never reused, so a freed program's id can't alias a new one.
+    static std::atomic<uint64_t> s_counter{0};
+    return ++s_counter;
+}
 
 ShaderProgram::ShaderProgram(void* mtl_device,
                              const std::vector<unsigned int>& vs,

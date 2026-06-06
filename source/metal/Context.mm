@@ -99,6 +99,12 @@ MTLBlendOperation ToMTLBlendOp(ur::BlendEquation e)
     }
 }
 
+// Boost-style 64-bit hash mix, for building pipeline/depth-stencil cache keys.
+inline void HashCombine(uint64_t& h, uint64_t v)
+{
+    h ^= v + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+}
+
 }
 
 namespace ur
@@ -121,7 +127,37 @@ Context::~Context()
 {
     if (m_depth_texture)       { CFRelease(m_depth_texture); }
     if (m_frame_sem)           { CFRelease(m_frame_sem); m_frame_sem = nullptr; }
+    // The caches own a +1 on each cached pipeline/depth-stencil state -- release.
+    for (auto& kv : m_pso_cache) { if (kv.second) { CFRelease(kv.second); } }
+    for (auto& kv : m_dss_cache) { if (kv.second) { CFRelease(kv.second); } }
+    m_pso_cache.clear();
+    m_dss_cache.clear();
     // m_mtl_layer is bridged from the view, not owned
+}
+
+void* Context::MakeDepthTexture(uint32_t width, uint32_t height) const
+{
+    id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
+    MTLTextureDescriptor* dd =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8
+                                                          width:width height:height mipmapped:NO];
+    dd.usage = MTLTextureUsageRenderTarget;
+    // The screen depth/stencil is a purely transient render-pass attachment: usage is
+    // RenderTarget only (never sampled) and BeginColorPass always stores it DontCare, so
+    // its contents never need to reach DRAM. On Apple-family (TBDR) GPUs that lets it live
+    // entirely in tile memory -- Memoryless allocates ZERO DRAM for a full-screen depth
+    // buffer. Memoryless render targets aren't supported on Intel Macs (Mac1/Mac2), so
+    // fall back to Private there. (Memoryless forbids loadAction:Load -- BeginColorPass
+    // accounts for that by using DontCare instead of Load on a memoryless depth.)
+    MTLStorageMode mode = MTLStorageModePrivate;
+    if (@available(macOS 11.0, iOS 13.0, *)) {
+        if ([device supportsFamily:MTLGPUFamilyApple1]) {
+            mode = MTLStorageModeMemoryless;
+        }
+    }
+    dd.storageMode = mode;
+    id<MTLTexture> dt = [device newTextureWithDescriptor:dd];
+    return (__bridge_retained void*)dt;
 }
 
 // ===========================================================================
@@ -160,16 +196,8 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
         m_mtl_layer = (__bridge_retained void*)layer;
     }
 
-    // --- Depth/Stencil texture ---
-    {
-        MTLTextureDescriptor* dd =
-            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8
-                                                              width:width height:height mipmapped:NO];
-        dd.storageMode = MTLStorageModePrivate;
-        dd.usage       = MTLTextureUsageRenderTarget;
-        id<MTLTexture> dt = [device newTextureWithDescriptor:dd];
-        m_depth_texture = (__bridge_retained void*)dt;
-    }
+    // --- Depth/Stencil texture (memoryless on Apple GPUs; see MakeDepthTexture) ---
+    m_depth_texture = MakeDepthTexture(width, height);
 
     // The depth-stencil STATE is no longer global: each Draw() builds its own from
     // the draw's render_state (depth_test / depth_func / depth_mask), so 2D draws
@@ -191,22 +219,14 @@ void Context::Resize(uint32_t width, uint32_t height)
     m_width  = width;
     m_height = height;
 
-    id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
-
     if (m_mtl_layer) {
         CAMetalLayer* layer = (__bridge CAMetalLayer*)m_mtl_layer;
         layer.drawableSize = CGSizeMake(width, height);
     }
 
-    // Recreate depth texture
+    // Recreate depth texture (memoryless on Apple GPUs; see MakeDepthTexture)
     if (m_depth_texture) { CFRelease(m_depth_texture); }
-    MTLTextureDescriptor* dd =
-        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8
-                                                          width:width height:height mipmapped:NO];
-    dd.storageMode = MTLStorageModePrivate;
-    dd.usage       = MTLTextureUsageRenderTarget;
-    id<MTLTexture> dt = [device newTextureWithDescriptor:dd];
-    m_depth_texture = (__bridge_retained void*)dt;
+    m_depth_texture = MakeDepthTexture(width, height);
 }
 
 // ===========================================================================
@@ -250,8 +270,17 @@ void Context::BeginColorPass(void* const* color_texs, size_t color_count,
 
     id<MTLTexture> depthTex = (__bridge id<MTLTexture>)depth_tex;
     if (depthTex) {
+        // Depth is always stored DontCare (never persisted across passes), so a
+        // non-clear "Load" would only read undefined contents anyway -- and a
+        // memoryless depth (the screen depth on Apple GPUs) FORBIDS loadAction:Load
+        // outright. So when not clearing, use DontCare for a memoryless target and
+        // keep Load for a regular (FBO) depth to preserve its existing behaviour.
+        MTLLoadAction depthLoad = clear
+            ? MTLLoadActionClear
+            : (depthTex.storageMode == MTLStorageModeMemoryless
+                   ? MTLLoadActionDontCare : MTLLoadActionLoad);
         rpd.depthAttachment.texture     = depthTex;
-        rpd.depthAttachment.loadAction  = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+        rpd.depthAttachment.loadAction  = depthLoad;
         rpd.depthAttachment.storeAction = MTLStoreActionDontCare;
         rpd.depthAttachment.clearDepth  = m_clear_state.depth;
         // Only attach stencil when the depth texture actually carries it (the
@@ -259,7 +288,7 @@ void Context::BeginColorPass(void* const* color_texs, size_t color_count,
         if (depthTex.pixelFormat == MTLPixelFormatDepth32Float_Stencil8 ||
             depthTex.pixelFormat == MTLPixelFormatDepth24Unorm_Stencil8) {
             rpd.stencilAttachment.texture      = depthTex;
-            rpd.stencilAttachment.loadAction   = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+            rpd.stencilAttachment.loadAction   = depthLoad;
             rpd.stencilAttachment.storeAction  = MTLStoreActionDontCare;
             rpd.stencilAttachment.clearStencil = m_clear_state.stencil;
         }
@@ -430,13 +459,29 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
     //     test, giving Always + no-write -- the old fixed behaviour. ---
     if (m_cur_has_depth) {
         const auto& rs = draw.render_state;
-        MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
-        dsd.depthCompareFunction = rs.depth_test.enabled
+        MTLCompareFunction cmp = rs.depth_test.enabled
             ? ToMTLCompare(rs.depth_test.function) : MTLCompareFunctionAlways;
-        dsd.depthWriteEnabled = (rs.depth_test.enabled && rs.depth_mask) ? YES : NO;
-        id<MTLDevice> dev = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
-        id<MTLDepthStencilState> dss = [dev newDepthStencilStateWithDescriptor:dsd];
-        [encoder setDepthStencilState:dss];
+        bool write = (rs.depth_test.enabled && rs.depth_mask);
+        // Only a handful of (compare, write) combinations ever occur (2D = Always +
+        // no-write, 3D = Less + write, ...). Cache the MTLDepthStencilState rather
+        // than allocate a new one every draw.
+        uint64_t dss_key = ((uint64_t)cmp << 1) | (write ? 1u : 0u);
+        id<MTLDepthStencilState> dss = nil;
+        auto it = m_dss_cache.find(dss_key);
+        if (it != m_dss_cache.end()) {
+            dss = (__bridge id<MTLDepthStencilState>)it->second;
+        } else {
+            MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
+            dsd.depthCompareFunction = cmp;
+            dsd.depthWriteEnabled    = write ? YES : NO;
+            id<MTLDevice> dev = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
+            dss = [dev newDepthStencilStateWithDescriptor:dsd];
+            // Only cache a real object: storing a NULL sentinel would turn every
+            // future draw with this key into a no-op hit (never retried). Mirrors
+            // the PSO path, which also returns before caching on failure.
+            if (dss) { m_dss_cache[dss_key] = (__bridge_retained void*)dss; } // cache owns the +1
+        }
+        if (dss) { [encoder setDepthStencilState:dss]; }
     }
     {
         const auto& fc = draw.render_state.facet_culling;
@@ -776,15 +821,84 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
     }
     const int vtxIdx = mtl_prog->GetVertexBufferIndex();
 
-    id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
-
-    MTLRenderPipelineDescriptor* pd = [[MTLRenderPipelineDescriptor alloc] init];
     // Offscreen FBO passes use the clip-space-y-flipped vertex function so the
     // rendered texture matches OpenGL's bottom-left origin (which the engine's UV
     // math assumes); the screen pass uses the normal one.
-    pd.vertexFunction   = (__bridge id<MTLFunction>)(m_cur_is_fbo
-        ? mtl_prog->GetVertexFunctionFlipped() : mtl_prog->GetVertexFunction());
-    pd.fragmentFunction = (__bridge id<MTLFunction>)mtl_prog->GetFragmentFunction();
+    void* vtxFunc  = m_cur_is_fbo ? mtl_prog->GetVertexFunctionFlipped()
+                                  : mtl_prog->GetVertexFunction();
+    void* fragFunc = mtl_prog->GetFragmentFunction();
+
+    // ---- Build a cache key from EVERYTHING that affects the pipeline state ----
+    // A missing input here means two draws that need different pipelines would share
+    // one (silently wrong rendering), so this must mirror every pd.* set below:
+    // shader funcs, vertex-buffer index, color/depth formats, blend, vertex layout.
+    uint64_t key = 1469598103934665603ULL; // FNV offset basis, just a seed
+    // Key on the program's STABLE id, not its MTLFunction addresses: a destroyed
+    // program frees those addresses, and a later, differently-coded program can be
+    // handed the same address by the allocator -- hashing the raw pointers would then
+    // alias two different shaders onto one cached pipeline (silent wrong rendering).
+    // The id is unique per construction, so a rebuilt shader never collides. The
+    // is_fbo bit distinguishes the normal vs y-flipped vertex function.
+    HashCombine(key, mtl_prog->GetId());
+    HashCombine(key, m_cur_is_fbo ? 1ull : 0ull);
+    HashCombine(key, (uint64_t)vtxIdx);
+    HashCombine(key, (uint64_t)m_cur_color_count);
+    if (m_cur_color_count == 0) {
+        HashCombine(key, (uint64_t)MTLPixelFormatBGRA8Unorm);
+    } else {
+        for (size_t i = 0; i < m_cur_color_count; ++i) {
+            id<MTLTexture> ct = (__bridge id<MTLTexture>)m_cur_color_targets[i];
+            HashCombine(key, (uint64_t)(ct ? ct.pixelFormat : MTLPixelFormatInvalid));
+        }
+    }
+    if (m_cur_has_depth && m_cur_depth_target) {
+        id<MTLTexture> dt = (__bridge id<MTLTexture>)m_cur_depth_target;
+        HashCombine(key, (uint64_t)dt.pixelFormat);
+    } else {
+        HashCombine(key, (uint64_t)MTLPixelFormatInvalid);
+    }
+    {
+        const auto& b = draw.render_state.blending;
+        HashCombine(key, b.enabled ? 1ull : 0ull);
+        if (b.enabled) {
+            if (b.separately) {
+                HashCombine(key, (uint64_t)b.src_rgb);
+                HashCombine(key, (uint64_t)b.dst_rgb);
+                HashCombine(key, (uint64_t)b.rgb_equation);
+                HashCombine(key, (uint64_t)b.src_alpha);
+                HashCombine(key, (uint64_t)b.dst_alpha);
+                HashCombine(key, (uint64_t)b.alpha_equation);
+                HashCombine(key, 0x5eull); // distinguish "separately" from combined
+            } else {
+                HashCombine(key, (uint64_t)b.src);
+                HashCombine(key, (uint64_t)b.dst);
+                HashCombine(key, (uint64_t)b.equation);
+            }
+        }
+    }
+    if (draw.vertex_array) {
+        for (auto& a : draw.vertex_array->GetVertexBufferAttrs()) {
+            if (!a) continue;
+            HashCombine(key, (uint64_t)a->GetLocation());
+            HashCombine(key, (uint64_t)a->GetCompDataType());
+            HashCombine(key, (uint64_t)a->GetNumOfComps());
+            HashCombine(key, (uint64_t)a->GetOffsetInBytes());
+            HashCombine(key, (uint64_t)a->GetStrideInBytes());
+        }
+    }
+
+    // ---- Cache hit: return a borrowed pointer (the cache owns the +1) ----
+    auto cached = m_pso_cache.find(key);
+    if (cached != m_pso_cache.end()) {
+        return cached->second;
+    }
+
+    // ---- Miss: build the pipeline (using the same derived values hashed above) ----
+    id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
+
+    MTLRenderPipelineDescriptor* pd = [[MTLRenderPipelineDescriptor alloc] init];
+    pd.vertexFunction   = (__bridge id<MTLFunction>)vtxFunc;
+    pd.fragmentFunction = (__bridge id<MTLFunction>)fragFunc;
     // Match the pipeline's color attachment formats to the CURRENT render targets,
     // one per MRT output (the screen drawable is a single BGRA8 target; the
     // deferred GBuffer binds several). A mismatch -- or a fragment shader that
@@ -896,9 +1010,13 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
         return nullptr;
     }
 
-    // NOTE: In production, cache this by (shader, vertex layout, blend state) hash
-    // For now, we create fresh each draw -- acceptable for correctness
-    return (__bridge_retained void*)pso;
+    // Hand ownership (+1) to the cache and return a borrowed pointer. This fixes
+    // BOTH the old per-draw rebuild cost AND the leak: the previous code returned a
+    // __bridge_retained PSO that Draw() consumed via a plain __bridge, so the +1 was
+    // dropped on the floor -- one MTLRenderPipelineState leaked per draw call.
+    void* stored = (__bridge_retained void*)pso;
+    m_pso_cache[key] = stored;
+    return stored;
 }
 
 }

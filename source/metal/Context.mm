@@ -50,6 +50,55 @@ MTLIndexType ToMTLIndexType(ur::IndexBufferDataType dt)
         : MTLIndexTypeUInt16;
 }
 
+MTLCompareFunction ToMTLCompare(ur::DepthTestFunc f)
+{
+    switch (f) {
+    case ur::DepthTestFunc::Never:              return MTLCompareFunctionNever;
+    case ur::DepthTestFunc::Less:               return MTLCompareFunctionLess;
+    case ur::DepthTestFunc::Equal:              return MTLCompareFunctionEqual;
+    case ur::DepthTestFunc::LessThanOrEqual:    return MTLCompareFunctionLessEqual;
+    case ur::DepthTestFunc::Greater:            return MTLCompareFunctionGreater;
+    case ur::DepthTestFunc::NotEqual:           return MTLCompareFunctionNotEqual;
+    case ur::DepthTestFunc::GreaterThanOrEqual: return MTLCompareFunctionGreaterEqual;
+    case ur::DepthTestFunc::Always:             return MTLCompareFunctionAlways;
+    default:                                    return MTLCompareFunctionLess;
+    }
+}
+
+MTLBlendFactor ToMTLBlend(ur::BlendingFactor f)
+{
+    switch (f) {
+    case ur::BlendingFactor::Zero:                  return MTLBlendFactorZero;
+    case ur::BlendingFactor::One:                   return MTLBlendFactorOne;
+    case ur::BlendingFactor::SrcColor:              return MTLBlendFactorSourceColor;
+    case ur::BlendingFactor::OneMinusSrcColor:      return MTLBlendFactorOneMinusSourceColor;
+    case ur::BlendingFactor::DstColor:              return MTLBlendFactorDestinationColor;
+    case ur::BlendingFactor::OneMinusDstColor:      return MTLBlendFactorOneMinusDestinationColor;
+    case ur::BlendingFactor::SrcAlpha:              return MTLBlendFactorSourceAlpha;
+    case ur::BlendingFactor::OneMinusSrcAlpha:      return MTLBlendFactorOneMinusSourceAlpha;
+    case ur::BlendingFactor::DstAlpha:              return MTLBlendFactorDestinationAlpha;
+    case ur::BlendingFactor::OneMinusDstAlpha:      return MTLBlendFactorOneMinusDestinationAlpha;
+    case ur::BlendingFactor::ConstantColor:         return MTLBlendFactorBlendColor;
+    case ur::BlendingFactor::OneMinusConstantColor: return MTLBlendFactorOneMinusBlendColor;
+    case ur::BlendingFactor::ConstantAlpha:         return MTLBlendFactorBlendAlpha;
+    case ur::BlendingFactor::OneMinusConstantAlpha: return MTLBlendFactorOneMinusBlendAlpha;
+    case ur::BlendingFactor::SrcAlphaSaturate:      return MTLBlendFactorSourceAlphaSaturated;
+    default:                                        return MTLBlendFactorOne;
+    }
+}
+
+MTLBlendOperation ToMTLBlendOp(ur::BlendEquation e)
+{
+    switch (e) {
+    case ur::BlendEquation::Add:             return MTLBlendOperationAdd;
+    case ur::BlendEquation::Minimum:         return MTLBlendOperationMin;
+    case ur::BlendEquation::Maximum:         return MTLBlendOperationMax;
+    case ur::BlendEquation::Subtract:        return MTLBlendOperationSubtract;
+    case ur::BlendEquation::ReverseSubtract: return MTLBlendOperationReverseSubtract;
+    default:                                 return MTLBlendOperationAdd;
+    }
+}
+
 }
 
 namespace ur
@@ -70,8 +119,8 @@ Context::Context(const ur::Device& device, void* hwnd,
 
 Context::~Context()
 {
-    if (m_depth_stencil_state) { CFRelease(m_depth_stencil_state); }
     if (m_depth_texture)       { CFRelease(m_depth_texture); }
+    if (m_frame_sem)           { CFRelease(m_frame_sem); m_frame_sem = nullptr; }
     // m_mtl_layer is bridged from the view, not owned
 }
 
@@ -83,6 +132,11 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
 {
     m_width  = width;
     m_height = height;
+
+    // One frame in flight: shared per-frame resources (uniform buffers) have a
+    // single copy, so the CPU must not record the next frame until the GPU has
+    // finished the current one. See EnsureCmdBuffer / EndFrame.
+    m_frame_sem = (__bridge_retained void*)dispatch_semaphore_create(1);
 
     id<MTLDevice> device = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
 
@@ -117,15 +171,9 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
         m_depth_texture = (__bridge_retained void*)dt;
     }
 
-    // --- Depth/Stencil state ---
-    {
-        MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
-        // 2D editor: draw order defines layering, so never reject on depth.
-        dsd.depthCompareFunction = MTLCompareFunctionAlways;
-        dsd.depthWriteEnabled    = NO;
-        id<MTLDepthStencilState> dss = [device newDepthStencilStateWithDescriptor:dsd];
-        m_depth_stencil_state = (__bridge_retained void*)dss;
-    }
+    // The depth-stencil STATE is no longer global: each Draw() builds its own from
+    // the draw's render_state (depth_test / depth_func / depth_mask), so 2D draws
+    // get Always + no-write while the 3D GBuffer pass gets Less + write.
 
     // Default clear state
     m_clear_state.color = Color(0, 0, 0, 255);
@@ -175,64 +223,93 @@ void Context::EndEncoder()
     }
 }
 
-void Context::BeginColorPass(void* color_tex, bool with_depth, bool clear)
+void Context::BeginColorPass(void* const* color_texs, size_t color_count,
+                             void* depth_tex, bool clear)
 {
     EndEncoder();
 
-    id<MTLCommandBuffer> cmdBuf  = (__bridge id<MTLCommandBuffer>)m_cmd_buffer;
-    id<MTLTexture>       colorTex = (__bridge id<MTLTexture>)color_tex;
-    if (!cmdBuf || !colorTex) { return; }
+    id<MTLCommandBuffer> cmdBuf = (__bridge id<MTLCommandBuffer>)m_cmd_buffer;
+    if (!cmdBuf || color_count == 0 || !color_texs[0]) { return; }
+    if (color_count > MAX_COLOR_ATTACH) { color_count = MAX_COLOR_ATTACH; }
 
     MTLRenderPassDescriptor* rpd = [MTLRenderPassDescriptor renderPassDescriptor];
-    rpd.colorAttachments[0].texture     = colorTex;
-    rpd.colorAttachments[0].loadAction  = clear ? MTLLoadActionClear : MTLLoadActionLoad;
-    rpd.colorAttachments[0].storeAction = MTLStoreActionStore;
-    if (clear) {
-        rpd.colorAttachments[0].clearColor =
-            MTLClearColorMake(m_clear_state.color.r / 255.0,
-                              m_clear_state.color.g / 255.0,
-                              m_clear_state.color.b / 255.0,
-                              m_clear_state.color.a / 255.0);
+    for (size_t i = 0; i < color_count; ++i) {
+        id<MTLTexture> colorTex = (__bridge id<MTLTexture>)color_texs[i];
+        if (!colorTex) { continue; }
+        rpd.colorAttachments[i].texture     = colorTex;
+        rpd.colorAttachments[i].loadAction  = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+        rpd.colorAttachments[i].storeAction = MTLStoreActionStore;
+        if (clear) {
+            rpd.colorAttachments[i].clearColor =
+                MTLClearColorMake(m_clear_state.color.r / 255.0,
+                                  m_clear_state.color.g / 255.0,
+                                  m_clear_state.color.b / 255.0,
+                                  m_clear_state.color.a / 255.0);
+        }
     }
 
-    if (with_depth) {
-        id<MTLTexture> depthTex = (__bridge id<MTLTexture>)m_depth_texture;
-        rpd.depthAttachment.texture        = depthTex;
-        rpd.depthAttachment.loadAction     = clear ? MTLLoadActionClear : MTLLoadActionLoad;
-        rpd.depthAttachment.storeAction    = MTLStoreActionDontCare;
-        rpd.depthAttachment.clearDepth     = m_clear_state.depth;
-        rpd.stencilAttachment.texture      = depthTex;
-        rpd.stencilAttachment.loadAction   = clear ? MTLLoadActionClear : MTLLoadActionLoad;
-        rpd.stencilAttachment.storeAction  = MTLStoreActionDontCare;
-        rpd.stencilAttachment.clearStencil = m_clear_state.stencil;
+    id<MTLTexture> depthTex = (__bridge id<MTLTexture>)depth_tex;
+    if (depthTex) {
+        rpd.depthAttachment.texture     = depthTex;
+        rpd.depthAttachment.loadAction  = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+        rpd.depthAttachment.storeAction = MTLStoreActionDontCare;
+        rpd.depthAttachment.clearDepth  = m_clear_state.depth;
+        // Only attach stencil when the depth texture actually carries it (the
+        // screen uses Depth32Float_Stencil8; an FBO depth RBO is plain depth).
+        if (depthTex.pixelFormat == MTLPixelFormatDepth32Float_Stencil8 ||
+            depthTex.pixelFormat == MTLPixelFormatDepth24Unorm_Stencil8) {
+            rpd.stencilAttachment.texture      = depthTex;
+            rpd.stencilAttachment.loadAction   = clear ? MTLLoadActionClear : MTLLoadActionLoad;
+            rpd.stencilAttachment.storeAction  = MTLStoreActionDontCare;
+            rpd.stencilAttachment.clearStencil = m_clear_state.stencil;
+        }
     }
 
     id<MTLRenderCommandEncoder> encoder = [cmdBuf renderCommandEncoderWithDescriptor:rpd];
+    if (!encoder) {
+        std::cerr << "[Metal] BeginColorPass: renderCommandEncoderWithDescriptor returned nil"
+                  << " n=" << color_count << " clear=" << clear << "\n";
+        return;
+    }
     m_render_encoder = (__bridge_retained void*)encoder;
 
-    if (with_depth) {
-        [encoder setDepthStencilState:(__bridge id<MTLDepthStencilState>)m_depth_stencil_state];
-    }
-
+    id<MTLTexture> firstColor = (__bridge id<MTLTexture>)color_texs[0];
     MTLViewport vp;
     vp.originX = m_viewport.x;
     vp.originY = m_viewport.y;
-    vp.width   = (m_viewport.w > 0) ? m_viewport.w : (double)colorTex.width;
-    vp.height  = (m_viewport.h > 0) ? m_viewport.h : (double)colorTex.height;
+    vp.width   = (m_viewport.w > 0) ? m_viewport.w : (double)firstColor.width;
+    vp.height  = (m_viewport.h > 0) ? m_viewport.h : (double)firstColor.height;
     vp.znear   = 0.0;
     vp.zfar    = 1.0;
     [encoder setViewport:vp];
 
-    m_cur_color_target = color_tex;
-    m_cur_has_depth    = with_depth;
-    // Screen passes carry a depth attachment; offscreen FBO passes don't. FBO
-    // passes render with a clip-space y flip (Metal top-left vs GL bottom-left).
-    m_cur_is_fbo       = !with_depth;
+    // Record the active targets so the pipeline can format-match them and the
+    // per-draw depth-stencil state can be applied in Draw(). The depth-stencil
+    // state is no longer set here -- each draw supplies its own from render_state.
+    m_cur_color_count = color_count;
+    for (size_t i = 0; i < MAX_COLOR_ATTACH; ++i) {
+        m_cur_color_targets[i] = (i < color_count) ? color_texs[i] : nullptr;
+    }
+    m_cur_depth_target = depth_tex;
+    m_cur_has_depth    = (depth_tex != nullptr);
+    // m_cur_is_fbo is set by the caller (screen drawable vs offscreen FBO) before
+    // this call; FBO passes render with a clip-space y flip (Metal vs GL origin).
 }
 
 void Context::EnsureCmdBuffer()
 {
     if (!m_cmd_buffer) {
+        // Throttle the CPU to one frame in flight. Shaders' uniform blocks (and the
+        // sprite renderer's UBO) are single shared MTLBuffers the CPU memcpys into
+        // every frame; without this the CPU races ahead and overwrites them while
+        // the GPU is still reading the previous frame -> intermittent flicker of the
+        // 2D text/nodes even when idle. The slot is returned in EndFrame's completion
+        // handler once the GPU is done. (Dynamic vertex/index buffers are already
+        // orphaned per write, so only the uniform buffers need this.)
+        if (m_frame_sem) {
+            dispatch_semaphore_wait((__bridge dispatch_semaphore_t)m_frame_sem,
+                                    DISPATCH_TIME_FOREVER);
+        }
         id<MTLCommandQueue> queue = (__bridge id<MTLCommandQueue>)m_device.GetCommandQueue();
         id<MTLCommandBuffer> cmdBuf = [queue commandBuffer];
         m_cmd_buffer = (__bridge_retained void*)cmdBuf;
@@ -254,13 +331,17 @@ void Context::BeginFrame()
     EnsureCmdBuffer();
 
     m_frame_active = true;
-    BeginColorPass((__bridge void*)drawable.texture, /*with_depth*/true, /*clear*/true);
+    m_cur_is_fbo = false;
+    void* color = (__bridge void*)drawable.texture;
+    BeginColorPass(&color, 1, m_depth_texture, /*clear*/true);
 }
 
 void Context::EndFrame()
 {
     EndEncoder();
-    m_cur_color_target = nullptr;
+    m_cur_color_count  = 0;
+    m_cur_depth_target = nullptr;
+    m_cur_has_depth    = false;
 
     // Commit whatever was recorded this frame (atlas passes and/or screen passes).
     if (m_cmd_buffer) {
@@ -269,6 +350,15 @@ void Context::EndFrame()
             id<CAMetalDrawable> drawable = (__bridge_transfer id<CAMetalDrawable>)m_drawable;
             [cmdBuf presentDrawable:drawable];
             m_drawable = nullptr;
+        }
+        // Release the frame-in-flight slot only once the GPU has finished reading
+        // this frame's shared resources (uniform buffers etc.), so the CPU can't
+        // overwrite them while in use. Pairs with the wait in EnsureCmdBuffer.
+        if (m_frame_sem) {
+            dispatch_semaphore_t sem = (__bridge dispatch_semaphore_t)m_frame_sem;
+            [cmdBuf addCompletedHandler:^(id<MTLCommandBuffer>) {
+                dispatch_semaphore_signal(sem);
+            }];
         }
         [cmdBuf commit];
         m_cmd_buffer = nullptr;
@@ -284,7 +374,34 @@ void Context::EndFrame()
 void Context::Clear(const ClearState& clear_state)
 {
     m_clear_state = clear_state;
-    // Values applied at next BeginFrame
+
+    // GL clears the bound framebuffer immediately; on Metal a clear happens via the
+    // render pass loadAction at pass start. If no pass is active yet, the values are
+    // applied at the next BeginColorPass (the screen BeginFrame, or an FBO bind) --
+    // the original behaviour. But if a pass IS already running, this is the
+    // rendergraph clearing an FBO it just bound, right before drawing into it (e.g.
+    // the deferred GBuffer's color + depth). Without honoring it the attachment keeps
+    // its stale/garbage contents -- an uncleared GBuffer depth rejects the mesh under
+    // depth-test, so the box never appears. Re-begin the pass on the same targets
+    // with a clear load action so the clear actually happens. Restrict this to FBO
+    // passes: the screen drawable is cleared once at BeginFrame, and restarting it
+    // mid-frame from a stray Clear() would wipe everything already drawn this frame.
+    if (!m_render_encoder || m_cur_color_count == 0 || !m_cur_is_fbo) {
+        return;
+    }
+
+    // A scissored clear (dtex atlas block reuse) must touch only a sub-rect; a
+    // loadAction clear wipes the whole attachment, so don't -- leave it intact
+    // (same as the old no-op) rather than destroy the other packed glyphs.
+    if (clear_state.scissor_test.enabled) {
+        return;
+    }
+
+    std::array<void*, MAX_COLOR_ATTACH> colors = m_cur_color_targets;
+    const size_t n = m_cur_color_count;
+    void* depth = m_cur_depth_target;
+    // m_cur_is_fbo stays as the pass we are restarting set it.
+    BeginColorPass(colors.data(), n, depth, /*clear*/true);
 }
 
 // ===========================================================================
@@ -305,6 +422,33 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
     void* pso = GetOrCreatePipelineState(draw);
     if (pso) {
         [encoder setRenderPipelineState:(__bridge id<MTLRenderPipelineState>)pso];
+    }
+
+    // --- Depth-stencil + face culling from the draw's render state. Only when
+    //     the active pass has a depth attachment (the screen pass, or an FBO with
+    //     a depth buffer like the deferred GBuffer). 2D draws disable the depth
+    //     test, giving Always + no-write -- the old fixed behaviour. ---
+    if (m_cur_has_depth) {
+        const auto& rs = draw.render_state;
+        MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
+        dsd.depthCompareFunction = rs.depth_test.enabled
+            ? ToMTLCompare(rs.depth_test.function) : MTLCompareFunctionAlways;
+        dsd.depthWriteEnabled = (rs.depth_test.enabled && rs.depth_mask) ? YES : NO;
+        id<MTLDevice> dev = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
+        id<MTLDepthStencilState> dss = [dev newDepthStencilStateWithDescriptor:dsd];
+        [encoder setDepthStencilState:dss];
+    }
+    {
+        const auto& fc = draw.render_state.facet_culling;
+        if (fc.enabled) {
+            [encoder setCullMode:(fc.face == ur::CullFace::Front ? MTLCullModeFront
+                                                                 : MTLCullModeBack)];
+            [encoder setFrontFacingWinding:
+                (fc.front_face_winding_order == ur::WindingOrder::Clockwise
+                    ? MTLWindingClockwise : MTLWindingCounterClockwise)];
+        } else {
+            [encoder setCullMode:MTLCullModeNone];
+        }
     }
 
     // --- Bind vertex buffer + reflected uniform blocks. The shader picks the
@@ -427,8 +571,22 @@ void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
         int count = static_cast<int>(mtl_ib->GetCount());
         Draw(prim_type, 0, count, draw, scene);
     } else {
+        // Non-indexed: the vertex count is the buffer size divided by a vertex's
+        // stride. VertexBuffer::GetVertexCount() is never populated (the GL backend
+        // doesn't use it either -- it derives the count from size/stride here too),
+        // so compute it the same way; otherwise count stays 0 and nothing draws
+        // (e.g. a brepkit box mesh, which has no index buffer).
         auto vb = draw.vertex_array->GetVertexBuffer();
-        int count = vb ? static_cast<int>(vb->GetVertexCount()) : 0;
+        int count = 0;
+        if (vb) {
+            int stride = 0;
+            for (auto& a : draw.vertex_array->GetVertexBufferAttrs()) {
+                if (a) { stride = a->GetStrideInBytes(); break; }
+            }
+            if (stride > 0) {
+                count = vb->GetSizeInBytes() / stride;
+            }
+        }
         Draw(prim_type, 0, count, draw, scene);
     }
 }
@@ -507,33 +665,53 @@ void Context::SetFramebuffer(const std::shared_ptr<ur::Framebuffer>& fb)
 {
     m_set_framebuffer = fb;
 
-    // Resolve the FBO's first color-attachment texture (if any).
-    void* colorTex = nullptr;
+    // Resolve the FBO's color attachments (in Color0..ColorN order, for MRT --
+    // e.g. the deferred GBuffer) and its depth attachment (a depth texture or a
+    // depth render buffer). A single-attachment FBO (the dtex glyph atlas) is the
+    // common case and falls out as colorCount == 1.
+    std::array<void*, MAX_COLOR_ATTACH> colorTexs = {};
+    size_t colorCount = 0;
+    void* depthTex = nullptr;
     if (fb) {
         auto mfb = std::static_pointer_cast<metal::Framebuffer>(fb);
         for (auto& att : mfb->GetAttachments()) {
-            if (att.tex) {
-                colorTex = std::static_pointer_cast<metal::Texture>(att.tex)->GetMTLTexture();
-                break;
+            int idx = (int)att.type - (int)ur::AttachmentType::Color0;
+            if (idx >= 0 && idx < (int)MAX_COLOR_ATTACH) {
+                if (att.tex) {
+                    colorTexs[idx] = std::static_pointer_cast<metal::Texture>(att.tex)->GetMTLTexture();
+                    if ((size_t)(idx + 1) > colorCount) { colorCount = (size_t)(idx + 1); }
+                }
+            } else if (att.type == ur::AttachmentType::Depth ||
+                       att.type == ur::AttachmentType::Stencil) {
+                if (att.tex) {
+                    depthTex = std::static_pointer_cast<metal::Texture>(att.tex)->GetMTLTexture();
+                } else if (att.rbo) {
+                    depthTex = std::static_pointer_cast<metal::RenderBuffer>(att.rbo)->GetMTLTexture();
+                }
             }
         }
     }
 
-    // One command buffer holds both offscreen (atlas) and screen passes this
-    // frame; Metal executes them in submission order, so an atlas rendered here
-    // is ready for a later screen pass that samples it -- no CPU sync needed.
-    if (colorTex) {
+    // One command buffer holds both offscreen (atlas/GBuffer) and screen passes
+    // this frame; Metal executes them in submission order, so an FBO rendered
+    // here is ready for a later screen pass that samples it -- no CPU sync needed.
+    if (colorCount > 0 && colorTexs[0]) {
         EnsureCmdBuffer();
-        BeginColorPass(colorTex, /*with_depth*/false, /*clear*/false);
+        m_cur_is_fbo = true;
+        BeginColorPass(colorTexs.data(), colorCount, depthTex, /*clear*/false);
     } else if (m_frame_active && m_drawable) {
         // Back to the screen drawable mid-frame; keep existing content.
         id<CAMetalDrawable> drawable = (__bridge id<CAMetalDrawable>)m_drawable;
-        BeginColorPass((__bridge void*)drawable.texture, /*with_depth*/true, /*clear*/false);
+        void* color = (__bridge void*)drawable.texture;
+        m_cur_is_fbo = false;
+        BeginColorPass(&color, 1, m_depth_texture, /*clear*/false);
     } else {
         // Unbinding an FBO before any screen frame has begun: just end the pass;
         // the screen pass starts later on the first on-screen draw (BeginFrame).
         EndEncoder();
-        m_cur_color_target = nullptr;
+        m_cur_color_count  = 0;
+        m_cur_depth_target = nullptr;
+        m_cur_has_depth    = false;
     }
 }
 
@@ -597,13 +775,28 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
     pd.vertexFunction   = (__bridge id<MTLFunction>)(m_cur_is_fbo
         ? mtl_prog->GetVertexFunctionFlipped() : mtl_prog->GetVertexFunction());
     pd.fragmentFunction = (__bridge id<MTLFunction>)mtl_prog->GetFragmentFunction();
-    // Match the pipeline's attachment formats to the CURRENT render target
-    // (the screen drawable, or an FBO color texture with no depth).
-    id<MTLTexture> curColor = (__bridge id<MTLTexture>)m_cur_color_target;
-    pd.colorAttachments[0].pixelFormat = curColor ? curColor.pixelFormat : MTLPixelFormatBGRA8Unorm;
-    if (m_cur_has_depth) {
-        pd.depthAttachmentPixelFormat   = MTLPixelFormatDepth32Float_Stencil8;
-        pd.stencilAttachmentPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+    // Match the pipeline's color attachment formats to the CURRENT render targets,
+    // one per MRT output (the screen drawable is a single BGRA8 target; the
+    // deferred GBuffer binds several). A mismatch -- or a fragment shader that
+    // writes an output with no matching attachment -- makes pipeline creation fail.
+    if (m_cur_color_count == 0) {
+        pd.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+    }
+    for (size_t i = 0; i < m_cur_color_count; ++i) {
+        id<MTLTexture> ct = (__bridge id<MTLTexture>)m_cur_color_targets[i];
+        pd.colorAttachments[i].pixelFormat = ct ? ct.pixelFormat : MTLPixelFormatInvalid;
+    }
+    // Depth/stencil format must match the active depth target: the screen depth is
+    // Depth32Float_Stencil8; an FBO depth render buffer is plain Depth32Float.
+    if (m_cur_has_depth && m_cur_depth_target) {
+        id<MTLTexture> dt = (__bridge id<MTLTexture>)m_cur_depth_target;
+        pd.depthAttachmentPixelFormat = dt.pixelFormat;
+        if (dt.pixelFormat == MTLPixelFormatDepth32Float_Stencil8 ||
+            dt.pixelFormat == MTLPixelFormatDepth24Unorm_Stencil8) {
+            pd.stencilAttachmentPixelFormat = dt.pixelFormat;
+        } else {
+            pd.stencilAttachmentPixelFormat = MTLPixelFormatInvalid;
+        }
     } else {
         pd.depthAttachmentPixelFormat   = MTLPixelFormatInvalid;
         pd.stencilAttachmentPixelFormat = MTLPixelFormatInvalid;
@@ -656,25 +849,45 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
         }
     }
 
-    // Configure blending (simple alpha blend by default)
-    pd.colorAttachments[0].blendingEnabled             = YES;
-    pd.colorAttachments[0].sourceRGBBlendFactor        = MTLBlendFactorSourceAlpha;
-    pd.colorAttachments[0].destinationRGBBlendFactor   = MTLBlendFactorOneMinusSourceAlpha;
-    pd.colorAttachments[0].rgbBlendOperation           = MTLBlendOperationAdd;
-    pd.colorAttachments[0].sourceAlphaBlendFactor      = MTLBlendFactorOne;
-    pd.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-    pd.colorAttachments[0].alphaBlendOperation         = MTLBlendOperationAdd;
+    // Configure blending per the draw's render state, on every active color
+    // attachment. The 2D UI blends (src-alpha / one-minus-src-alpha); the opaque
+    // GBuffer pass disables blend so its depth/normal targets are written raw.
+    const auto& bs = draw.render_state.blending;
+    const size_t blend_n = (m_cur_color_count > 0) ? m_cur_color_count : 1;
+    for (size_t i = 0; i < blend_n; ++i) {
+        if (!bs.enabled) {
+            pd.colorAttachments[i].blendingEnabled = NO;
+            continue;
+        }
+        pd.colorAttachments[i].blendingEnabled = YES;
+        if (bs.separately) {
+            pd.colorAttachments[i].sourceRGBBlendFactor        = ToMTLBlend(bs.src_rgb);
+            pd.colorAttachments[i].destinationRGBBlendFactor   = ToMTLBlend(bs.dst_rgb);
+            pd.colorAttachments[i].rgbBlendOperation           = ToMTLBlendOp(bs.rgb_equation);
+            pd.colorAttachments[i].sourceAlphaBlendFactor      = ToMTLBlend(bs.src_alpha);
+            pd.colorAttachments[i].destinationAlphaBlendFactor = ToMTLBlend(bs.dst_alpha);
+            pd.colorAttachments[i].alphaBlendOperation         = ToMTLBlendOp(bs.alpha_equation);
+        } else {
+            pd.colorAttachments[i].sourceRGBBlendFactor        = ToMTLBlend(bs.src);
+            pd.colorAttachments[i].destinationRGBBlendFactor   = ToMTLBlend(bs.dst);
+            pd.colorAttachments[i].rgbBlendOperation           = ToMTLBlendOp(bs.equation);
+            pd.colorAttachments[i].sourceAlphaBlendFactor      = ToMTLBlend(bs.src);
+            pd.colorAttachments[i].destinationAlphaBlendFactor = ToMTLBlend(bs.dst);
+            pd.colorAttachments[i].alphaBlendOperation         = ToMTLBlendOp(bs.equation);
+        }
+    }
 
     NSError* error = nil;
     id<MTLRenderPipelineState> pso = [device newRenderPipelineStateWithDescriptor:pd error:&error];
     if (!pso) {
-        std::cerr << "[Metal] Pipeline creation failed: "
+        std::cerr << "[Metal] Pipeline creation failed (fbo=" << m_cur_is_fbo
+                  << " n=" << m_cur_color_count << "): "
                   << [[error localizedDescription] UTF8String] << "\n";
         return nullptr;
     }
 
     // NOTE: In production, cache this by (shader, vertex layout, blend state) hash
-    // For now, we create fresh each draw — acceptable for correctness
+    // For now, we create fresh each draw -- acceptable for correctness
     return (__bridge_retained void*)pso;
 }
 

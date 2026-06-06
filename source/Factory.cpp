@@ -1,4 +1,7 @@
 #include "unirender/Factory.h"
+
+#include <exception>
+
 #ifndef __APPLE__ // the OpenGL backend is excluded on macOS (Metal is used instead)
 #include "unirender/opengl/Device.h"
 #include "unirender/opengl/Context.h"
@@ -33,7 +36,23 @@ std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
 #else
         const bool enable_validation_layers = true;
 #endif
-        ret = std::make_shared<vulkan::Device>(enable_validation_layers);
+        try {
+            ret = std::make_shared<vulkan::Device>(enable_validation_layers);
+        } catch (const std::exception& e) {
+            // Validation layers can enumerate yet fail to actually load
+            // (stale Vulkan SDK registry entry, arch mismatch). Don't let that
+            // hard-crash the app -- retry once with validation disabled.
+            // A real driver/ICD problem (e.g. VK_ERROR_INCOMPATIBLE_DRIVER)
+            // will throw again here and propagate, but with a decoded message.
+            if (enable_validation_layers) {
+                logger << "Vulkan: device creation with validation layers failed:\n  "
+                       << e.what()
+                       << "\nRetrying without validation layers..." << std::endl;
+                ret = std::make_shared<vulkan::Device>(false);
+            } else {
+                throw;
+            }
+        }
     }
 #endif
         break;

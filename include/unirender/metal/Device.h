@@ -1,6 +1,10 @@
 #pragma once
 
 #include "unirender/Device.h"
+#include "unirender/VertexLayoutType.h"
+
+#include <array>
+#include <memory>
 
 namespace ur
 {
@@ -95,6 +99,16 @@ public:
 
 private:
     void Init();
+
+    // Build the full-screen quad / unit cube vertex arrays used by post-process
+    // and primitive-shape nodes (the GL backend builds these the same way). The
+    // quad is a 4-vertex tri_strip with no index buffer.
+    std::shared_ptr<VertexArray> CreateQuadVertexArray(VertexLayoutType layout, bool unit) const;
+    std::shared_ptr<VertexArray> CreateCubeVertexArray(VertexLayoutType layout, bool unit) const;
+
+    // Cached primitive vertex arrays, one per layout (mutable: GetVertexArray is const).
+    mutable std::array<std::shared_ptr<VertexArray>, (int)VertexLayoutType::MaxCount> m_quad_va;
+    mutable std::array<std::shared_ptr<VertexArray>, (int)VertexLayoutType::MaxCount> m_cube_va;
 
     int m_max_num_vert_attrs        = 31;
     int m_max_num_tex_units         = 31;

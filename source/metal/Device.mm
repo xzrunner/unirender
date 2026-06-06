@@ -11,9 +11,13 @@
 #include "unirender/metal/RenderBuffer.h"
 #include "unirender/metal/UniformBuffer.h"
 #include "unirender/TextureDescription.h"
+#include "unirender/VertexInputAttribute.h"
+#include "unirender/VertexLayoutType.h"
+#include "unirender/typedef.h"
 
 #include <iostream>
 #include <cassert>
+#include <vector>
 
 namespace ur
 {
@@ -54,7 +58,116 @@ void Device::Init()
 std::shared_ptr<ur::VertexArray>
 Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit) const
 {
-    // TODO: cached quad / cube vertex arrays
+    const int layout_idx = static_cast<int>(layout);
+    if (layout_idx < 0 || layout_idx >= (int)VertexLayoutType::MaxCount) {
+        return nullptr;
+    }
+    switch (prim)
+    {
+    case PrimitiveType::Quad:
+        if (!m_quad_va[layout_idx]) {
+            m_quad_va[layout_idx] = CreateQuadVertexArray(layout, unit);
+        }
+        return m_quad_va[layout_idx];
+    case PrimitiveType::Cube:
+        if (!m_cube_va[layout_idx]) {
+            m_cube_va[layout_idx] = CreateCubeVertexArray(layout, unit);
+        }
+        return m_cube_va[layout_idx];
+    default:
+        return nullptr;
+    }
+}
+
+// Full-screen quad: 4-vertex tri_strip, NO index buffer (drawn with tri_strip).
+// Geometry matches the GL backend's CreateQuadVertexArray so post-process passes
+// (outline edge-detect, FXAA) sample the same UVs. Without this the Metal
+// GetVertexArray stub returned null and every post-process draw was a no-op,
+// leaving the composited image (and the 3D model) blank on screen.
+std::shared_ptr<ur::VertexArray>
+Device::CreateQuadVertexArray(VertexLayoutType layout, bool unit) const
+{
+    const float p_min = unit ? 0.0f : -1.0f;
+
+    std::vector<float> vertices;
+    switch (layout)
+    {
+    case VertexLayoutType::Pos:
+        vertices = {
+            p_min, 1.0f,  0.0f,
+            p_min, p_min, 0.0f,
+            1.0f,  1.0f,  0.0f,
+            1.0f,  p_min, 0.0f,
+        };
+        break;
+    case VertexLayoutType::PosTex:
+        vertices = {
+            p_min, 1.0f,  0.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f,
+            1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 1.0f, 0.0f,
+        };
+        break;
+    case VertexLayoutType::PosNorm:
+        vertices = {
+            p_min, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f,
+        };
+        break;
+    case VertexLayoutType::PosNormTex:
+        vertices = {
+            p_min, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        };
+        break;
+    default:
+        // PosNormTexTB and any others are not used by the post-process quads.
+        return nullptr;
+    }
+
+    auto va = CreateVertexArray();
+
+    int vbuf_sz = (int)(sizeof(float) * vertices.size());
+    auto vbuf = CreateVertexBuffer(BufferUsageHint::StaticDraw, vbuf_sz);
+    vbuf->ReadFromMemory(vertices.data(), vbuf_sz, 0);
+    va->SetVertexBuffer(vbuf);
+
+    std::vector<std::shared_ptr<ur::VertexInputAttribute>> attrs;
+    switch (layout)
+    {
+    case VertexLayoutType::Pos:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 12));
+        break;
+    case VertexLayoutType::PosTex:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 20));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(1, ComponentDataType::Float, 2, 12, 20));
+        break;
+    case VertexLayoutType::PosNorm:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 24));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(1, ComponentDataType::Float, 3, 12, 24));
+        break;
+    case VertexLayoutType::PosNormTex:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 32));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(1, ComponentDataType::Float, 3, 12, 32));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(2, ComponentDataType::Float, 2, 24, 32));
+        break;
+    default:
+        break;
+    }
+    va->SetVertexBufferAttrs(attrs);
+
+    return va;
+}
+
+// Unit cube is not used by the deferred/post-process path; build it on demand
+// later if a scene needs it (the GL backend has the full geometry).
+std::shared_ptr<ur::VertexArray>
+Device::CreateCubeVertexArray(VertexLayoutType layout, bool unit) const
+{
     return nullptr;
 }
 

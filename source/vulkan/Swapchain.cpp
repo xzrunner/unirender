@@ -246,9 +246,14 @@ Swapchain::QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 
 VkSurfaceFormatKHR Swapchain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-    for (const auto& availableFormat : availableFormats) {
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-            return availableFormat;
+    // Prefer a UNORM (non-sRGB) swapchain to match the Metal backend, which presents
+    // through MTLPixelFormatBGRA8Unorm. The engine's shaders output colors already in
+    // display (sRGB) space; an *_SRGB swapchain would apply linear->sRGB encoding again
+    // on store, washing the 2D GUI out (everything looks pale / hazy).
+    for (const auto& f : availableFormats) {
+        if ((f.format == VK_FORMAT_B8G8R8A8_UNORM || f.format == VK_FORMAT_R8G8B8A8_UNORM) &&
+            f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+            return f;
         }
     }
 

@@ -8,6 +8,8 @@
 #include "unirender/vulkan/LogicalDevice.h"
 
 #include <assert.h>
+#include <iostream>
+#include <vector>
 
 /* Number of samples needs to be the same at image creation,      */
 /* renderpass creation and pipeline creation.                     */
@@ -19,6 +21,47 @@
 #define NUM_VIEWPORTS 1
 #define NUM_SCISSORS NUM_VIEWPORTS
 
+namespace
+{
+
+VkBlendFactor ToVkBlendFactor(ur::BlendingFactor f)
+{
+    switch (f)
+    {
+    case ur::BlendingFactor::Zero:                 return VK_BLEND_FACTOR_ZERO;
+    case ur::BlendingFactor::One:                  return VK_BLEND_FACTOR_ONE;
+    case ur::BlendingFactor::SrcColor:             return VK_BLEND_FACTOR_SRC_COLOR;
+    case ur::BlendingFactor::OneMinusSrcColor:     return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+    case ur::BlendingFactor::DstColor:             return VK_BLEND_FACTOR_DST_COLOR;
+    case ur::BlendingFactor::OneMinusDstColor:     return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+    case ur::BlendingFactor::SrcAlpha:             return VK_BLEND_FACTOR_SRC_ALPHA;
+    case ur::BlendingFactor::OneMinusSrcAlpha:     return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    case ur::BlendingFactor::DstAlpha:             return VK_BLEND_FACTOR_DST_ALPHA;
+    case ur::BlendingFactor::OneMinusDstAlpha:     return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+    case ur::BlendingFactor::ConstantColor:        return VK_BLEND_FACTOR_CONSTANT_COLOR;
+    case ur::BlendingFactor::OneMinusConstantColor:return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+    case ur::BlendingFactor::ConstantAlpha:        return VK_BLEND_FACTOR_CONSTANT_ALPHA;
+    case ur::BlendingFactor::OneMinusConstantAlpha:return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA;
+    case ur::BlendingFactor::SrcAlphaSaturate:     return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+    default:                                       return VK_BLEND_FACTOR_ONE;
+    }
+}
+
+VkBlendOp ToVkBlendOp(ur::BlendEquation e)
+{
+    switch (e)
+    {
+    case ur::BlendEquation::Add:             return VK_BLEND_OP_ADD;
+    case ur::BlendEquation::Subtract:        return VK_BLEND_OP_SUBTRACT;
+    case ur::BlendEquation::ReverseSubtract: return VK_BLEND_OP_REVERSE_SUBTRACT;
+    case ur::BlendEquation::Minimum:         return VK_BLEND_OP_MIN;
+    case ur::BlendEquation::Maximum:         return VK_BLEND_OP_MAX;
+    default:                                 return VK_BLEND_OP_ADD;
+    }
+}
+
+}
+
 namespace ur
 {
 namespace vulkan
@@ -28,6 +71,21 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
                    const ur::PipelineLayout& layout, const ur::VertexBuffer& vb,
                    const ur::ShaderProgram& prog)
     : m_device(ctx.GetLogicalDevice())
+{
+    Build(ctx, include_depth, include_vi, vb, prog, Blending(), VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+}
+
+Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
+                   const ur::VertexBuffer& vb, const ur::ShaderProgram& prog,
+                   const Blending& blend, VkPrimitiveTopology topology)
+    : m_device(ctx.GetLogicalDevice())
+{
+    Build(ctx, include_depth, include_vi, vb, prog, blend, topology);
+}
+
+void Pipeline::Build(const Context& ctx, bool include_depth, bool include_vi,
+                     const ur::VertexBuffer& vb, const ur::ShaderProgram& prog,
+                     const Blending& blend, VkPrimitiveTopology topology)
 {
     VkResult res;
 
@@ -60,7 +118,7 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
     ia.pNext = NULL;
     ia.flags = 0;
     ia.primitiveRestartEnable = VK_FALSE;
-    ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    ia.topology = topology;
 
     VkPipelineRasterizationStateCreateInfo rs;
     rs.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -81,17 +139,51 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
     cb.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     cb.flags = 0;
     cb.pNext = NULL;
-    VkPipelineColorBlendAttachmentState att_state[1];
-    att_state[0].colorWriteMask = 0xf;
-    att_state[0].blendEnable = VK_FALSE;
-    att_state[0].alphaBlendOp = VK_BLEND_OP_ADD;
-    att_state[0].colorBlendOp = VK_BLEND_OP_ADD;
-    att_state[0].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    att_state[0].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-    att_state[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    att_state[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    cb.attachmentCount = 1;
-    cb.pAttachments = att_state;
+    // Honor the engine's RenderState.blending (was hardcoded OFF, which left the 2D
+    // GUI -- DefaultRenderState2D wants SrcAlpha/OneMinusSrcAlpha -- compositing glyph
+    // quads as opaque black boxes once the atlas had real content).
+    VkPipelineColorBlendAttachmentState one = {};
+    one.colorWriteMask = 0xf;
+    if (blend.enabled)
+    {
+        one.blendEnable = VK_TRUE;
+        if (blend.separately)
+        {
+            one.srcColorBlendFactor = ToVkBlendFactor(blend.src_rgb);
+            one.dstColorBlendFactor = ToVkBlendFactor(blend.dst_rgb);
+            one.srcAlphaBlendFactor = ToVkBlendFactor(blend.src_alpha);
+            one.dstAlphaBlendFactor = ToVkBlendFactor(blend.dst_alpha);
+            one.colorBlendOp        = ToVkBlendOp(blend.rgb_equation);
+            one.alphaBlendOp        = ToVkBlendOp(blend.alpha_equation);
+        }
+        else
+        {
+            one.srcColorBlendFactor = ToVkBlendFactor(blend.src);
+            one.dstColorBlendFactor = ToVkBlendFactor(blend.dst);
+            one.srcAlphaBlendFactor = ToVkBlendFactor(blend.src);
+            one.dstAlphaBlendFactor = ToVkBlendFactor(blend.dst);
+            one.colorBlendOp        = ToVkBlendOp(blend.equation);
+            one.alphaBlendOp        = ToVkBlendOp(blend.equation);
+        }
+    }
+    else
+    {
+        one.blendEnable = VK_FALSE;
+        one.alphaBlendOp = VK_BLEND_OP_ADD;
+        one.colorBlendOp = VK_BLEND_OP_ADD;
+        one.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        one.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+        one.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        one.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    }
+    // One blend state per color attachment -- the count MUST match the render pass
+    // (MRT GBuffer has 3 color attachments; screen has 1). All attachments share the
+    // same blend config here.
+    uint32_t color_count = static_cast<const vulkan::Context&>(ctx).GetCurrentColorAttachmentCount();
+    if (color_count == 0) { color_count = 1; }
+    std::vector<VkPipelineColorBlendAttachmentState> att_states(color_count, one);
+    cb.attachmentCount = color_count;
+    cb.pAttachments = att_states.data();
     cb.logicOpEnable = VK_FALSE;
     cb.logicOp = VK_LOGIC_OP_NO_OP;
     cb.blendConstants[0] = 1.0f;
@@ -165,7 +257,11 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
     VkGraphicsPipelineCreateInfo pipeline;
     pipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipeline.pNext = NULL;
-    pipeline.layout = static_cast<const PipelineLayout&>(layout).GetHandler();
+    // Use the shader program's reflection-built pipeline layout so the pipeline's
+    // descriptor expectations always match the (binding-deconflicted) shader. The
+    // `layout` param (the engine's hardcoded single_ubo_single_img) is ignored on
+    // Vulkan now that the ShaderProgram owns the real layout.
+    pipeline.layout = static_cast<const vulkan::ShaderProgram&>(prog).GetVkPipelineLayout();
     pipeline.basePipelineHandle = VK_NULL_HANDLE;
     pipeline.basePipelineIndex = 0;
     pipeline.flags = 0;
@@ -180,16 +276,30 @@ Pipeline::Pipeline(const Context& ctx, bool include_depth, bool include_vi,
     pipeline.pDepthStencilState = &ds;
     pipeline.pStages = static_cast<const vulkan::ShaderProgram&>(prog).GetShaderStages();
     pipeline.stageCount = 2;
-    pipeline.renderPass = ctx.GetRenderPass()->GetHandler();
+    // Build against the pass currently being recorded (screen or offscreen) so the
+    // pipeline is render-pass-compatible with where it's used; fall back to the
+    // screen pass if built outside a pass.
+    {
+        VkRenderPass cur = static_cast<const vulkan::Context&>(ctx).GetCurrentRenderPass();
+        pipeline.renderPass = cur != VK_NULL_HANDLE ? cur : ctx.GetRenderPass()->GetHandler();
+    }
     pipeline.subpass = 0;
 
     res = vkCreateGraphicsPipelines(m_device->GetHandler(), ctx.GetPipelineCache()->GetHandler(), 1, &pipeline, NULL, &m_handle);
-    assert(res == VK_SUCCESS);
+    if (res != VK_SUCCESS) {
+        // Don't abort the whole app: one shader with a bad VS->FS interface (e.g. the
+        // 3D deferred mesh) must not take down the 2D GUI. Leave m_handle null; callers
+        // (Context::RecordDraw) skip the draw when the handle is null.
+        std::cerr << "[Vulkan] pipeline build failed (VkResult " << res << "); draw skipped" << std::endl;
+        m_handle = VK_NULL_HANDLE;
+    }
 }
 
 Pipeline::~Pipeline()
 {
-    vkDestroyPipeline(m_device->GetHandler(), m_handle, nullptr);
+    if (m_handle != VK_NULL_HANDLE) {
+        vkDestroyPipeline(m_device->GetHandler(), m_handle, nullptr);
+    }
 }
 
 }

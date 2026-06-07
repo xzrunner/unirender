@@ -179,8 +179,10 @@ source_group("api\\vulkan\\3.drawing\\image" FILES ${api__vulkan__3.drawing__ima
 set(api__vulkan__3.drawing__pixels
     "include/unirender/vulkan/DepthBuffer.h"
     "include/unirender/vulkan/FrameBuffers.h"
+    "include/unirender/vulkan/Framebuffer.h"
     "source/vulkan/DepthBuffer.cpp"
     "source/vulkan/FrameBuffers.cpp"
+    "source/vulkan/Framebuffer.cpp"
 )
 source_group("api\\vulkan\\3.drawing\\pixels" FILES ${api__vulkan__3.drawing__pixels})
 
@@ -386,18 +388,15 @@ set(ALL_FILES
 )
 
 if(APPLE)
-    # macOS targets the Metal backend. Apple's OpenGL is frozen at 4.1 (no GL 4.3
-    # compute/SSBO/barriers), and the Vulkan backend needs a Vulkan loader we do not
-    # link on macOS -- so exclude both backends here (selection is gated in Factory.cpp).
+    # macOS default backend is Metal. Apple's OpenGL is frozen at 4.1 (no GL 4.3
+    # compute/SSBO/barriers), so the GL backend stays excluded. The Vulkan backend
+    # IS compiled here and runs via MoltenVK (Vulkan -> Metal); the editor links the
+    # macOS Vulkan loader and selects it at runtime (default Metal, opt in via
+    # TT_RENDER_API=vulkan). Backend selection is gated in Factory.cpp.
     list(REMOVE_ITEM ALL_FILES
         ${api__opengl} ${api__opengl__buffer} ${api__opengl__frame_buffer}
         ${api__opengl__image} ${api__opengl__shader} ${api__opengl__texture}
-        ${api__opengl__utility} ${api__opengl__vertex_array}
-        ${api__vulkan} ${api__vulkan__0.setup} ${api__vulkan__1.presentation}
-        ${api__vulkan__2.pipeline} ${api__vulkan__3.drawing__command}
-        ${api__vulkan__3.drawing__image} ${api__vulkan__3.drawing__pixels}
-        ${api__vulkan__3.drawing__uniform} ${api__vulkan__3.drawing__vertex}
-        ${api__vulkan__9.utility})
+        ${api__opengl__utility} ${api__opengl__vertex_array})
 endif()
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})

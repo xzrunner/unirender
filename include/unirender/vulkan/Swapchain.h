@@ -28,8 +28,12 @@ public:
 
 	auto GetImageCount() const { return m_image_count; }
 
-	VkImageView GetView(int idx) const { 
+	VkImageView GetView(int idx) const {
 		return idx >= 0 && idx < static_cast<int>(m_buffers.size()) ? m_buffers[idx].view : 0;
+	}
+
+	VkImage GetImage(int idx) const {
+		return idx >= 0 && idx < static_cast<int>(m_buffers.size()) ? m_buffers[idx].image : VK_NULL_HANDLE;
 	}
 
 	VkResult QueuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore = VK_NULL_HANDLE);

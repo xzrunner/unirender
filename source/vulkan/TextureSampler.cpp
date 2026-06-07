@@ -23,6 +23,7 @@ TextureSampler::TextureSampler(const std::shared_ptr<LogicalDevice>& device, Tex
     ci.borderColor   = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
     ci.minFilter     = TypeConverter::To(min_filter);
     ci.magFilter     = TypeConverter::To(mag_filter);
+    ci.mipmapMode    = TypeConverter::ToMipmapMode(min_filter);
     ci.maxAnisotropy = max_anistropy;
     if (vkCreateSampler(m_device->GetHandler(), &ci, nullptr, &m_handle) != VK_SUCCESS) {
         throw std::runtime_error("failed to create sampler!");

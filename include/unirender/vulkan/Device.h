@@ -1,6 +1,9 @@
 #pragma once
 
 #include "unirender/Device.h"
+#include "unirender/VertexLayoutType.h"
+
+#include <array>
 
 namespace ur
 {
@@ -26,7 +29,7 @@ public:
     virtual std::shared_ptr<VertexArray>
         GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit = false) const override;
     virtual std::shared_ptr<VertexArray> CreateVertexArray() const override;
-    virtual std::shared_ptr<Framebuffer> CreateFramebuffer() const override;
+    virtual std::shared_ptr<ur::Framebuffer> CreateFramebuffer() const override;
     virtual std::shared_ptr<RenderBuffer> CreateRenderBuffer(
         int width, int height, InternalFormat format) const override;
 
@@ -91,6 +94,14 @@ public:
     virtual void PopDebugGroup() const override;
 
 private:
+    // Built-in full-screen quad / cube vertex arrays (cached per layout). Used by the
+    // rendergraph's post-process / composite passes (PrimitiveShape "quad"). Without
+    // these GetVertexArray returned null and every post-process Draw was a no-op, so
+    // the 3D scene never composited to the screen (only the GUI showed).
+    std::shared_ptr<VertexArray> CreateQuadVertexArray(VertexLayoutType layout, bool unit) const;
+    std::shared_ptr<VertexArray> CreateCubeVertexArray(VertexLayoutType layout, bool unit) const;
+
+private:
     int m_max_num_vert_attrs        = 0;
     int m_max_num_tex_units         = 0;
     int m_max_num_color_attachments = 0;
@@ -106,6 +117,9 @@ private:
     uint32_t m_present_family_id = 0;
 
     std::shared_ptr<CommandPool> m_cmd_pool = nullptr;
+
+    mutable std::array<std::shared_ptr<VertexArray>, (int)VertexLayoutType::MaxCount> m_quad_va;
+    mutable std::array<std::shared_ptr<VertexArray>, (int)VertexLayoutType::MaxCount> m_cube_va;
 
     friend class Context;
 

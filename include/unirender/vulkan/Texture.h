@@ -53,7 +53,18 @@ public:
     void ReadFromMemory(const TextureDescription& desc, const std::shared_ptr<CommandPool>& cmd_pool,
         const void* pixels, int row_alignment, int mip_level = 0);
 
+    // Create this texture as an offscreen color render target (no source pixels):
+    // OPTIMAL/device-local image with COLOR_ATTACHMENT|SAMPLED usage + a color view,
+    // cleared once and left in SHADER_READ_ONLY_OPTIMAL so it can be both rendered
+    // into (vulkan::Framebuffer) and sampled afterwards.
+    void CreateAsColorAttachment(const TextureDescription& desc, const std::shared_ptr<CommandPool>& cmd_pool);
+
     auto& GetDescInfo() const { return m_vk_desc; }
+
+    // Direct handles for use as a render-pass / framebuffer attachment.
+    VkImageView GetImageView() const;
+    VkFormat    GetVkFormat()  const;
+    VkImage     GetVkImage()   const;
 
 private:
     std::shared_ptr<LogicalDevice>  m_device;

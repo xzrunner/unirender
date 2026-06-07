@@ -1,15 +1,17 @@
 #include "unirender/Factory.h"
 
 #include <exception>
+#include <cstdlib>
+#include <string>
 
 #ifndef __APPLE__ // the OpenGL backend is excluded on macOS (Metal is used instead)
 #include "unirender/opengl/Device.h"
 #include "unirender/opengl/Context.h"
 #endif
-#ifndef __APPLE__ // the Vulkan backend is excluded on macOS (Metal is used instead)
+// Vulkan backend: built on all platforms. On macOS it runs via MoltenVK
+// (Vulkan -> Metal); Metal stays the default and Vulkan is opt-in at runtime.
 #include "unirender/vulkan/Device.h"
 #include "unirender/vulkan/Context.h"
-#endif
 #ifdef __APPLE__
 #include "unirender/metal/Device.h"
 #include "unirender/metal/Context.h"
@@ -29,12 +31,20 @@ std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
 #endif
         break;
     case APIType::Vulkan:
-#ifndef __APPLE__
     {
 #ifdef NDEBUG
-        const bool enable_validation_layers = false;
+        bool enable_validation_layers = false;
 #else
-        const bool enable_validation_layers = true;
+        bool enable_validation_layers = true;
+#endif
+#ifdef __APPLE__
+        // The Khronos validation layer is unstable on MoltenVK -- it can segfault
+        // inside CmdPipelineBarrier validation during texture upload. Default it OFF
+        // on macOS; opt in explicitly with TT_VK_VALIDATION=1.
+        enable_validation_layers = false;
+        if (const char* v = std::getenv("TT_VK_VALIDATION")) {
+            enable_validation_layers = (std::string(v) == "1" || std::string(v) == "true");
+        }
 #endif
         try {
             ret = std::make_shared<vulkan::Device>(enable_validation_layers);
@@ -54,7 +64,6 @@ std::shared_ptr<Device> CreateDevice(APIType type, std::ostream& logger)
             }
         }
     }
-#endif
         break;
     case APIType::Metal:
 #ifdef __APPLE__
@@ -77,9 +86,7 @@ std::shared_ptr<Context> CreateContext(APIType type, const Device& device, void*
 #endif
         break;
     case APIType::Vulkan:
-#ifndef __APPLE__
         ret = std::make_shared<vulkan::Context>(device, hwnd, width, height);
-#endif
         break;
     case APIType::Metal:
 #ifdef __APPLE__

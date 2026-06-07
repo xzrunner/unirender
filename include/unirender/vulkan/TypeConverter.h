@@ -22,11 +22,20 @@ class TypeConverter
 public:
     static VkShaderStageFlagBits To(ShaderType type)
     {
+        // MUST match ur::ShaderType order exactly:
+        // { VertexShader, TessCtrlShader, TessEvalShader, GeometryShader,
+        //   FragmentShader, ComputeShader }. The old table had 4 wrongly-ordered
+        // entries, so FragmentShader (index 4) read out of bounds and produced a
+        // garbage stage flag -> the fragment stage was silently dropped from every
+        // pipeline -> rasterization wrote depth but never any color (gray screen,
+        // black atlases, "texture bound but never accessed").
         const VkShaderStageFlagBits types[] = {
-            VK_SHADER_STAGE_VERTEX_BIT,
-            VK_SHADER_STAGE_GEOMETRY_BIT,
-            VK_SHADER_STAGE_FRAGMENT_BIT,
-            VK_SHADER_STAGE_COMPUTE_BIT,
+            VK_SHADER_STAGE_VERTEX_BIT,                  // VertexShader
+            VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,    // TessCtrlShader
+            VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, // TessEvalShader
+            VK_SHADER_STAGE_GEOMETRY_BIT,                // GeometryShader
+            VK_SHADER_STAGE_FRAGMENT_BIT,                // FragmentShader
+            VK_SHADER_STAGE_COMPUTE_BIT,                 // ComputeShader
         };
         return types[static_cast<int>(type)];
     }
@@ -63,30 +72,42 @@ public:
 
     static VkFormat To(TextureFormat fmt)
     {
-        const VkFormat fmts[] = {
-            VK_FORMAT_R8G8B8A8_UNORM,
-            VK_FORMAT_R4G4B4A4_UNORM_PACK16,
-            VK_FORMAT_R8G8B8_UNORM,
-            VK_FORMAT_R5G6B5_UNORM_PACK16,
-            VK_FORMAT_B8G8R8A8_UNORM,
-            VK_FORMAT_B8G8R8_UNORM,
-            VK_FORMAT_R16G16B16A16_USCALED,
-            VK_FORMAT_R16G16B16_USCALED,
-            VK_FORMAT_R32G32B32_SFLOAT,
-            VK_FORMAT_R16G16_SFLOAT,
-            VK_FORMAT_R8_UNORM,          // A8
-            VK_FORMAT_R8_UNORM,
-            VK_FORMAT_R16_UINT,
-            VK_FORMAT_D16_UNORM,
-            VK_FORMAT_PVRTC2_2BPP_UNORM_BLOCK_IMG,
-            VK_FORMAT_PVRTC2_4BPP_UNORM_BLOCK_IMG,
-            VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK,    // ETC1
-            VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK,
-            // COMPRESSED_RGBA_S3TC_DXT1_EXT,
-            // COMPRESSED_RGBA_S3TC_DXT3_EXT,
-            // COMPRESSED_RGBA_S3TC_DXT5_EXT,
-        };
-        return fmts[static_cast<int>(fmt)];
+        // MUST match ur::TextureFormat exactly. The old array-indexed-by-enum was short
+        // and mis-ordered, so everything past RGBA8 mapped to the wrong VkFormat (e.g.
+        // RGBA16F -> R16G16B16_USCALED, R16F -> out of bounds). That gave the deferred
+        // GBuffer's gDepth(r16f)/gNormal(rgb16f) garbage/unsupported formats -> no GPU
+        // image -> null imageView -> the post-process passes sampled invalid textures.
+        // 3-component formats (RGB*, RGB16F...) are promoted to 4 components: Vulkan /
+        // MoltenVK rarely support 3-component sampled/renderable images (the Metal and
+        // GL backends promote them the same way).
+        switch (fmt)
+        {
+        case TextureFormat::RGBA8:    return VK_FORMAT_R8G8B8A8_UNORM;
+        case TextureFormat::RGBA4:    return VK_FORMAT_R4G4B4A4_UNORM_PACK16;
+        case TextureFormat::RGB:      return VK_FORMAT_R8G8B8A8_UNORM;      // promote 3->4
+        case TextureFormat::RGB565:   return VK_FORMAT_R5G6B5_UNORM_PACK16;
+        case TextureFormat::BGRA_EXT: return VK_FORMAT_B8G8R8A8_UNORM;
+        case TextureFormat::BGR_EXT:  return VK_FORMAT_B8G8R8A8_UNORM;      // promote 3->4
+        case TextureFormat::RGBA16:   return VK_FORMAT_R16G16B16A16_UNORM;
+        case TextureFormat::RGBA16F:  return VK_FORMAT_R16G16B16A16_SFLOAT;
+        case TextureFormat::RGBA32F:  return VK_FORMAT_R32G32B32A32_SFLOAT;
+        case TextureFormat::RGB16F:   return VK_FORMAT_R16G16B16A16_SFLOAT; // promote 3->4
+        case TextureFormat::RGB32F:   return VK_FORMAT_R32G32B32A32_SFLOAT; // promote 3->4
+        case TextureFormat::RG16F:    return VK_FORMAT_R16G16_SFLOAT;
+        case TextureFormat::RG32F:    return VK_FORMAT_R32G32_SFLOAT;
+        case TextureFormat::A8:       return VK_FORMAT_R8_UNORM;
+        case TextureFormat::RED:      return VK_FORMAT_R8_UNORM;
+        case TextureFormat::R16:      return VK_FORMAT_R16_UNORM;
+        case TextureFormat::R16F:     return VK_FORMAT_R16_SFLOAT;
+        case TextureFormat::R32F:     return VK_FORMAT_R32_SFLOAT;
+        case TextureFormat::DEPTH:    return VK_FORMAT_D32_SFLOAT;
+        case TextureFormat::RGB32I:   return VK_FORMAT_R32G32B32A32_SINT;   // promote 3->4
+        case TextureFormat::PVR2:     return VK_FORMAT_PVRTC2_2BPP_UNORM_BLOCK_IMG;
+        case TextureFormat::PVR4:     return VK_FORMAT_PVRTC2_4BPP_UNORM_BLOCK_IMG;
+        case TextureFormat::ETC1:     return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
+        case TextureFormat::ETC2:     return VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK;
+        default:                      return VK_FORMAT_R8G8B8A8_UNORM;
+        }
     }
 
     static VkSamplerAddressMode To(TextureWrap wrap)
@@ -102,13 +123,33 @@ public:
 
     static VkFilter To(TextureMinificationFilter filter)
     {
-        assert(filter == TextureMinificationFilter::Nearest 
-            || filter == TextureMinificationFilter::Linear);
-        const VkFilter filters[] = {
-            VK_FILTER_NEAREST,
-            VK_FILTER_LINEAR,
-        };
-        return filters[static_cast<int>(filter)];
+        // GL-style min filters fold the in-level filter and the between-mip filter
+        // into one enum; Vulkan splits them (VkFilter minFilter + VkSamplerMipmapMode).
+        // Here we return just the in-level (NEAREST/LINEAR) component.
+        switch (filter)
+        {
+        case TextureMinificationFilter::Nearest:
+        case TextureMinificationFilter::NearestMipmapNearest:
+        case TextureMinificationFilter::NearestMipmapLinear:
+            return VK_FILTER_NEAREST;
+        case TextureMinificationFilter::Linear:
+        case TextureMinificationFilter::LinearMipmapNearest:
+        case TextureMinificationFilter::LinearMipmapLinear:
+        default:
+            return VK_FILTER_LINEAR;
+        }
+    }
+
+    static VkSamplerMipmapMode ToMipmapMode(TextureMinificationFilter filter)
+    {
+        switch (filter)
+        {
+        case TextureMinificationFilter::NearestMipmapLinear:
+        case TextureMinificationFilter::LinearMipmapLinear:
+            return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        default:
+            return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        }
     }
 
     static VkFilter To(TextureMagnificationFilter filter)

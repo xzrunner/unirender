@@ -15,7 +15,12 @@
 #include "unirender/vulkan/Pipeline.h"
 #include "unirender/vulkan/TextureSampler.h"
 #include "unirender/vulkan/CommandPool.h"
+#include "unirender/vulkan/Framebuffer.h"
+#include "unirender/vulkan/RenderBuffer.h"
+#include "unirender/vulkan/TypeConverter.h"
 #include "unirender/TextureDescription.h"
+#include "unirender/ComponentDataType.h"
+#include "unirender/VertexInputAttribute.h"
 
 #include <iostream>
 #include <cassert>
@@ -62,7 +67,115 @@ Device::Device(bool enable_validation_layers)
 std::shared_ptr<ur::VertexArray>
 Device::GetVertexArray(PrimitiveType prim, VertexLayoutType layout, bool unit) const
 {
-    // TODO: cached quad / cube vertex arrays like the opengl backend
+    const int layout_idx = static_cast<int>(layout);
+    if (layout_idx < 0 || layout_idx >= (int)VertexLayoutType::MaxCount) {
+        return nullptr;
+    }
+    switch (prim)
+    {
+    case PrimitiveType::Quad:
+        if (!m_quad_va[layout_idx]) {
+            m_quad_va[layout_idx] = CreateQuadVertexArray(layout, unit);
+        }
+        return m_quad_va[layout_idx];
+    case PrimitiveType::Cube:
+        if (!m_cube_va[layout_idx]) {
+            m_cube_va[layout_idx] = CreateCubeVertexArray(layout, unit);
+        }
+        return m_cube_va[layout_idx];
+    default:
+        return nullptr;
+    }
+}
+
+// Full-screen quad: 4-vertex tri_strip, NO index buffer (drawn with tri_strip).
+// Geometry matches the GL / Metal backends' CreateQuadVertexArray so the post-process
+// passes (outline edge-detect, FXAA, composite) sample the same UVs. Without this the
+// Vulkan GetVertexArray stub returned null and every post-process Draw was a no-op,
+// leaving the composited 3D scene blank on screen (only the 2D GUI showed).
+std::shared_ptr<ur::VertexArray>
+Device::CreateQuadVertexArray(VertexLayoutType layout, bool unit) const
+{
+    const float p_min = unit ? 0.0f : -1.0f;
+
+    std::vector<float> vertices;
+    switch (layout)
+    {
+    case VertexLayoutType::Pos:
+        vertices = {
+            p_min, 1.0f,  0.0f,
+            p_min, p_min, 0.0f,
+            1.0f,  1.0f,  0.0f,
+            1.0f,  p_min, 0.0f,
+        };
+        break;
+    case VertexLayoutType::PosTex:
+        vertices = {
+            p_min, 1.0f,  0.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f,
+            1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 1.0f, 0.0f,
+        };
+        break;
+    case VertexLayoutType::PosNorm:
+        vertices = {
+            p_min, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f,
+        };
+        break;
+    case VertexLayoutType::PosNormTex:
+        vertices = {
+            p_min, 1.0f,  0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+            p_min, p_min, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+            1.0f,  1.0f,  0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+            1.0f,  p_min, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+        };
+        break;
+    default:
+        // PosNormTexTB and any others are not used by the post-process quads.
+        return nullptr;
+    }
+
+    auto va = CreateVertexArray();
+
+    int vbuf_sz = (int)(sizeof(float) * vertices.size());
+    auto vbuf = CreateVertexBuffer(BufferUsageHint::StaticDraw, vbuf_sz);
+    vbuf->ReadFromMemory(vertices.data(), vbuf_sz, 0);
+    va->SetVertexBuffer(vbuf);
+
+    std::vector<std::shared_ptr<ur::VertexInputAttribute>> attrs;
+    switch (layout)
+    {
+    case VertexLayoutType::Pos:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 12));
+        break;
+    case VertexLayoutType::PosTex:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 20));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(1, ComponentDataType::Float, 2, 12, 20));
+        break;
+    case VertexLayoutType::PosNorm:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 24));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(1, ComponentDataType::Float, 3, 12, 24));
+        break;
+    case VertexLayoutType::PosNormTex:
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(0, ComponentDataType::Float, 3, 0, 32));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(1, ComponentDataType::Float, 3, 12, 32));
+        attrs.push_back(std::make_shared<ur::VertexInputAttribute>(2, ComponentDataType::Float, 2, 24, 32));
+        break;
+    default:
+        break;
+    }
+    va->SetVertexBufferAttrs(attrs);
+
+    return va;
+}
+
+std::shared_ptr<ur::VertexArray>
+Device::CreateCubeVertexArray(VertexLayoutType layout, bool unit) const
+{
+    // Not used by the deferred / post-process path; build on demand if a scene needs it.
     return nullptr;
 }
 
@@ -79,13 +192,13 @@ Device::CreateVertexArray() const
 std::shared_ptr<ur::Framebuffer>
 Device::CreateFramebuffer() const
 {
-    return nullptr; // TODO: off-screen render targets
+    return std::make_shared<ur::vulkan::Framebuffer>(m_logic_dev, m_phy_dev);
 }
 
 std::shared_ptr<ur::RenderBuffer>
 Device::CreateRenderBuffer(int width, int height, InternalFormat format) const
 {
-    return nullptr;
+    return std::make_shared<ur::vulkan::RenderBuffer>(width, height, format);
 }
 
 // ---------------------------------------------------------------------------
@@ -102,7 +215,7 @@ Device::CreateShaderProgram(const std::vector<unsigned int>& vs,
     if (vs.empty() || fs.empty()) {
         return nullptr;
     }
-    return std::make_shared<ur::vulkan::ShaderProgram>(m_logic_dev, vs, fs);
+    return std::make_shared<ur::vulkan::ShaderProgram>(m_logic_dev, *m_phy_dev, vs, fs);
 }
 
 std::shared_ptr<ur::ShaderProgram>
@@ -168,6 +281,19 @@ Device::CreateTexture(const TextureDescription& desc, const void* pixels) const
     auto tex = std::make_shared<ur::vulkan::Texture>(m_logic_dev, m_phy_dev, sampler);
     if (pixels) {
         tex->ReadFromMemory(desc, m_cmd_pool, pixels, 4);
+    } else {
+        // No source pixels -> likely a render target (dtex atlas, rendergraph
+        // render_target). Make it a color attachment ONLY if the device can
+        // actually render to that format -- compressed (ETC2/PVRTC/S3TC) and other
+        // non-renderable formats must NOT get COLOR_ATTACHMENT usage (MoltenVK
+        // errors, e.g. "ETC2... cannot be cleared"). Those stay imageless, as
+        // before, until uploaded.
+        VkFormatProperties props = {};
+        vkGetPhysicalDeviceFormatProperties(
+            m_phy_dev->GetHandler(), TypeConverter::To(desc.format), &props);
+        if (props.optimalTilingFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) {
+            tex->CreateAsColorAttachment(desc, m_cmd_pool);
+        }
     }
     return tex;
 }

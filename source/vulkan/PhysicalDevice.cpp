@@ -11,7 +11,13 @@ namespace
 {
 
 const std::vector<const char*> DeviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#ifdef __APPLE__
+    // MoltenVK is a portability implementation; the spec mandates enabling this
+    // extension when the device advertises it (it always does on MoltenVK). Use the
+    // string literal -- the macro lives in vulkan_beta.h (needs VK_ENABLE_BETA_EXTENSIONS).
+    "VK_KHR_portability_subset",
+#endif
 };
 
 }

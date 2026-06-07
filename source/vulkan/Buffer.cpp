@@ -94,13 +94,15 @@ void Buffer::Clear()
     auto vk_dev = m_device->GetHandler();
     if (vk_dev == VK_NULL_HANDLE) return;
 
-    // FIX: check for VK_NULL_HANDLE before destroying
-    if (m_buffer != VK_NULL_HANDLE) {
-        vkDestroyBuffer(vk_dev, m_buffer, nullptr);
+    // Defer destruction instead of freeing immediately: this buffer may still be
+    // referenced by a draw already recorded into the current frame's command buffer
+    // (the engine recreates dynamic vertex/index buffers mid-frame, which calls
+    // Buffer::Create -> Clear on the live buffer). The LogicalDevice frees the
+    // handles once the owning frame's fence has signalled. See LogicalDevice's
+    // retirement queue and vulkan::Context's frames-in-flight loop.
+    if (m_buffer != VK_NULL_HANDLE || m_memory != VK_NULL_HANDLE) {
+        m_device->RetireBuffer(m_buffer, m_memory);
         m_buffer = VK_NULL_HANDLE;
-    }
-    if (m_memory != VK_NULL_HANDLE) {
-        vkFreeMemory(vk_dev, m_memory, nullptr);
         m_memory = VK_NULL_HANDLE;
     }
     m_size = 0;

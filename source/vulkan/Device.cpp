@@ -48,8 +48,15 @@ Device::Device(bool enable_validation_layers)
     m_logic_dev = std::make_shared<LogicalDevice>(
         enable_validation_layers, *m_phy_dev, /*surface=*/nullptr);
 
-    // Create a command pool for resource-upload operations
-    m_cmd_pool = std::make_shared<CommandPool>(m_logic_dev);
+    // Create a command pool for resource-upload operations. Its queue family must be
+    // the graphics family the upload command buffers are submitted to (resolved here
+    // the same way LogicalDevice picked the graphics queue), not a hardcoded 0.
+    {
+        PhysicalDevice::QueueFamilyIndices qfi =
+            PhysicalDevice::FindQueueFamilies(m_phy_dev->GetHandler(), nullptr);
+        m_cmd_pool = std::make_shared<CommandPool>(m_logic_dev,
+            qfi.graphics_family.value());
+    }
 
     // Query limits from physical device
     VkPhysicalDeviceProperties props;

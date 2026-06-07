@@ -23,9 +23,14 @@ Image::Image(const std::shared_ptr<LogicalDevice>& device, const PhysicalDevice&
 {
 	auto vk_dev = device->GetHandler();
 
-	// A render target needs OPTIMAL tiling + device-local memory + COLOR_ATTACHMENT
-	// usage (plus SAMPLED to read the result back, TRANSFER_DST for the one-time
-	// clear). The plain texture path keeps the old LINEAR host-visible behaviour.
+	// Both sampled textures and render targets use OPTIMAL tiling + device-local
+	// memory now. Sampled textures are filled via a staging buffer + vkCmdCopyBufferToImage
+	// (Image::Upload / UploadRegion), so they never needed LINEAR host-visible memory --
+	// and LINEAR + SAMPLED is only guaranteed for a few formats, making the old plain-
+	// texture path a latent portability bug as well as sub-optimal for sampling. A
+	// render target additionally needs COLOR_ATTACHMENT usage; both keep TRANSFER_DST
+	// (upload / one-time clear) + SAMPLED. initialLayout is UNDEFINED -- the first
+	// transition in Upload/clear goes UNDEFINED -> TRANSFER_DST.
 	VkImageCreateInfo img_ci = {};
 	img_ci.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	img_ci.imageType   = type;
@@ -34,12 +39,12 @@ Image::Image(const std::shared_ptr<LogicalDevice>& device, const PhysicalDevice&
 	img_ci.mipLevels   = mip_levels;
 	img_ci.arrayLayers = array_layers;
 	img_ci.samples     = VK_SAMPLE_COUNT_1_BIT;
-	img_ci.tiling      = as_color_attachment ? VK_IMAGE_TILING_OPTIMAL : VK_IMAGE_TILING_LINEAR;
+	img_ci.tiling      = VK_IMAGE_TILING_OPTIMAL;
 	img_ci.usage       = as_color_attachment
 		? (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT)
 		: (VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 	img_ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	img_ci.initialLayout = as_color_attachment ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_PREINITIALIZED;
+	img_ci.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	if (vkCreateImage(vk_dev, &img_ci, nullptr, &m_handle) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create image!");
 	}
@@ -49,10 +54,7 @@ Image::Image(const std::shared_ptr<LogicalDevice>& device, const PhysicalDevice&
 	mem_alloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	mem_alloc.allocationSize = mem_reqs.size;
 	mem_alloc.memoryTypeIndex = Utility::FindMemoryType(
-		phy_dev.GetHandler(), mem_reqs.memoryTypeBits, as_color_attachment
-			? VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-			: (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-	);
+		phy_dev.GetHandler(), mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	if (vkAllocateMemory(vk_dev, &mem_alloc, nullptr, &m_memory) != VK_SUCCESS) {
 		throw std::runtime_error("failed to alloc image memory!");
 	}

@@ -71,7 +71,58 @@ LogicalDevice::LogicalDevice(bool enable_validation_layers, const PhysicalDevice
 
 LogicalDevice::~LogicalDevice()
 {
+	// Free any buffers still pending deferred destroy before tearing down the device.
+	// The owning Context already waited the GPU idle in its destructor.
+	CollectAllRetired();
 	vkDestroyDevice(m_handle, nullptr);
+}
+
+void LogicalDevice::RetireBuffer(VkBuffer buffer, VkDeviceMemory memory)
+{
+	if (buffer == VK_NULL_HANDLE && memory == VK_NULL_HANDLE) {
+		return;
+	}
+	m_retired.push_back({ buffer, memory, m_cur_frame });
+}
+
+void LogicalDevice::CollectRetired(uint64_t completed_frame)
+{
+	for (size_t i = 0; i < m_retired.size(); )
+	{
+		if (m_retired[i].frame <= completed_frame)
+		{
+			if (m_retired[i].buffer != VK_NULL_HANDLE) {
+				vkDestroyBuffer(m_handle, m_retired[i].buffer, nullptr);
+			}
+			if (m_retired[i].memory != VK_NULL_HANDLE) {
+				vkFreeMemory(m_handle, m_retired[i].memory, nullptr);
+			}
+			// Order is irrelevant for destruction -- swap-erase with the tail.
+			m_retired[i] = m_retired.back();
+			m_retired.pop_back();
+		}
+		else
+		{
+			++i;
+		}
+	}
+}
+
+void LogicalDevice::CollectAllRetired()
+{
+	if (m_handle == VK_NULL_HANDLE) {
+		return;
+	}
+	for (auto& r : m_retired)
+	{
+		if (r.buffer != VK_NULL_HANDLE) {
+			vkDestroyBuffer(m_handle, r.buffer, nullptr);
+		}
+		if (r.memory != VK_NULL_HANDLE) {
+			vkFreeMemory(m_handle, r.memory, nullptr);
+		}
+	}
+	m_retired.clear();
 }
 
 }

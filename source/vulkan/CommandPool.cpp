@@ -8,8 +8,9 @@ namespace ur
 namespace vulkan
 {
 
-CommandPool::CommandPool(const std::shared_ptr<LogicalDevice>& device)
+CommandPool::CommandPool(const std::shared_ptr<LogicalDevice>& device, uint32_t queue_family_index)
     : m_device(device)
+    , m_queue_family_index(queue_family_index)
 {
     VkResult res;
 

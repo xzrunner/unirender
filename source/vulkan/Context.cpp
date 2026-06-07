@@ -75,9 +75,11 @@ Context::~Context()
     // Wait for all GPU work to finish before destroying resources
     vkDeviceWaitIdle(logic_dev);
 
-    vkDestroySemaphore(logic_dev, m_semaphores.present_complete, nullptr);
-    vkDestroySemaphore(logic_dev, m_semaphores.render_complete, nullptr);
-    vkDestroyFence(logic_dev, m_wait_fence, nullptr);
+    // GPU is idle: free any buffers still queued for deferred destruction, then the
+    // per-frame ring and the per-image present semaphores.
+    m_device.m_logic_dev->CollectAllRetired();
+    DestroyRenderFinishedSemaphores();
+    DestroyFrameResources();
 }
 
 // ===========================================================================
@@ -115,12 +117,16 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
             indices.present_family.value();
     }
 
-    // ---- 4. Command pool / buffer -----------------------------------------
-    m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev);
+    // ---- 4. Command pool --------------------------------------------------
+    // The pool's queue family MUST be the graphics family the command buffers are
+    // submitted to (not a hardcoded 0, which only worked when graphics happened to be
+    // family 0). `indices` was just resolved against this surface above.
+    m_cmd_pool = std::make_shared<CommandPool>(m_device.m_logic_dev,
+        indices.graphics_family.value());
     if (!m_device.m_cmd_pool) {
         const_cast<Device&>(m_device).m_cmd_pool = m_cmd_pool;
     }
-    m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
+    // (Per-frame command buffers are created in CreateFrameResources below.)
 
     // ---- 5. Swapchain & depth buffer --------------------------------------
     m_swapchain = std::make_shared<Swapchain>(
@@ -143,22 +149,97 @@ void Context::Init(void* hwnd, uint32_t width, uint32_t height)
     m_frame_buffers  = std::make_shared<FrameBuffers>(*this, m_include_depth);
     m_pipeline_cache = std::make_shared<PipelineCache>(m_device.m_logic_dev);
 
-    // ---- 8. Synchronisation primitives ------------------------------------
+    // ---- 8. Frames-in-flight ring + per-image present semaphores ----------
+    CreateFrameResources();
+    CreateRenderFinishedSemaphores();
+}
+
+// ---------------------------------------------------------------------------
+// Frames-in-flight ring lifecycle
+// ---------------------------------------------------------------------------
+
+void Context::CreateFrameResources()
+{
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+
+    // Per-frame descriptor pool: sized for a whole frame's worth of per-draw sets
+    // (reset once per frame, one set allocated per draw). Mirrors the device pool in
+    // SetupDescriptorLayouts -- must cover every descriptor type the reflected sets
+    // use (HLSL Texture2D + SamplerState reflect as SEPARATE SampledImage + Sampler).
+    std::vector<std::pair<DescriptorType, size_t>> pool_sizes = {
+        { DescriptorType::UniformBuffer,        4096 },
+        { DescriptorType::CombinedImageSampler, 4096 },
+        { DescriptorType::SampledImage,         4096 },
+        { DescriptorType::Sampler,              4096 },
+        { DescriptorType::StorageImage,         1024 },
+        { DescriptorType::StorageBuffer,        1024 },
+    };
+
     VkSemaphoreCreateInfo sem_ci = {};
     sem_ci.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    auto vk_dev = m_device.m_logic_dev->GetHandler();
-    VkResult res;
-    res = vkCreateSemaphore(vk_dev, &sem_ci, nullptr, &m_semaphores.present_complete);
-    assert(res == VK_SUCCESS);
-    res = vkCreateSemaphore(vk_dev, &sem_ci, nullptr, &m_semaphores.render_complete);
-    assert(res == VK_SUCCESS);
-
     VkFenceCreateInfo fence_ci = {};
     fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fence_ci.flags = VK_FENCE_CREATE_SIGNALED_BIT; // start signaled
-    res = vkCreateFence(vk_dev, &fence_ci, nullptr, &m_wait_fence);
-    assert(res == VK_SUCCESS);
+    fence_ci.flags = VK_FENCE_CREATE_SIGNALED_BIT; // start signalled so frame 0 doesn't block
+
+    for (auto& f : m_frames)
+    {
+        f.cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
+
+        VkResult fr = vkCreateFence(vk_dev, &fence_ci, nullptr, &f.in_flight);
+        assert(fr == VK_SUCCESS);
+        VkResult sr = vkCreateSemaphore(vk_dev, &sem_ci, nullptr, &f.image_available);
+        assert(sr == VK_SUCCESS);
+
+        f.desc_pool = std::static_pointer_cast<vulkan::DescriptorPool>(
+            m_device.CreateDescriptorPool(4096, pool_sizes));
+    }
+}
+
+void Context::DestroyFrameResources()
+{
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    for (auto& f : m_frames)
+    {
+        if (f.in_flight != VK_NULL_HANDLE) {
+            vkDestroyFence(vk_dev, f.in_flight, nullptr);
+            f.in_flight = VK_NULL_HANDLE;
+        }
+        if (f.image_available != VK_NULL_HANDLE) {
+            vkDestroySemaphore(vk_dev, f.image_available, nullptr);
+            f.image_available = VK_NULL_HANDLE;
+        }
+        f.cmd_buf.reset();
+        f.desc_pool.reset();
+    }
+}
+
+void Context::CreateRenderFinishedSemaphores()
+{
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    VkSemaphoreCreateInfo sem_ci = {};
+    sem_ci.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    const uint32_t count = m_swapchain ? m_swapchain->GetImageCount() : 0;
+    m_render_finished.assign(count, VK_NULL_HANDLE);
+    for (uint32_t i = 0; i < count; ++i) {
+        VkResult r = vkCreateSemaphore(vk_dev, &sem_ci, nullptr, &m_render_finished[i]);
+        assert(r == VK_SUCCESS);
+    }
+}
+
+void Context::DestroyRenderFinishedSemaphores()
+{
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+    for (auto& s : m_render_finished) {
+        if (s != VK_NULL_HANDLE) { vkDestroySemaphore(vk_dev, s, nullptr); }
+    }
+    m_render_finished.clear();
+}
+
+VkCommandBuffer Context::CurCmd() const
+{
+    return m_frames[m_frame_slot].cmd_buf->GetHandler();
 }
 
 // ---------------------------------------------------------------------------
@@ -227,9 +308,19 @@ void Context::Resize(uint32_t width, uint32_t height)
     auto vk_dev = m_device.m_logic_dev->GetHandler();
     vkDeviceWaitIdle(vk_dev);
 
+    // GPU is idle: free deferred buffers, and drop pipelines built against the OLD
+    // screen render pass (they would be render-pass-incompatible if the surface
+    // format/extent assumptions changed). They are rebuilt lazily on next use.
+    m_device.m_logic_dev->CollectAllRetired();
+    m_prog_pipelines.clear();
+
+    // Per-image present semaphores depend on the swapchain image count -- recreate.
+    DestroyRenderFinishedSemaphores();
+
     // Destroy in reverse order, then recreate
     m_frame_buffers.reset();
     m_renderpass.reset();
+    m_renderpass_load.reset();
     m_depth_buf.reset();
     m_swapchain.reset();
 
@@ -237,10 +328,17 @@ void Context::Resize(uint32_t width, uint32_t height)
         m_device.m_logic_dev, *m_device.m_phy_dev, *m_surface, width, height);
     m_depth_buf = std::make_shared<DepthBuffer>(
         m_device.m_logic_dev, *m_device.m_phy_dev, width, height);
-    m_renderpass    = std::make_shared<RenderPass>(*this, m_include_depth, /*clear=*/true);
-    m_frame_buffers = std::make_shared<FrameBuffers>(*this, m_include_depth);
+    m_renderpass      = std::make_shared<RenderPass>(*this, m_include_depth, /*clear=*/true);
+    m_renderpass_load = std::make_shared<RenderPass>(*this, m_include_depth, /*clear=*/false,
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    m_frame_buffers   = std::make_shared<FrameBuffers>(*this, m_include_depth);
 
-    m_cmd_buf = std::make_shared<CommandBuffer>(m_device.m_logic_dev, m_cmd_pool);
+    CreateRenderFinishedSemaphores();
+
+    // Per-frame command buffers / fences / descriptor pools survive a resize: after
+    // the device wait-idle every in_flight fence is signalled and every command
+    // buffer is free to re-record. Just drop any in-progress frame state.
+    m_frame_active = false;
 }
 
 // ===========================================================================
@@ -371,51 +469,19 @@ void Context::DrawImpl(const DrawState& ds, PrimitiveType prim_type,
 
     const Framebuffer* fbo = std::static_pointer_cast<vulkan::Framebuffer>(m_set_framebuffer).get();
 
-    auto vk_dev         = m_device.m_logic_dev->GetHandler();
-    auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
-    auto cmd_buf        = m_cmd_buf->GetHandler();
-
-    // Each draw is its OWN command buffer, submitted and waited synchronously. This
-    // lets the engine recreate vertex/index buffers between draws (it does, in
-    // SpriteRenderer::Flush) without the GPU still referencing the freed ones, and
-    // lets an offscreen FBO rebuild its render pass safely. The frame still
-    // ACCUMULATES: screen passes use LOAD after the first clear, all targeting the
-    // one swapchain image acquired this frame; present happens once in Flush().
-
-    auto pool = std::static_pointer_cast<vulkan::DescriptorPool>(m_device.GetDescriptorPool());
-    if (pool) {
-        vkResetDescriptorPool(vk_dev, pool->GetHandler(), 0);
-    }
-
-    VkCommandBufferBeginInfo cb_begin = {};
-    cb_begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    VkResult res = vkBeginCommandBuffer(cmd_buf, &cb_begin);
-    assert(res == VK_SUCCESS);
-
-    BeginPass(fbo);            // lazy-acquires the image on the first screen pass
-    RecordDraw(cmd_buf, ds, prim_type, offset, count);
-    EndCurrentPass();
-
-    res = vkEndCommandBuffer(cmd_buf);
-    assert(res == VK_SUCCESS);
-
-    VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    VkSubmitInfo si = {};
-    si.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    si.commandBufferCount = 1;
-    si.pCommandBuffers    = &cmd_buf;
-    // Only the first screen submit of the frame waits on the image-acquire semaphore.
-    if (m_swapchain_acquired && m_first_screen_submit) {
-        si.pWaitDstStageMask  = &wait_stage;
-        si.pWaitSemaphores    = &m_semaphores.present_complete;
-        si.waitSemaphoreCount = 1;
-        m_first_screen_submit = false;
-    }
-    vkResetFences(vk_dev, 1, &m_wait_fence);
-    res = vkQueueSubmit(graphics_queue, 1, &si, m_wait_fence);
-    assert(res == VK_SUCCESS);
-    res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
-    assert(res == VK_SUCCESS);
+    // Record this draw into the frame's SINGLE command buffer -- no per-draw submit.
+    // The whole frame is submitted once in Flush(). BeginPass switches render pass
+    // (screen vs offscreen FBO) only when the target changes; consecutive draws to
+    // the same target share one vkCmdBeginRenderPass..vkCmdEndRenderPass instance.
+    // Recreating a vertex/index buffer between draws is now safe: the old VkBuffer is
+    // retired (deferred-destroyed) rather than freed while still referenced -- see
+    // Buffer::Clear / LogicalDevice retirement. Offscreen<->screen and acquire
+    // ordering is handled by the render passes' own external subpass dependencies
+    // (Framebuffer.cpp / RenderPass.cpp), so no per-draw fence is needed.
+    BeginPass(fbo); // lazy-acquires the swapchain image on the first screen pass
+    RecordDraw(CurCmd(), ds, prim_type, offset, count);
+    // Do NOT end the pass here -- the next draw to the same target reuses it; Flush
+    // (or a target switch in BeginPass) closes it.
 
     // Clear per-draw texture bindings so the next draw only sees what it explicitly
     // binds. m_bound_textures is indexed by slot (= reflected binding for rendergraph
@@ -430,16 +496,46 @@ void Context::BeginFrameIfNeeded()
     if (m_frame_active) return;
     m_frame_active        = true;
     m_swapchain_acquired  = false;
-    m_first_screen_submit = true;
     m_pass_open           = false;
     m_screen_cleared      = false;
     m_cur_pass_fbo        = nullptr;
+
+    m_frame_slot = static_cast<uint32_t>(m_frame_number % MAX_FRAMES_IN_FLIGHT);
+    FrameSlot& slot = m_frames[m_frame_slot];
+    auto vk_dev = m_device.m_logic_dev->GetHandler();
+
+    // Wait until the GPU has finished this slot's PREVIOUS use (frame
+    // m_frame_number - MAX_FRAMES_IN_FLIGHT) before reusing its command buffer,
+    // descriptor pool and acquire semaphore. This is the ONLY CPU/GPU sync point now
+    // -- once per frame, vs the old once-per-draw stall.
+    VkResult wr = vkWaitForFences(vk_dev, 1, &slot.in_flight, VK_TRUE, UINT64_MAX);
+    assert(wr == VK_SUCCESS);
+
+    // That previous frame is now done, so any resources it retired (and earlier) are
+    // safe to free. completed = m_frame_number - MAX_FRAMES_IN_FLIGHT.
+    if (m_frame_number >= MAX_FRAMES_IN_FLIGHT) {
+        m_device.m_logic_dev->CollectRetired(m_frame_number - MAX_FRAMES_IN_FLIGHT);
+    }
+    // Buffers retired from here on belong to THIS frame.
+    m_device.m_logic_dev->SetCurrentFrame(m_frame_number);
+
+    vkResetFences(vk_dev, 1, &slot.in_flight);
+
+    // Reset this slot's descriptor pool ONCE per frame (the fence wait above
+    // guarantees its sets from the previous cycle are no longer in use), then begin
+    // recording the frame into this slot's command buffer.
+    vkResetDescriptorPool(vk_dev, slot.desc_pool->GetHandler(), 0);
+
+    VkCommandBufferBeginInfo cb_begin = {};
+    cb_begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    VkResult br = vkBeginCommandBuffer(slot.cmd_buf->GetHandler(), &cb_begin);
+    assert(br == VK_SUCCESS);
 }
 
 void Context::EndCurrentPass()
 {
     if (m_pass_open) {
-        vkCmdEndRenderPass(m_cmd_buf->GetHandler());
+        vkCmdEndRenderPass(CurCmd());
         m_pass_open = false;
     }
 }
@@ -451,7 +547,7 @@ void Context::BeginPass(const vulkan::Framebuffer* fbo)
     }
     EndCurrentPass();
 
-    auto cmd_buf = m_cmd_buf->GetHandler();
+    auto cmd_buf = CurCmd();
 
     VkRenderPass  rp;
     VkFramebuffer fb;
@@ -491,11 +587,13 @@ void Context::BeginPass(const vulkan::Framebuffer* fbo)
     }
     else
     {
-        // Acquire a swapchain image the first time a screen pass is needed.
+        // Acquire a swapchain image the first time a screen pass is needed. The
+        // acquire signals THIS frame slot's image_available semaphore, which the
+        // single frame submit in Flush() waits on at COLOR_ATTACHMENT_OUTPUT.
         if (!m_swapchain_acquired) {
             VkResult ar = vkAcquireNextImageKHR(
                 m_device.m_logic_dev->GetHandler(), m_swapchain->GetHandler(), UINT64_MAX,
-                m_semaphores.present_complete, VK_NULL_HANDLE, &m_current_buffer);
+                m_frames[m_frame_slot].image_available, VK_NULL_HANDLE, &m_current_buffer);
             assert(ar == VK_SUCCESS || ar == VK_SUBOPTIMAL_KHR);
             m_swapchain_acquired = true;
         }
@@ -619,10 +717,11 @@ void Context::RecordDraw(VkCommandBuffer cmd_buf, const DrawState& ds,
     auto prog = std::static_pointer_cast<vulkan::ShaderProgram>(ds.program);
     if (prog && prog->GetVkDescriptorSetLayout() != VK_NULL_HANDLE)
     {
-        auto pool = std::static_pointer_cast<vulkan::DescriptorPool>(m_device.GetDescriptorPool());
-        // The pool is reset once per frame (BeginFrameIfNeeded); here we just
-        // allocate a fresh set for this draw. Resetting mid-frame would free sets
-        // still referenced by earlier draws recorded in this command buffer.
+        // Allocate this draw's set from the CURRENT frame slot's pool. That pool is
+        // reset exactly once per frame in BeginFrameIfNeeded (after its fence wait),
+        // so sets allocated here stay valid for the whole frame's execution and are
+        // only recycled once the GPU has finished this slot's previous frame.
+        auto pool = m_frames[m_frame_slot].desc_pool;
         VkDescriptorSetLayout layout = prog->GetVkDescriptorSetLayout();
         VkDescriptorSetAllocateInfo ai = {};
         ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -771,20 +870,6 @@ void Context::RecordDraw(VkCommandBuffer cmd_buf, const DrawState& ds,
 }
 
 // ===========================================================================
-// WaitSync -- wait for previous frame to finish
-// ===========================================================================
-
-void Context::WaitSync()
-{
-    auto vk_dev = m_device.m_logic_dev->GetHandler();
-    VkResult res;
-    res = vkWaitForFences(vk_dev, 1, &m_wait_fence, VK_TRUE, UINT64_MAX);
-    assert(res == VK_SUCCESS);
-    res = vkResetFences(vk_dev, 1, &m_wait_fence);
-    assert(res == VK_SUCCESS);
-}
-
-// ===========================================================================
 // Viewport
 // ===========================================================================
 
@@ -925,19 +1010,48 @@ void Context::DumpImageToPPM(VkImage image, VkFormat format, uint32_t w, uint32_
 
 void Context::Flush()
 {
-    // End-of-frame: present the swapchain image the frame's draws accumulated into.
-    // Every draw already submitted + waited its fence, so the GPU is idle and the
-    // image is in PRESENT_SRC -- present needs no wait semaphore. (Called from
-    // main.cpp after the whole frame is drawn.)
+    // End-of-frame: finish recording the frame's single command buffer, submit it
+    // ONCE, and present. Called from main.cpp after the whole frame is drawn.
     if (!m_frame_active) {
         return; // nothing was drawn this frame
     }
 
-    // Diagnostic dump (TT_VK_DUMP=<frame>): the GPU is idle here (per-draw waits),
-    // so the offscreen scene target can be copied out to inspect what rendered.
+    auto vk_dev         = m_device.m_logic_dev->GetHandler();
+    auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
+    FrameSlot& slot     = m_frames[m_frame_slot];
+
+    // Close any render pass left open by the last draw, then finish recording.
+    EndCurrentPass();
+    VkCommandBuffer cb = slot.cmd_buf->GetHandler();
+    VkResult er = vkEndCommandBuffer(cb);
+    assert(er == VK_SUCCESS);
+
+    // Submit the WHOLE frame in one go. If a screen pass acquired an image, wait its
+    // acquire semaphore at color-output and signal that image's render-finished
+    // semaphore (which present waits on -- this is also what orders present after
+    // render for MoltenVK, replacing the old empty signalling submit). The fence
+    // lets a later frame reusing this slot know when the GPU is done with it.
+    VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    VkSubmitInfo si = {};
+    si.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    si.commandBufferCount = 1;
+    si.pCommandBuffers    = &cb;
+    if (m_swapchain_acquired) {
+        si.waitSemaphoreCount   = 1;
+        si.pWaitSemaphores      = &slot.image_available;
+        si.pWaitDstStageMask    = &wait_stage;
+        si.signalSemaphoreCount = 1;
+        si.pSignalSemaphores    = &m_render_finished[m_current_buffer];
+    }
+    VkResult sr = vkQueueSubmit(graphics_queue, 1, &si, slot.in_flight);
+    assert(sr == VK_SUCCESS);
+
+    // Diagnostic dump (TT_VK_DUMP=<frame>): the new model does NOT idle the GPU per
+    // frame, so wait here (debug path only) before reading the targets.
     ++m_frame_count;
     if (const char* d = std::getenv("TT_VK_DUMP")) {
         if (m_frame_count == atoi(d)) {
+            vkDeviceWaitIdle(vk_dev);
             for (size_t i = 0; i < m_dump_targets.size(); ++i) {
                 char path[64];
                 snprintf(path, sizeof(path), "/tmp/vk_off%zu_%ux%u.ppm",
@@ -960,25 +1074,14 @@ void Context::Flush()
     }
 
     if (m_swapchain_acquired) {
-        auto graphics_queue = m_device.m_logic_dev->GetGraphicsQueue();
-        // MoltenVK presents the drawable correctly only when present is ordered
-        // after rendering by a semaphore. All render work is already done (each draw
-        // waited its fence), so an empty submit just signals render_complete, then
-        // present waits on it.
-        VkSubmitInfo si = {};
-        si.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        si.signalSemaphoreCount = 1;
-        si.pSignalSemaphores    = &m_semaphores.render_complete;
-        VkResult sr = vkQueueSubmit(graphics_queue, 1, &si, VK_NULL_HANDLE);
-        assert(sr == VK_SUCCESS);
-
         VkResult present = m_swapchain->QueuePresent(
-            graphics_queue, m_current_buffer, m_semaphores.render_complete);
+            graphics_queue, m_current_buffer, m_render_finished[m_current_buffer]);
         if (present == VK_ERROR_OUT_OF_DATE_KHR || present == VK_SUBOPTIMAL_KHR) {
             Resize(m_width, m_height);
         }
     }
 
+    ++m_frame_number; // advance to the next slot for the next frame
     m_frame_active = false;
 }
 
@@ -993,7 +1096,77 @@ Context::CreatePipeline(bool include_depth, bool include_vi,
 
 void Context::SetMemoryBarrier(const std::vector<BarrierType>& types)
 {
-    // TODO: vkCmdPipelineBarrier for buffer/image memory barriers
+    // OpenGL glMemoryBarrier equivalent: make prior (typically compute/storage)
+    // writes visible to the accesses named in `types`. We record a global
+    // VkMemoryBarrier into the frame's command buffer. A pipeline barrier must be
+    // OUTSIDE a render pass instance, so close the current pass first; the next draw
+    // re-begins the right pass via BeginPass. (Without an active frame there is no
+    // command buffer to record into, so this is a no-op then.)
+    if (!m_frame_active || types.empty()) {
+        return;
+    }
+    EndCurrentPass();
+
+    VkPipelineStageFlags src_stage = 0, dst_stage = 0;
+    VkAccessFlags        src_access = 0, dst_access = 0;
+    for (auto t : types)
+    {
+        switch (t)
+        {
+        case BarrierType::ShaderImageAccess:
+        case BarrierType::ShaderStorage:
+            src_stage  |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dst_stage  |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+                        | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+            src_access |= VK_ACCESS_SHADER_WRITE_BIT;
+            dst_access |= VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+            break;
+        case BarrierType::TextureFetch:
+            src_stage  |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dst_stage  |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+            src_access |= VK_ACCESS_SHADER_WRITE_BIT;
+            dst_access |= VK_ACCESS_SHADER_READ_BIT;
+            break;
+        case BarrierType::Uniform:
+            src_stage  |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+            dst_stage  |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            src_access |= VK_ACCESS_SHADER_WRITE_BIT;
+            dst_access |= VK_ACCESS_UNIFORM_READ_BIT;
+            break;
+        case BarrierType::VertexAttribArray:
+        case BarrierType::ElementArray:
+            src_stage  |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage  |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+            src_access |= VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+            dst_access |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT | VK_ACCESS_INDEX_READ_BIT;
+            break;
+        case BarrierType::BufferUpdate:
+        case BarrierType::TextureUpdate:
+        case BarrierType::PixelBuffer:
+            src_stage  |= VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+            dst_stage  |= VK_PIPELINE_STAGE_TRANSFER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            src_access |= VK_ACCESS_TRANSFER_WRITE_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+            dst_access |= VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+            break;
+        case BarrierType::Framebuffer:
+            src_stage  |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dst_stage  |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            src_access |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            dst_access |= VK_ACCESS_SHADER_READ_BIT;
+            break;
+        default:
+            break;
+        }
+    }
+    // Fall back to a conservative full barrier if no type matched.
+    if (src_stage == 0) { src_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT; }
+    if (dst_stage == 0) { dst_stage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT; }
+
+    VkMemoryBarrier mb = {};
+    mb.sType         = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+    mb.srcAccessMask = src_access;
+    mb.dstAccessMask = dst_access;
+    vkCmdPipelineBarrier(CurCmd(), src_stage, dst_stage, 0, 1, &mb, 0, nullptr, 0, nullptr);
 }
 
 // ===========================================================================

@@ -99,6 +99,49 @@ MTLBlendOperation ToMTLBlendOp(ur::BlendEquation e)
     }
 }
 
+// glColorMask -> Metal per-channel write mask. In Metal the write mask is baked into
+// the MTLRenderPipelineState (an immutable object), so it must also be part of the
+// pipeline cache key -- two draws differing only in color_mask need distinct PSOs.
+MTLColorWriteMask ToMTLColorWriteMask(const ur::ColorMask& m)
+{
+    MTLColorWriteMask mask = MTLColorWriteMaskNone;
+    if (m.r) { mask |= MTLColorWriteMaskRed;   }
+    if (m.g) { mask |= MTLColorWriteMaskGreen; }
+    if (m.b) { mask |= MTLColorWriteMaskBlue;  }
+    if (m.a) { mask |= MTLColorWriteMaskAlpha; }
+    return mask;
+}
+
+MTLCompareFunction ToMTLStencilCompare(ur::StencilTestFunction f)
+{
+    switch (f) {
+    case ur::StencilTestFunction::Never:              return MTLCompareFunctionNever;
+    case ur::StencilTestFunction::Less:               return MTLCompareFunctionLess;
+    case ur::StencilTestFunction::Equal:              return MTLCompareFunctionEqual;
+    case ur::StencilTestFunction::LessThanOrEqual:    return MTLCompareFunctionLessEqual;
+    case ur::StencilTestFunction::Greater:            return MTLCompareFunctionGreater;
+    case ur::StencilTestFunction::NotEqual:           return MTLCompareFunctionNotEqual;
+    case ur::StencilTestFunction::GreaterThanOrEqual: return MTLCompareFunctionGreaterEqual;
+    case ur::StencilTestFunction::Always:             return MTLCompareFunctionAlways;
+    default:                                          return MTLCompareFunctionAlways;
+    }
+}
+
+MTLStencilOperation ToMTLStencilOp(ur::StencilOperation op)
+{
+    switch (op) {
+    case ur::StencilOperation::Zero:          return MTLStencilOperationZero;
+    case ur::StencilOperation::Invert:        return MTLStencilOperationInvert;
+    case ur::StencilOperation::Keep:          return MTLStencilOperationKeep;
+    case ur::StencilOperation::Replace:       return MTLStencilOperationReplace;
+    case ur::StencilOperation::Increment:     return MTLStencilOperationIncrementClamp;
+    case ur::StencilOperation::Decrement:     return MTLStencilOperationDecrementClamp;
+    case ur::StencilOperation::IncrementWrap: return MTLStencilOperationIncrementWrap;
+    case ur::StencilOperation::DecrementWrap: return MTLStencilOperationDecrementWrap;
+    default:                                  return MTLStencilOperationKeep;
+    }
+}
+
 // Boost-style 64-bit hash mix, for building pipeline/depth-stencil cache keys.
 inline void HashCombine(uint64_t& h, uint64_t v)
 {
@@ -462,10 +505,28 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
         MTLCompareFunction cmp = rs.depth_test.enabled
             ? ToMTLCompare(rs.depth_test.function) : MTLCompareFunctionAlways;
         bool write = (rs.depth_test.enabled && rs.depth_mask);
-        // Only a handful of (compare, write) combinations ever occur (2D = Always +
-        // no-write, 3D = Less + write, ...). Cache the MTLDepthStencilState rather
-        // than allocate a new one every draw.
-        uint64_t dss_key = ((uint64_t)cmp << 1) | (write ? 1u : 0u);
+        const auto& st = rs.stencil_test;
+
+        // Cache the MTLDepthStencilState. The key must cover depth compare+write AND,
+        // when stencil testing is on, every per-face stencil parameter baked into the
+        // state object (compare func, the three ops, and the read/write mask). The
+        // reference value is dynamic encoder state (set below), so it is NOT keyed.
+        uint64_t dss_key = 1469598103934665603ULL; // FNV offset basis, just a seed
+        HashCombine(dss_key, (uint64_t)cmp);
+        HashCombine(dss_key, write ? 1ull : 0ull);
+        HashCombine(dss_key, st.enabled ? 1ull : 0ull);
+        if (st.enabled) {
+            auto hash_face = [&dss_key](const ur::StencilTestFace& f) {
+                HashCombine(dss_key, (uint64_t)ToMTLStencilCompare(f.function));
+                HashCombine(dss_key, (uint64_t)ToMTLStencilOp(f.stencil_fail_op));
+                HashCombine(dss_key, (uint64_t)ToMTLStencilOp(f.depth_fail_stencil_pass_op));
+                HashCombine(dss_key, (uint64_t)ToMTLStencilOp(f.depth_pass_stencil_pass_op));
+                HashCombine(dss_key, (uint64_t)(uint32_t)f.mask);
+            };
+            hash_face(st.front_face);
+            hash_face(st.back_face);
+        }
+
         id<MTLDepthStencilState> dss = nil;
         auto it = m_dss_cache.find(dss_key);
         if (it != m_dss_cache.end()) {
@@ -474,6 +535,24 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
             MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
             dsd.depthCompareFunction = cmp;
             dsd.depthWriteEnabled    = write ? YES : NO;
+            // Translate glStencilFunc/glStencilOp into Metal's per-face stencil state.
+            // (The single engine `mask` is used for both compare-read and write mask;
+            // the engine exposes only one.) No-op when the active depth target has no
+            // stencil component (an FBO's plain Depth32Float) -- Metal just skips it.
+            if (st.enabled) {
+                auto make_face = [](const ur::StencilTestFace& f) {
+                    MTLStencilDescriptor* sd = [[MTLStencilDescriptor alloc] init];
+                    sd.stencilCompareFunction    = ToMTLStencilCompare(f.function);
+                    sd.stencilFailureOperation   = ToMTLStencilOp(f.stencil_fail_op);
+                    sd.depthFailureOperation     = ToMTLStencilOp(f.depth_fail_stencil_pass_op);
+                    sd.depthStencilPassOperation = ToMTLStencilOp(f.depth_pass_stencil_pass_op);
+                    sd.readMask  = (uint32_t)f.mask;
+                    sd.writeMask = (uint32_t)f.mask;
+                    return sd;
+                };
+                dsd.frontFaceStencil = make_face(st.front_face);
+                dsd.backFaceStencil  = make_face(st.back_face);
+            }
             id<MTLDevice> dev = (__bridge id<MTLDevice>)m_device.GetMTLDevice();
             dss = [dev newDepthStencilStateWithDescriptor:dsd];
             // Only cache a real object: storing a NULL sentinel would turn every
@@ -482,6 +561,11 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
             if (dss) { m_dss_cache[dss_key] = (__bridge_retained void*)dss; } // cache owns the +1
         }
         if (dss) { [encoder setDepthStencilState:dss]; }
+        // Stencil reference value is dynamic per-draw state, not part of the state object.
+        if (st.enabled) {
+            [encoder setStencilFrontReferenceValue:(uint32_t)st.front_face.reference_value
+                                backReferenceValue:(uint32_t)st.back_face.reference_value];
+        }
     }
     {
         const auto& fc = draw.render_state.facet_culling;
@@ -613,6 +697,16 @@ void Context::Draw(PrimitiveType prim_type, int offset, int count,
                         vertexCount:count];
         }
     }
+
+    // Clear per-draw texture/sampler bindings so the next draw only sees what it
+    // explicitly binds. The bind loop above maps each NON-NULL slot (in ascending
+    // order) onto the shader's reflected MSL index by POSITION (tex_ord), so a slot
+    // left bound by an earlier draw would count as an extra entry and shift every
+    // following texture onto the wrong [[texture(M)]] index -- a multi-texture post
+    // pass that sets slots 1/2/3 must not leak those into a later, simpler draw.
+    // (Mirrors the Vulkan backend, which clears these at the end of every draw.)
+    for (auto& t : m_bound_textures) { t.reset(); }
+    for (auto& s : m_bound_samplers) { s.reset(); }
 }
 
 void Context::Draw(PrimitiveType prim_type, const DrawState& draw,
@@ -876,6 +970,11 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
             }
         }
     }
+    {
+        // color write mask is baked into the PSO, so it must be in the key too.
+        const auto& cm = draw.render_state.color_mask;
+        HashCombine(key, (uint64_t)ToMTLColorWriteMask(cm));
+    }
     if (draw.vertex_array) {
         for (auto& a : draw.vertex_array->GetVertexBufferAttrs()) {
             if (!a) continue;
@@ -977,8 +1076,11 @@ void* Context::GetOrCreatePipelineState(const DrawState& draw)
     // attachment. The 2D UI blends (src-alpha / one-minus-src-alpha); the opaque
     // GBuffer pass disables blend so its depth/normal targets are written raw.
     const auto& bs = draw.render_state.blending;
+    const MTLColorWriteMask write_mask = ToMTLColorWriteMask(draw.render_state.color_mask);
     const size_t blend_n = (m_cur_color_count > 0) ? m_cur_color_count : 1;
     for (size_t i = 0; i < blend_n; ++i) {
+        // Per-channel write mask (glColorMask) -- applies whether or not blend is on.
+        pd.colorAttachments[i].writeMask = write_mask;
         if (!bs.enabled) {
             pd.colorAttachments[i].blendingEnabled = NO;
             continue;

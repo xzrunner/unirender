@@ -16,6 +16,7 @@
 #include <map>
 #include <tuple>
 #include <utility>
+#include <cstdint>
 
 #undef DrawState
 
@@ -34,6 +35,7 @@ class Device;
 class Surface;
 class CommandPool;
 class CommandBuffer;
+class DescriptorPool;
 class Swapchain;
 class DepthBuffer;
 class UniformBuffer;
@@ -100,7 +102,7 @@ public:
     auto GetSurface()      const { return m_surface; }
     auto GetSwapchain()    const { return m_swapchain; }
     auto GetDepthBuffer()  const { return m_depth_buf; }
-    auto GetCommandBuffer()const { return m_cmd_buf; }
+    auto GetCommandBuffer()const { return m_frames[m_frame_slot].cmd_buf; }
     auto GetRenderPass()   const { return m_renderpass; }
     auto GetFrameBuffers() const { return m_frame_buffers; }
     auto GetPipelineCache()const { return m_pipeline_cache; }
@@ -142,11 +144,16 @@ private:
     void DumpImageToPPM(VkImage image, VkFormat format, uint32_t w, uint32_t h,
                         VkImageLayout cur_layout, const char* path);
 
-    // Wait for previous frame's fence
-    void WaitSync();
-
     // Setup commonly used descriptor set layouts on the Device
     void SetupDescriptorLayouts();
+
+    // Frames-in-flight ring lifecycle.
+    void CreateFrameResources();   // per-frame cmd buffer / fence / acquire-sem / desc pool
+    void DestroyFrameResources();
+    void CreateRenderFinishedSemaphores();  // one per swapchain image (resize-dependent)
+    void DestroyRenderFinishedSemaphores();
+    // Handle of the command buffer the current frame is recording into.
+    VkCommandBuffer CurCmd() const;
 
 private:
     const Device& m_device;
@@ -162,19 +169,34 @@ private:
 
     Rectangle m_viewport;
 
-    // Synchronisation
-    struct {
-        VkSemaphore present_complete = VK_NULL_HANDLE;
-        VkSemaphore render_complete  = VK_NULL_HANDLE;
-    } m_semaphores;
-    VkFence m_wait_fence = VK_NULL_HANDLE;
+    // ---- Frames-in-flight synchronisation -----------------------------------
+    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+
+    // One independent set of GPU resources per in-flight frame. The CPU records
+    // frame N+1 into slot (N+1)%MAX while the GPU still executes frame N from slot
+    // N%MAX, so CPU and GPU overlap instead of lock-stepping a submit+wait per draw.
+    struct FrameSlot {
+        std::shared_ptr<CommandBuffer>  cmd_buf;                  // the whole frame is recorded here
+        VkFence        in_flight       = VK_NULL_HANDLE;          // signalled when this slot's submit completes
+        VkSemaphore    image_available = VK_NULL_HANDLE;          // signalled by vkAcquireNextImageKHR
+        std::shared_ptr<DescriptorPool> desc_pool;               // per-draw sets, reset once per frame
+    };
+    std::array<FrameSlot, MAX_FRAMES_IN_FLIGHT> m_frames;
+
+    // render-finished is per SWAPCHAIN IMAGE (signalled by the frame submit, waited
+    // by present). A given image's semaphore is only reused once its present has
+    // completed, which the presentation engine guarantees before re-acquiring it --
+    // so this avoids the per-frame-semaphore reuse hazard.
+    std::vector<VkSemaphore> m_render_finished;
+
+    uint64_t m_frame_number = 0; // monotonic CPU frame counter (drives slot + retirement)
+    uint32_t m_frame_slot   = 0; // m_frame_number % MAX_FRAMES_IN_FLIGHT
 
     // Vulkan objects
     std::shared_ptr<Surface>       m_surface       = nullptr;
     std::shared_ptr<Swapchain>     m_swapchain     = nullptr;
     std::shared_ptr<DepthBuffer>   m_depth_buf     = nullptr;
     std::shared_ptr<CommandPool>   m_cmd_pool      = nullptr;
-    std::shared_ptr<CommandBuffer> m_cmd_buf       = nullptr;
     std::shared_ptr<RenderPass>    m_renderpass    = nullptr; // screen, loadOp=CLEAR
     std::shared_ptr<RenderPass>    m_renderpass_load = nullptr; // screen, loadOp=LOAD (resume)
     std::shared_ptr<FrameBuffers>  m_frame_buffers = nullptr;
@@ -186,7 +208,6 @@ private:
     // Per-frame batching state (see BeginFrameIfNeeded / BeginPass / Flush).
     bool m_frame_active       = false; // a frame is in progress (>=1 draw issued)
     bool m_swapchain_acquired = false; // a screen pass acquired an image this frame
-    bool m_first_screen_submit = true; // next screen submit must wait the acquire semaphore
     bool m_pass_open          = false; // a render pass is currently recording
     bool m_screen_cleared     = false; // the screen pass was already cleared this frame
     const vulkan::Framebuffer* m_cur_pass_fbo = nullptr; // null = screen

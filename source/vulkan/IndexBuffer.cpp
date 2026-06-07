@@ -34,18 +34,14 @@ void IndexBuffer::ReadFromMemory(const void* data, int size, int offset)
 {
     if (!data || size <= 0) return;
 
-    // Use staging buffer -> device-local buffer
-    Buffer staging(m_device);
-    staging.Create(m_phy_dev->GetHandler(), size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    staging.Upload(data, size);
-
+    // Stream/dynamic indices (re-uploaded every frame): write DIRECTLY into a
+    // HOST_VISIBLE | HOST_COHERENT index buffer -- no staging buffer, no copy, no
+    // synchronous submit. See VertexBuffer::ReadFromMemory for the full rationale
+    // (frames-in-flight stall avoidance, unified-memory, deferred-destroy safety).
     m_buffer.Create(m_phy_dev->GetHandler(), size,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    m_buffer.CopyFrom(staging, size,
-        m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    m_buffer.Upload(data, size);
 
     m_size_in_bytes = size;
 

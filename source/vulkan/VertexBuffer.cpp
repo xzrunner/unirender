@@ -81,18 +81,20 @@ void VertexBuffer::ReadFromMemory(const void* data, int size, int offset)
 {
     if (!data || size <= 0) return;
 
-    // Use staging buffer -> device-local buffer
-    Buffer staging(m_device);
-    staging.Create(m_phy_dev->GetHandler(), size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    staging.Upload(data, size);
-
+    // Stream/dynamic geometry (GetUsageHint() == StreamDraw, re-uploaded every frame
+    // by e.g. SpriteRenderer::Flush): write the data DIRECTLY into a HOST_VISIBLE |
+    // HOST_COHERENT vertex buffer. This drops the old staging buffer + vkCmdCopyBuffer
+    // + synchronous single-time submit (which, with frames-in-flight, would stall the
+    // CPU on prior in-flight frames via the shared graphics queue). Host-coherent
+    // writes done before the frame's vkQueueSubmit are visible to that submission, so
+    // no barrier is needed. On unified-memory GPUs (MoltenVK/Apple) host-visible
+    // memory is also device-local, so there is no GPU read penalty either.
+    // Recreating the buffer here is safe: Buffer::Create -> Clear retires the previous
+    // VkBuffer for deferred destruction once the frame that referenced it completes.
     m_buffer.Create(m_phy_dev->GetHandler(), size,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    m_buffer.CopyFrom(staging, size,
-        m_cmd_pool->GetHandler(), m_device->GetGraphicsQueue());
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    m_buffer.Upload(data, size);
 
     // FIX: track buffer size
     m_size_in_bytes = size;

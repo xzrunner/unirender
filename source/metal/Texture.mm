@@ -3,6 +3,7 @@
 #include "unirender/TextureUtility.h"
 #include <cstring>
 #include <cassert>
+#include <vector>
 
 namespace
 {
@@ -32,6 +33,9 @@ MTLPixelFormat ToMTLPixelFormat(ur::TextureFormat fmt, bool gamma)
     }
 }
 
+// Logical (source) bytes-per-pixel of the engine format -- what the CALLER's CPU
+// buffer is laid out as. May differ from the actual Metal texture when Metal has no
+// matching 3-channel format (see GpuBytesPerPixel).
 size_t BytesPerPixel(ur::TextureFormat fmt)
 {
     switch (fmt)
@@ -51,9 +55,38 @@ size_t BytesPerPixel(ur::TextureFormat fmt)
     case ur::TextureFormat::RGB16F:
     case ur::TextureFormat::RGBA16F:  return 8;
     case ur::TextureFormat::RGB32F:   return 12;
-    case ur::TextureFormat::RGBA32F:
     case ur::TextureFormat::RG32F:    return 8;
+    case ur::TextureFormat::RGBA32F:  return 16; // FIX: 4 floats = 16, not 8
     default:                          return 4;
+    }
+}
+
+// Actual bytes-per-pixel of the Metal texture, which differs from the logical size
+// when ToMTLPixelFormat PROMOTES a 3-channel format (Metal has no RGB8/RGB16F/RGB32F):
+// RGB->RGBA8 (3->4), RGB16F->RGBA16F (6->8), RGB32F->RGBA32F (12->16). getBytes/
+// replaceRegion must stride by THIS, not the logical size, or every row past the
+// first is misaligned and the readback is corrupt.
+size_t GpuBytesPerPixel(ur::TextureFormat fmt, bool gamma)
+{
+    switch (ToMTLPixelFormat(fmt, gamma))
+    {
+    case MTLPixelFormatA8Unorm:
+    case MTLPixelFormatR8Unorm:            return 1;
+    case MTLPixelFormatR16Unorm:
+    case MTLPixelFormatR16Float:
+    case MTLPixelFormatABGR4Unorm:
+    case MTLPixelFormatB5G6R5Unorm:        return 2;
+    case MTLPixelFormatRGBA8Unorm:
+    case MTLPixelFormatRGBA8Unorm_sRGB:
+    case MTLPixelFormatBGRA8Unorm:
+    case MTLPixelFormatBGRA8Unorm_sRGB:
+    case MTLPixelFormatRG16Float:
+    case MTLPixelFormatR32Float:
+    case MTLPixelFormatDepth32Float:       return 4;
+    case MTLPixelFormatRGBA16Float:
+    case MTLPixelFormatRG32Float:          return 8;
+    case MTLPixelFormatRGBA32Float:        return 16;
+    default:                               return 4;
     }
 }
 
@@ -193,9 +226,37 @@ void Texture::WriteToMemory(void* data) const
     if (!m_mtl_texture || !data) return;
 
     id<MTLTexture> tex = (__bridge id<MTLTexture>)m_mtl_texture;
-    size_t bpp = BytesPerPixel(m_desc.format);
-    MTLRegion region = MTLRegionMake2D(0, 0, m_desc.width, m_desc.height);
-    [tex getBytes:data bytesPerRow:bpp * m_desc.width fromRegion:region mipmapLevel:0];
+    const size_t w = static_cast<size_t>(m_desc.width);
+    const size_t h = static_cast<size_t>(m_desc.height);
+    if (w == 0 || h == 0) return;
+
+    // The Metal texture may be a PROMOTED format (RGB->RGBA8, RGB32F->RGBA32F, ...),
+    // so getBytes must stride by the GPU's bytes-per-pixel, not the engine's logical
+    // size -- otherwise every row past the first is misaligned and the result is
+    // corrupt. When the two differ, read the real layout into a temp buffer and then
+    // compact each pixel down to the logical layout the caller's buffer expects,
+    // dropping the channel(s) Metal padded on (RGBA -> RGB).
+    const size_t gpu_bpp     = GpuBytesPerPixel(m_desc.format, m_desc.gamma_correction);
+    const size_t logical_bpp = BytesPerPixel(m_desc.format);
+    MTLRegion region = MTLRegionMake2D(0, 0, w, h);
+
+    if (gpu_bpp == logical_bpp) {
+        [tex getBytes:data bytesPerRow:gpu_bpp * w fromRegion:region mipmapLevel:0];
+        return;
+    }
+
+    std::vector<uint8_t> tmp(gpu_bpp * w * h);
+    [tex getBytes:tmp.data() bytesPerRow:gpu_bpp * w fromRegion:region mipmapLevel:0];
+
+    // The promoted channels are appended (RGBA = RGB + padding), so the logical
+    // pixel is the leading `logical_bpp` bytes of each GPU pixel.
+    uint8_t* dst       = static_cast<uint8_t*>(data);
+    const uint8_t* src = tmp.data();
+    const size_t copy  = (logical_bpp < gpu_bpp) ? logical_bpp : gpu_bpp;
+    const size_t px    = w * h;
+    for (size_t i = 0; i < px; ++i) {
+        memcpy(dst + i * logical_bpp, src + i * gpu_bpp, copy);
+    }
 }
 
 }

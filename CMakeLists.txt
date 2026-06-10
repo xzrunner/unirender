@@ -5,6 +5,10 @@ project(unirender)
 add_definitions(-DNO_BOOST)
 if(WIN32)
     add_definitions(-DVK_USE_PLATFORM_WIN32_KHR)
+    # VK_USE_PLATFORM_WIN32_KHR drags in <windows.h>, whose min/max function-like
+    # macros otherwise clobber std::numeric_limits<...>::max() inside the SPIRV-Cross
+    # headers that the Vulkan/Metal ShaderProgram include for reflection.
+    add_definitions(-DNOMINMAX)
 elseif(APPLE)
     add_definitions(-DVK_USE_PLATFORM_METAL_EXT)
 elseif(UNIX)

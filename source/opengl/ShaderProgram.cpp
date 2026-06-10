@@ -392,6 +392,16 @@ void ShaderProgram::BindTextures() const
         assert(unit >= 0);
         unif->SetValue(&unit, 1);
     }
+
+    // image uniforms get their unit only from layout(binding = N) in the
+    // GLSL, but shadertrans no longer emits those qualifiers for GL targets
+    // below 4.2; write the assigned unit back like the samplers above
+    for (auto& unif : m_img_uniforms)
+    {
+        const int unit = unif->GetUnit();
+        assert(unit >= 0);
+        unif->SetValue(&unit, 1);
+    }
 }
 
 void ShaderProgram::AddUniform(const std::string& name, GLenum type, GLint size)

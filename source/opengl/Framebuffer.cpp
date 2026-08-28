@@ -64,12 +64,14 @@ void Framebuffer::SetAttachment(AttachmentType type, TextureTarget target,
 
 void Framebuffer::Bind() const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_id);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_id);
 }
 
 void Framebuffer::UnBind()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 void Framebuffer::Clean()

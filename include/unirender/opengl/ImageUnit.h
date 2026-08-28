@@ -18,6 +18,7 @@ public:
     void SetAccess(ur::AccessType access);
 
     void Clean();
+    void Invalidate();
 
 private:
     int m_index = 0;

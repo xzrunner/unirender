@@ -20,6 +20,7 @@ public:
 
     void Clean();
     void CleanLastTextureUnit();
+    void Invalidate();
 
 private:
     int m_index = 0;

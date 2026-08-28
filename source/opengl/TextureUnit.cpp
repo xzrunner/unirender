@@ -44,7 +44,12 @@ void TextureUnit::Clean()
         if (m_texture) {
             m_texture->Bind();
         } else {
+            Texture::UnBind(TextureTarget::Texture1D);
             Texture::UnBind(TextureTarget::Texture2D);
+            Texture::UnBind(TextureTarget::Texture3D);
+            Texture::UnBind(TextureTarget::TextureCubeMap);
+            Texture::UnBind(TextureTarget::Texture2DArray);
+            Texture::UnBind(TextureTarget::TextureBuffer);
         }
         m_texture_dirty = false;
     }
@@ -66,6 +71,12 @@ void TextureUnit::CleanLastTextureUnit()
         m_texture_dirty = true;
     }
     Clean();
+}
+
+void TextureUnit::Invalidate()
+{
+    m_texture_dirty = true;
+    m_sampler_dirty = true;
 }
 
 }

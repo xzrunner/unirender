@@ -65,6 +65,12 @@ public:
 
     virtual void SetMemoryBarrier(const std::vector<BarrierType>& types) override;
 
+    virtual void InvalidateCachedState() override;
+    virtual void NotifyExternalStateMutation() override;
+    virtual void CommitFramebuffer() override;
+    virtual void CommitViewport() override;
+    virtual void CommitBindings() override;
+
 private:
     void Init();
 
@@ -92,6 +98,9 @@ private:
     void ApplyDepthClamp(bool depth_clamp);
 
     void ApplyBeforeDraw(const DrawState& draw, const void* scene);
+    bool CheckBoundFramebufferStatus();
+    void SubmitViewport();
+    void SubmitPixelStore();
 
     void ApplyVertexArray(const std::shared_ptr<ur::VertexArray>& va);
     void ApplyShaderProgram(const DrawState& draw, const void* scene);
@@ -113,6 +122,15 @@ private:
     int m_pack_row_length = 0;
 
     RenderState m_render_state;
+
+    bool m_viewport_dirty = true;
+    bool m_render_state_dirty = true;
+    bool m_program_dirty = true;
+    bool m_framebuffer_dirty = true;
+    bool m_pixel_store_dirty = true;
+    bool m_clear_color_dirty = true;
+    bool m_clear_depth_dirty = true;
+    bool m_clear_stencil_dirty = true;
 
     std::shared_ptr<ShaderProgram> m_binded_program = nullptr;
 

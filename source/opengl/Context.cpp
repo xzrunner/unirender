@@ -46,13 +46,24 @@ Context::Context(const ur::Device& device)
 
 void Context::Clear(const ClearState& clear_state)
 {
+    if (m_viewport_dirty) {
+        SubmitViewport();
+    }
+    if (m_pixel_store_dirty) {
+        SubmitPixelStore();
+    }
+    if (m_render_state_dirty) {
+        ForceApplyRenderState(m_render_state);
+        m_render_state_dirty = false;
+    }
+
     ApplyFramebuffer();
 
     ApplyScissorTest(clear_state.scissor_test);
     ApplyColorMask(clear_state.color_mask);
     ApplyDepthMask(clear_state.depth_mask);
 
-    if (m_clear_color != clear_state.color)
+    if (m_clear_color_dirty || m_clear_color != clear_state.color)
     {
         const float r = clear_state.color.r / 255.0f;
         const float g = clear_state.color.g / 255.0f;
@@ -61,18 +72,21 @@ void Context::Clear(const ClearState& clear_state)
         glClearColor(r, g, b, a);
 
         m_clear_color = clear_state.color;
+        m_clear_color_dirty = false;
     }
 
-    if (m_clear_depth != clear_state.depth)
+    if (m_clear_depth_dirty || m_clear_depth != clear_state.depth)
     {
         glClearDepth(clear_state.depth);
         m_clear_depth = clear_state.depth;
+        m_clear_depth_dirty = false;
     }
 
-    if (m_clear_stencil != clear_state.stencil)
+    if (m_clear_stencil_dirty || m_clear_stencil != clear_state.stencil)
     {
         glClearStencil(clear_state.stencil);
         m_clear_stencil = clear_state.stencil;
+        m_clear_stencil_dirty = false;
     }
 
     glClear(TypeConverter::To(clear_state.buffers));
@@ -164,13 +178,8 @@ void Context::Compute(const DrawState& draw, int num_groups_x, int num_groups_y,
 
 void Context::SetViewport(int x, int y, int w, int h)
 {
-    Rectangle vp(x, y, w, h);
-    if (m_viewport != vp)
-    {
-        glViewport(x, y, w, h);
-        m_viewport = vp;
-    }
-
+    m_viewport = Rectangle(x, y, w, h);
+    SubmitViewport();
     check_error();
 }
 
@@ -217,9 +226,9 @@ void Context::SetImage(size_t slot, const ur::TexturePtr& tex, AccessType access
 
 void Context::SetUnpackRowLength(int len)
 {
-    if (len != m_unpack_row_length) {
+    if (m_pixel_store_dirty || len != m_unpack_row_length) {
         m_unpack_row_length = len;
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, m_unpack_row_length);
+        SubmitPixelStore();
     }
 
     check_error();
@@ -227,15 +236,70 @@ void Context::SetUnpackRowLength(int len)
 
 void Context::SetPackRowLength(int len)
 {
-    if (len != m_pack_row_length) {
+    if (m_pixel_store_dirty || len != m_pack_row_length) {
         m_pack_row_length = len;
-        glPixelStorei(GL_PACK_ROW_LENGTH, m_pack_row_length);
+        SubmitPixelStore();
     }
 
     check_error();
 }
 
+void Context::InvalidateCachedState()
+{
+    m_viewport_dirty = true;
+    m_render_state_dirty = true;
+    m_program_dirty = true;
+    m_framebuffer_dirty = true;
+    m_pixel_store_dirty = true;
+    m_texture_units.Invalidate();
+    m_image_units.Invalidate();
+    m_clear_color_dirty = true;
+    m_clear_depth_dirty = true;
+    m_clear_stencil_dirty = true;
+}
+
+void Context::NotifyExternalStateMutation()
+{
+    InvalidateCachedState();
+}
+
+void Context::CommitFramebuffer()
+{
+    m_framebuffer_dirty = true;
+    ApplyFramebuffer();
+}
+
+void Context::CommitViewport()
+{
+    SubmitViewport();
+}
+
+void Context::CommitBindings()
+{
+    m_texture_units.Clean();
+    m_image_units.Clean();
+}
+
+void Context::SubmitViewport()
+{
+    glViewport(m_viewport.x, m_viewport.y, m_viewport.w, m_viewport.h);
+    m_viewport_dirty = false;
+}
+
+void Context::SubmitPixelStore()
+{
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, m_unpack_row_length);
+    glPixelStorei(GL_PACK_ROW_LENGTH, m_pack_row_length);
+    m_pixel_store_dirty = false;
+}
+
 bool Context::CheckRenderTargetStatus()
+{
+    ApplyFramebuffer();
+    return CheckBoundFramebufferStatus();
+}
+
+bool Context::CheckBoundFramebufferStatus()
 {
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	switch(status)
@@ -284,6 +348,11 @@ void Context::SetMemoryBarrier(const std::vector<BarrierType>& types)
 
 void Context::Init()
 {
+    GLint viewport[4] = {};
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    m_viewport = Rectangle(viewport[0], viewport[1], viewport[2], viewport[3]);
+    m_viewport_dirty = false;
+
     GLfloat col[4];
     glGetFloatv(GL_COLOR_CLEAR_VALUE, col);
     m_clear_color.r = static_cast<uint8_t>(255 * col[0]);
@@ -300,6 +369,8 @@ void Context::Init()
     m_clear_stencil = stencil;
 
     ForceApplyRenderState(m_render_state);
+    m_render_state_dirty = false;
+    m_pixel_store_dirty = false;
 
     check_error();
 }
@@ -332,15 +403,26 @@ void Context::ForceApplyRenderState(const RenderState& rs)
     glDepthRange(rs.depth_range.d_near, rs.depth_range.d_far);
 
     Enable(GL_BLEND, rs.blending.enabled);
-    glBlendFuncSeparate(
-        TypeConverter::To(rs.blending.src_rgb),
-        TypeConverter::To(rs.blending.dst_rgb),
-        TypeConverter::To(rs.blending.src_alpha),
-        TypeConverter::To(rs.blending.dst_alpha));
-    glBlendEquationSeparate(
-        TypeConverter::To(rs.blending.rgb_equation),
-        TypeConverter::To(rs.blending.alpha_equation));
-    glBlendColor(rs.blending.color.r, rs.blending.color.g, rs.blending.color.b, rs.blending.color.a);
+    if (rs.blending.separately)
+    {
+        glBlendFuncSeparate(
+            TypeConverter::To(rs.blending.src_rgb),
+            TypeConverter::To(rs.blending.dst_rgb),
+            TypeConverter::To(rs.blending.src_alpha),
+            TypeConverter::To(rs.blending.dst_alpha));
+        glBlendEquationSeparate(
+            TypeConverter::To(rs.blending.rgb_equation),
+            TypeConverter::To(rs.blending.alpha_equation));
+        glBlendColor(rs.blending.color.r / 255.0f, rs.blending.color.g / 255.0f,
+                     rs.blending.color.b / 255.0f, rs.blending.color.a / 255.0f);
+    }
+    else
+    {
+        glBlendFunc(
+            TypeConverter::To(rs.blending.src),
+            TypeConverter::To(rs.blending.dst));
+        glBlendEquation(TypeConverter::To(rs.blending.equation));
+    }
 
     glDepthMask(rs.depth_mask);
     glColorMask(rs.color_mask.r, rs.color_mask.g, rs.color_mask.b, rs.color_mask.a);
@@ -381,6 +463,14 @@ void Context::ForceApplyRenderStateStencil(GLenum face, const StencilTestFace& t
 
 void Context::ApplyRenderState(const RenderState& rs)
 {
+    if (m_render_state_dirty)
+    {
+        ForceApplyRenderState(rs);
+        m_render_state = rs;
+        m_render_state_dirty = false;
+        return;
+    }
+
     ApplyPrimitiveRestart(rs.prim_restart);
     ApplyFacetCulling(rs.facet_culling);
     ApplyProgramPointSize(rs.prog_point_size);
@@ -402,7 +492,7 @@ void Context::ApplyRenderState(const RenderState& rs)
 
 void Context::ApplyFramebuffer()
 {
-    if (m_set_framebuffer != m_binded_framebuffer)
+    if (m_framebuffer_dirty || m_set_framebuffer != m_binded_framebuffer)
     {
         if (m_set_framebuffer) {
             m_set_framebuffer->Bind();
@@ -411,12 +501,13 @@ void Context::ApplyFramebuffer()
         }
 
         m_binded_framebuffer = m_set_framebuffer;
+        m_framebuffer_dirty = false;
     }
 
     if (m_set_framebuffer)
     {
         std::static_pointer_cast<opengl::Framebuffer>(m_set_framebuffer)->Clean();
-        /*assert*/(CheckRenderTargetStatus());
+        /*assert*/(CheckBoundFramebufferStatus());
     }
 
     check_error();
@@ -686,11 +777,19 @@ void Context::ApplyDepthClamp(bool depth_clamp)
 
 void Context::ApplyBeforeDraw(const DrawState& draw, const void* scene)
 {
+    if (m_viewport_dirty) {
+        SubmitViewport();
+    }
+    if (m_pixel_store_dirty) {
+        SubmitPixelStore();
+    }
+
     ApplyRenderState(draw.render_state);
     ApplyVertexArray(draw.vertex_array);
     ApplyShaderProgram(draw, scene);
 
     m_texture_units.Clean();
+    m_image_units.Clean();
     ApplyFramebuffer();
 
     check_error();
@@ -711,12 +810,13 @@ void Context::ApplyVertexArray(const std::shared_ptr<ur::VertexArray>& va)
 
 void Context::ApplyShaderProgram(const DrawState& draw, const void* scene)
 {
-    if (m_binded_program != draw.program)
+    if (m_program_dirty || m_binded_program != draw.program)
     {
         if (draw.program) {
             draw.program->Bind();
         }
         m_binded_program = draw.program;
+        m_program_dirty = false;
     }
     assert(!m_binded_program || m_binded_program/* && m_binded_program->CheckStatus()*/);
 

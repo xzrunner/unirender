@@ -90,6 +90,12 @@ public:
 
     virtual void SetMemoryBarrier(const std::vector<BarrierType>& types) override;
 
+    virtual void InvalidateCachedState() override {}
+    virtual void NotifyExternalStateMutation() override {}
+    virtual void CommitFramebuffer() override {}
+    virtual void CommitViewport() override {}
+    virtual void CommitBindings() override {}
+
     // Accessors used by RenderPass, FrameBuffers, Pipeline, etc.
     void Init(void* hwnd, uint32_t width, uint32_t height);
 

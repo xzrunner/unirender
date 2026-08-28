@@ -27,5 +27,12 @@ void ImageUnits::Clean()
     }
 }
 
+void ImageUnits::Invalidate()
+{
+    for (auto& img : m_image_units) {
+        img->Invalidate();
+    }
+}
+
 }
 }

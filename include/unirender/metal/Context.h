@@ -64,6 +64,12 @@ public:
 
     virtual void SetMemoryBarrier(const std::vector<BarrierType>& types) override;
 
+    virtual void InvalidateCachedState() override {}
+    virtual void NotifyExternalStateMutation() override {}
+    virtual void CommitFramebuffer() override {}
+    virtual void CommitViewport() override {}
+    virtual void CommitBindings() override {}
+
     int  GetWidth()  const { return m_width; }
     int  GetHeight() const { return m_height; }
 

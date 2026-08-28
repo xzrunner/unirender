@@ -68,6 +68,19 @@ public:
 
     virtual void SetMemoryBarrier(const std::vector<BarrierType>& types) = 0;
 
+    // Invalidates cache-backed backend state so subsequent work replays its logical values.
+    // Implementations without externally mutable cached state may treat this as a no-op.
+    virtual void InvalidateCachedState() = 0;
+    // Call after raw external API mutations that bypass this Context.
+    virtual void NotifyExternalStateMutation() = 0;
+    // Replays only the logical framebuffer value already marked dirty or invalidated.
+    virtual void CommitFramebuffer() = 0;
+    // Replays only the logical viewport value already marked dirty or invalidated.
+    virtual void CommitViewport() = 0;
+    // Replays only logical bindings already marked dirty or invalidated.
+    // Implementations without externally mutable cached state may treat this as a no-op.
+    virtual void CommitBindings() = 0;
+
 }; // Context
 
 }

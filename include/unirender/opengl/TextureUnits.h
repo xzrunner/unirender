@@ -24,6 +24,7 @@ public:
     }
 
     void Clean();
+    void Invalidate();
 
 private:
     std::vector<std::shared_ptr<TextureUnit>> m_texture_units;

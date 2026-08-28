@@ -23,6 +23,7 @@ public:
     }
 
     void Clean();
+    void Invalidate();
 
 private:
     std::vector<std::shared_ptr<ImageUnit>> m_image_units;

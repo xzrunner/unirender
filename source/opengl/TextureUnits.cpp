@@ -31,5 +31,12 @@ void TextureUnits::Clean()
     last->CleanLastTextureUnit();
 }
 
+void TextureUnits::Invalidate()
+{
+    for (auto& tex : m_texture_units) {
+        tex->Invalidate();
+    }
+}
+
 }
 }
